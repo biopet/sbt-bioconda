@@ -1,0 +1,84 @@
+organization := "com.github.biopet"
+name := "sbt-biopet"
+
+homepage := Some(url(s"https://github.com/biopet/sbt-bioconda"))
+licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
+organizationName := "Sequencing Analysis Support Core - Leiden University Medical Center"
+scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/biopet/sbt-bioconda"),
+    "scm:git@github.com:biopet/sbt-bioconda.git"
+  )
+)
+startYear := some(2018)
+
+developers := List(
+  Developer(id = "rhpvorderman",
+            name = "Ruben Vorderman",
+            email = "r.h.p.vorderman@lumc.nl",
+            url = url("https://github.com/rhpvorderman")),
+  Developer(id = "ffinfo",
+    name = "Peter van 't Hof",
+    email = "pjrvanthof@gmail.com",
+    url = url("https://github.com/ffinfo"))
+)
+
+publishMavenStyle := true
+
+sbtPlugin := true
+
+scalaVersion := "2.12.4"
+
+resolvers += Resolver.sonatypeRepo("snapshots")
+
+useGpg := true
+
+scalafmt := (scalafmt in Compile)
+  .dependsOn(scalafmt in Test)
+  .dependsOn(scalafmt in Sbt)
+  .value
+
+publishTo := {
+  if (isSnapshot.value)
+    Some(Opts.resolver.sonatypeSnapshots)
+  else
+    Some(Opts.resolver.sonatypeStaging)
+}
+
+scriptedLaunchOpts := {
+  scriptedLaunchOpts.value ++
+    Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+}
+scriptedBufferLog := false
+
+import ReleaseTransformations._
+releaseProcess := Seq[ReleaseStep](
+  releaseStepCommand("git fetch"),
+  releaseStepCommand("git checkout master"),
+  releaseStepCommand("git pull"),
+  releaseStepCommand("git merge origin/develop"),
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  //releaseStepCommand("ghpagesPushSite"),
+  releaseStepCommand("publishSigned"),
+  releaseStepCommand("sonatypeReleaseAll"),
+  pushChanges,
+  releaseStepCommand("git checkout develop"),
+  releaseStepCommand("git merge master"),
+  setNextVersion,
+  commitNextVersion,
+  pushChanges
+)
+
+libraryDependencies ++= Seq(
+  Defaults.sbtPluginExtra(
+    "ohnosequences" % "sbt-github-release" % "0.7.0",
+    (sbtBinaryVersion in pluginCrossBuild).value,
+    (scalaBinaryVersion in pluginCrossBuild).value
+  )
+)
