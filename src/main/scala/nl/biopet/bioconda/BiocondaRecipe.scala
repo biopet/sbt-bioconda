@@ -11,15 +11,40 @@ class BiocondaRecipe(name: String,
                      homeUrl: String,
                      license: String,
                      summary: String,
-                     buildNumber: Option[Int] = Some(0),
-                     notes: Option[String] = None
+                     description: String = "",
+                     buildNumber: Int = 0,
+                     notes: String = ""
                     ) {
 
   def fileName: String = sourceUrl.split("/").last
 
-  def generateMetaYaml(): Unit = {
+  def metaYaml: String =
+    s"""# Based on OpenJDK recipe in conda-forge
+       |# https://github.com/conda-forge/openjdk-feedstock/blob/master/recipe/meta.yaml
+       |
+       |{% set name = "$name" %}
+       |{% set version = "$version" % }
+       |
+       |package:
+       |  name: "{{ name }}"
+       |  version: "{{ version }}"
+       |
+       |source:
+       |  url: "$sourceUrl"
+       |  sha256: "$sourceSha256"
+       |
+       |build:
+       |  number: "$buildNumber"
+       |
+       |about:
+       |  home: "$homeUrl"
+       |  license: "$license"
+       |  summary: "$summary"
+       |  description: |
+       |    $description
+     """.stripMargin
 
-  }
+
   def buildScript: String =
     s"""#!/usr/bin/env bash
        |# Build file is copied from VarScan
@@ -33,9 +58,9 @@ class BiocondaRecipe(name: String,
      """.stripMargin
 
   object Wrapper {
-    def file = s"${name}.py"
+    def file = s"$name.py"
     def script: String = {
-      val wrapperStream = getClass().getResourceAsStream("nl/biopet/bioconda/wrapper.py")
+      val wrapperStream = getClass.getResourceAsStream("nl/biopet/bioconda/wrapper.py")
 
       s"""
          |#!/usr/bin/env python
