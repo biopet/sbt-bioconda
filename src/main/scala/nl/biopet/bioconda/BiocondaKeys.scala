@@ -11,5 +11,6 @@ trait BiocondaKeys {
     SettingKey[String]("Git URL of your/your project's bioconda repo fork")
   lazy val biocondaBranch =
     SettingKey[String]("Branch for bioconda tool repository")
+  lazy val biocondaUpdatedRepository = taskKey[File]("Clone the biocondaLocalRepo")
 
 }

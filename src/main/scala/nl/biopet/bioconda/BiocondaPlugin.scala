@@ -22,7 +22,10 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaMainRepo := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master"
   )
-
+  GitKeys.
+  /* Copied from https://github.com/sbt/sbt-ghpages/blob/master/src/main/scala/com/typesafe/sbt/sbtghpages/GhpagesPlugin.scala
+   *
+   */
   private def updatedRepo(
       repo: SettingKey[File],
       remote: SettingKey[String],

@@ -74,7 +74,7 @@ releaseProcess := Seq[ReleaseStep](
   commitNextVersion,
   pushChanges
 )
-
+libraryDependencies += "org.yaml" % "snakeyaml" % "1.20"
 libraryDependencies ++= Seq(
   Defaults.sbtPluginExtra(
     "ohnosequences" % "sbt-github-release" % "0.7.0",
