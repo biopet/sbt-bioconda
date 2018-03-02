@@ -1,5 +1,5 @@
 organization := "com.github.biopet"
-name := "sbt-biopet"
+name := "sbt-bioconda"
 
 homepage := Some(url(s"https://github.com/biopet/sbt-bioconda"))
 licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
@@ -18,9 +18,9 @@ developers := List(
             email = "r.h.p.vorderman@lumc.nl",
             url = url("https://github.com/rhpvorderman")),
   Developer(id = "ffinfo",
-    name = "Peter van 't Hof",
-    email = "pjrvanthof@gmail.com",
-    url = url("https://github.com/ffinfo"))
+            name = "Peter van 't Hof",
+            email = "pjrvanthof@gmail.com",
+            url = url("https://github.com/ffinfo"))
 )
 
 publishMavenStyle := true
@@ -85,5 +85,5 @@ libraryDependencies ++= Seq(
     "com.typesafe.sbt" % "sbt-git" % "0.9.3",
     (sbtBinaryVersion in pluginCrossBuild).value,
     (scalaBinaryVersion in pluginCrossBuild).value
-  ),
+  )
 )
