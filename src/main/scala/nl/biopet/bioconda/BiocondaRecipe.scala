@@ -13,8 +13,7 @@ class BiocondaRecipe(name: String,
                      summary: String,
                      description: String = "",
                      buildNumber: Int = 0,
-                     notes: String = ""
-                    ) {
+                     notes: String = "") {
 
   def fileName: String = sourceUrl.split("/").last
 
@@ -44,7 +43,6 @@ class BiocondaRecipe(name: String,
        |    $description
      """.stripMargin
 
-
   def buildScript: String =
     s"""#!/usr/bin/env bash
        |# Build file is copied from VarScan
@@ -60,7 +58,8 @@ class BiocondaRecipe(name: String,
   object Wrapper {
     def file = s"$name.py"
     def script: String = {
-      val wrapperStream = getClass.getResourceAsStream("nl/biopet/bioconda/wrapper.py")
+      val wrapperStream =
+        getClass.getResourceAsStream("nl/biopet/bioconda/wrapper.py")
 
       s"""
          |#!/usr/bin/env python
