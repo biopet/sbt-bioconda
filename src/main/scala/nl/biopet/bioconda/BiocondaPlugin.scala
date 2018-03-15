@@ -9,26 +9,29 @@ import com.typesafe.sbt.git.GitRunner
 import GitKeys.{gitBranch, gitRemoteRepo}
 
 object BiocondaPlugin extends AutoPlugin {
-  override def trigger: PluginTrigger = noTrigger
+  override def trigger: PluginTrigger = allRequirements
 
-  override def requires: Plugins = GitPlugin && SbtGithubReleasePlugin
+  override def requires: Plugins = {
+    empty
+  } //GitPlugin && SbtGithubReleasePlugin
 
   object autoImport extends BiocondaKeys
 
   import autoImport._
 
-  override def projectSettings: Seq[Def.Setting[_]] = Def.settings(
-    biocondaBranch := normalizedName.value
-  )
-
-  override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
+  override def projectSettings: Seq[Setting[_]] = Def.settings(
+    biocondaBranch := normalizedName.value,
     biocondaMainGitUrl := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master",
     biocondaUpdatedRepository := updatedRepo(biocondaRepository,
-                                             biocondaGitUrl,
-                                             biocondaBranch,
-                                             biocondaMainGitUrl,
-                                             biocondaMainBranch).value
+      biocondaGitUrl,
+      biocondaBranch,
+      biocondaMainGitUrl,
+      biocondaMainBranch).value,
+    biocondaRepository := new File(target.value , "bioconda")
+  )
+
+  override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
   )
 
   /*
@@ -48,22 +51,22 @@ object BiocondaPlugin extends AutoPlugin {
       // Make sure there is a git repo checked out at the desired branch
       git.updated(remote = remote.value,
                   cwd = local,
-                  branch = Some(branch.value),
+                  branch = Some(upstreamBranch.value),
                   log = s.log)
 
       // Make sure the upstream git url is added
       val remotes: Array[String] =
         git.apply("remote")(local, streams.value.log).split("\\n")
       if (remotes.contains("upstream")) {
-        git.apply("remote", "set-url", "upstream", upstream.value)
+        git.apply("remote", "set-url", "upstream", upstream.value)(local, s.log)
       } else {
-        git.apply("remote", "add", "upstream", upstream.value)
+        git.apply("remote", "add", "upstream", upstream.value)(local, s.log)
       }
 
       // rebase the current branch on upstream main, so a pull request can be made
       // from this branch.
-      git.apply("fetch", "upstream")
-      git.apply("rebase", "upstream", upstreamBranch.value)
+      git.apply("pull", "upstream", upstreamBranch.value)(local, s.log)
+      // git.apply("rebase", "upstream", upstreamBranch.value)(local, s.log)
       local
     }
 }

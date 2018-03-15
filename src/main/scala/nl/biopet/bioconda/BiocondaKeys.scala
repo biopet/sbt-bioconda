@@ -4,13 +4,13 @@ import sbt._
 
 trait BiocondaKeys {
   lazy val bioconda = config("bioconda") describedAs ("Configuration for bioconda repo")
-  lazy val biocondaMainGitUrl = SettingKey[String]("Git URL of biocondaMain")
+  lazy val biocondaMainGitUrl = settingKey[String]("Git URL of biocondaMain")
   lazy val biocondaMainBranch =
-    SettingKey[String]("The default development branch on bioconda main.")
+    settingKey[String]("The default development branch on bioconda main.")
   lazy val biocondaGitUrl =
-    SettingKey[String]("Git URL of your/your project's bioconda repo fork")
+    settingKey[String]("Git URL of your/your project's bioconda repo fork")
   lazy val biocondaBranch =
-    SettingKey[String]("Branch for bioconda tool repository")
+    settingKey[String]("Branch for bioconda tool repository")
   lazy val biocondaUpdatedRepository =
     taskKey[File]("Clone the biocondaLocalRepo")
   lazy val biocondaRepository =

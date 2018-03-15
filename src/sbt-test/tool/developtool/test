@@ -1,1 +1,6 @@
-# All tests are symbolic linked to this directory for the source files.
+> biocondaUpdatedRepository
+$ exists target/bioconda/.github
+$ exists target/bioconda/recipes
+$ exists target/bioconda/scripts
+$ exists target/bioconda/recipes/biopet
+$ exists target/bioconda/config.yml
