@@ -7,6 +7,7 @@ import ohnosequences.sbt.SbtGithubReleasePlugin
 import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.GitRunner
 import GitKeys.{gitBranch, gitRemoteRepo}
+import sbt.internal.util.ManagedLogger
 
 object BiocondaPlugin extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
@@ -66,7 +67,7 @@ object BiocondaPlugin extends AutoPlugin {
       // Check if biocondaMainBranch exists. If not create it.
 
 
-      if (branchExists(branch)){
+      if (branchExists(branch,local,git,s.log)){
         git.apply("checkout", branch)(local, s.log)
       }
       else {
@@ -88,7 +89,7 @@ object BiocondaPlugin extends AutoPlugin {
         val mainBranch: String = biocondaMainBranch.value
 
         // Check if tool branch exists, create it otherwise.
-        if (branchExists(branch) {
+        if (branchExists(branch,local,git,s.log)) {
           git.apply("checkout", branch)(local, s.log)
         }
         else {
@@ -100,14 +101,16 @@ object BiocondaPlugin extends AutoPlugin {
       }
     }
 
-  def branchExists(branch: String): Boolean = {
-    val git = GitKeys.gitRunner.value
-    val s = streams.value
-    val local: File = biocondaRepository.value
-
+  def branchExists(branch: String,
+                   repo: File,
+                   git: GitRunner,
+                   log: ManagedLogger
+                   ): Boolean = {
     // TODO: Find a git command that just returns branches as a list. (Without * in front of the branch you are on)
     val branches: Array[String] =
-      git.apply("branch", "-a")(local, s.log).split("\\n")
+      git.apply("branch", "-a")(repo, log).split("\\n")
+
+    branches.foreach(x => println(x.split("/").last.replaceFirst("\\*"," "))
 
     // For each branch
     // Split on / and get the last item(remotes/origin/branch) => branch
