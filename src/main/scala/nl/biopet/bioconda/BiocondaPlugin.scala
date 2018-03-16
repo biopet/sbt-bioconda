@@ -23,16 +23,12 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaBranch := normalizedName.value,
     biocondaMainGitUrl := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master",
-    biocondaUpdatedRepository := updatedRepo(biocondaRepository,
-      biocondaGitUrl,
-      biocondaBranch,
-      biocondaMainGitUrl,
-      biocondaMainBranch).value,
-    biocondaRepository := new File(target.value , "bioconda")
+    biocondaUpdatedRepository := initBiocondaRepo.value,
+    biocondaRepository := new File(target.value, "bioconda")
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
-  )
+    )
 
   /*
    * Copied from https://github.com/sbt/sbt-ghpages/blob/master/src/main/scala/com/typesafe/sbt/sbtghpages/GhpagesPlugin.scala
@@ -40,9 +36,8 @@ object BiocondaPlugin extends AutoPlugin {
   private def updatedRepo(
       repo: SettingKey[File],
       remote: SettingKey[String],
-      branch: SettingKey[String],
       upstream: SettingKey[String],
-      upstreamBranch: SettingKey[String]): Def.Initialize[Task[File]] =
+      branch: SettingKey[String]): Def.Initialize[Task[File]] =
     Def.task[File] {
       val local = repo.value
       val git = GitKeys.gitRunner.value
@@ -51,7 +46,7 @@ object BiocondaPlugin extends AutoPlugin {
       // Make sure there is a git repo checked out at the desired branch
       git.updated(remote = remote.value,
                   cwd = local,
-                  branch = Some(upstreamBranch.value),
+                  branch = Some(branch.value),
                   log = s.log)
 
       // Make sure the upstream git url is added
@@ -63,10 +58,46 @@ object BiocondaPlugin extends AutoPlugin {
         git.apply("remote", "add", "upstream", upstream.value)(local, s.log)
       }
 
-      // rebase the current branch on upstream main, so a pull request can be made
-      // from this branch.
-      git.apply("pull", "upstream", upstreamBranch.value)(local, s.log)
-      // git.apply("rebase", "upstream", upstreamBranch.value)(local, s.log)
+      // Make sure local git is up to date with upstream.
+      git.apply("pull", "upstream", branch.value)(local, s.log)
       local
     }
+  private def initBiocondaRepo: Def.Initialize[Task[File]] = {
+    Def.task {
+    val initialized: Boolean = new File(biocondaRepository.value, ".git").exists()
+    val git = GitKeys.gitRunner.value
+    val s = streams.value
+    val local = biocondaRepository.value
+    val upstream = biocondaMainGitUrl.value
+    val origin = biocondaMainGitUrl.value
+    val branch = biocondaMainBranch.value
+
+      if (!initialized) {
+        git.apply("init")(local, s.log)
+      }
+      val remotes: Array[String] =
+        git.apply("remote")(local, s.log).split("\\n")
+      if (remotes.contains("upstream")) {
+        git.apply("remote", "set-url", "upstream", upstream)(local, s.log)
+      } else {
+        git.apply("remote", "add", "upstream", upstream)(local, s.log)
+      }
+      if (remotes.contains("origin")) {
+        git.apply("remote", "set-url", "origin", origin)(local, s.log)
+      } else {
+        git.apply("remote", "add", "origin", origin)(local, s.log)
+      }
+
+      val branches: Array[String] =
+        git.apply("branch")(local, s.log).split("\\n")
+      if (branches.contains(branch)) {
+        git.apply("checkout",branch)(local, s.log)
+      }
+      else{
+        git.apply("checkout","-b",branch)(local, s.log)
+      }
+      git.apply("pull","upstream",branch)(local,s.log)
+      local
+    }
+  }
 }
