@@ -30,38 +30,7 @@ object BiocondaPlugin extends AutoPlugin {
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
     )
 
-  /*
-   * Copied from https://github.com/sbt/sbt-ghpages/blob/master/src/main/scala/com/typesafe/sbt/sbtghpages/GhpagesPlugin.scala
-   */
-  private def updatedRepo(
-      repo: SettingKey[File],
-      remote: SettingKey[String],
-      upstream: SettingKey[String],
-      branch: SettingKey[String]): Def.Initialize[Task[File]] =
-    Def.task[File] {
-      val local = repo.value
-      val git = GitKeys.gitRunner.value
-      val s = streams.value
 
-      // Make sure there is a git repo checked out at the desired branch
-      git.updated(remote = remote.value,
-                  cwd = local,
-                  branch = Some(branch.value),
-                  log = s.log)
-
-      // Make sure the upstream git url is added
-      val remotes: Array[String] =
-        git.apply("remote")(local, streams.value.log).split("\\n")
-      if (remotes.contains("upstream")) {
-        git.apply("remote", "set-url", "upstream", upstream.value)(local, s.log)
-      } else {
-        git.apply("remote", "add", "upstream", upstream.value)(local, s.log)
-      }
-
-      // Make sure local git is up to date with upstream.
-      git.apply("pull", "upstream", branch.value)(local, s.log)
-      local
-    }
   private def initBiocondaRepo: Def.Initialize[Task[File]] = {
     Def.task {
     val initialized: Boolean = new File(biocondaRepository.value, ".git").exists()
