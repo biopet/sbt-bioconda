@@ -24,7 +24,9 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaMainGitUrl := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master",
     biocondaUpdatedRepository := initBiocondaRepo.value,
-    biocondaRepository := new File(target.value, "bioconda")
+    biocondaUpdatedBranch := updateBranch.dependsOn(biocondaUpdatedRepository).value,
+    biocondaRepository := new File(target.value, "bioconda"),
+    biocondaRecipeDir := new File(target.value, "conda-recipe")
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -33,19 +35,23 @@ object BiocondaPlugin extends AutoPlugin {
 
   private def initBiocondaRepo: Def.Initialize[Task[File]] = {
     Def.task {
-    val initialized: Boolean = new File(biocondaRepository.value, ".git").exists()
-    val git = GitKeys.gitRunner.value
-    val s = streams.value
-    val local = biocondaRepository.value
-    val upstream = biocondaMainGitUrl.value
-    val origin = biocondaMainGitUrl.value
-    val branch = biocondaMainBranch.value
+      val initialized: Boolean = new File(biocondaRepository.value, ".git").exists()
+      val git = GitKeys.gitRunner.value
+      val s = streams.value
+      val local = biocondaRepository.value
+      val upstream = biocondaMainGitUrl.value
+      val origin = biocondaMainGitUrl.value
+      val branch = biocondaMainBranch.value
 
+      //Check if git repo already exits
       if (!initialized) {
         git.apply("init")(local, s.log)
       }
+
+      // Check if remotes have been set properly
       val remotes: Array[String] =
         git.apply("remote")(local, s.log).split("\\n")
+
       if (remotes.contains("upstream")) {
         git.apply("remote", "set-url", "upstream", upstream)(local, s.log)
       } else {
@@ -57,16 +63,45 @@ object BiocondaPlugin extends AutoPlugin {
         git.apply("remote", "add", "origin", origin)(local, s.log)
       }
 
+      // Check if biocondaMainBranch exists. If not create it.
       val branches: Array[String] =
-        git.apply("branch")(local, s.log).split("\\n")
+        git.apply("branch", "-a")(local, s.log).split("\\n")
       if (branches.contains(branch)) {
-        git.apply("checkout",branch)(local, s.log)
+        git.apply("checkout", branch)(local, s.log)
       }
-      else{
-        git.apply("checkout","-b",branch)(local, s.log)
+      else {
+        git.apply("checkout", "-b", branch)(local, s.log)
       }
-      git.apply("pull","upstream",branch)(local,s.log)
+
+      // Get latest recipes from main repository.
+      git.apply("pull", "upstream", branch)(local, s.log)
       local
     }
   }
+
+    private def updateBranch: Def.Initialize[Task[File]] = {
+      Def.task {
+        val git = GitKeys.gitRunner.value
+        val s = streams.value
+        val local: File = biocondaRepository.value
+        val branch: String = biocondaBranch.value
+        val mainBranch: String = biocondaMainBranch.value
+
+        // Check if tool branch exists, create it otherwise.
+        val branches: Array[String] =
+          git.apply("branch", "-a")(local, s.log).split("\\n")
+        if (branches.contains(branch)) {
+          git.apply("checkout", branch)(local, s.log)
+        }
+        else {
+          git.apply("checkout", "-b", branch)(local, s.log)
+        }
+
+        // Rebase tool branch on main branch
+        git.apply("rebase", mainBranch)(local,s.log)
+        local
+      }
+    }
+
+
 }
