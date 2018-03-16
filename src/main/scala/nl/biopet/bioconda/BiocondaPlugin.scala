@@ -64,9 +64,9 @@ object BiocondaPlugin extends AutoPlugin {
       }
 
       // Check if biocondaMainBranch exists. If not create it.
-      val branches: Array[String] =
-        git.apply("branch", "-a")(local, s.log).split("\\n")
-      if (branches.contains(branch)) {
+
+
+      if (branchExists(branch)){
         git.apply("checkout", branch)(local, s.log)
       }
       else {
@@ -88,20 +88,32 @@ object BiocondaPlugin extends AutoPlugin {
         val mainBranch: String = biocondaMainBranch.value
 
         // Check if tool branch exists, create it otherwise.
-        val branches: Array[String] =
-          git.apply("branch", "-a")(local, s.log).split("\\n")
-        if (branches.contains(branch)) {
+        if (branchExists(branch) {
           git.apply("checkout", branch)(local, s.log)
         }
         else {
           git.apply("checkout", "-b", branch)(local, s.log)
         }
-
         // Rebase tool branch on main branch
         git.apply("rebase", mainBranch)(local,s.log)
         local
       }
     }
 
+  def branchExists(branch: String): Boolean = {
+    val git = GitKeys.gitRunner.value
+    val s = streams.value
+    val local: File = biocondaRepository.value
 
+    // TODO: Find a git command that just returns branches as a list. (Without * in front of the branch you are on)
+    val branches: Array[String] =
+      git.apply("branch", "-a")(local, s.log).split("\\n")
+
+    // For each branch
+    // Split on / and get the last item(remotes/origin/branch) => branch
+    // Remove that annonoying *
+    // Trim away all spaces
+    // Is this the branch we are looking for?
+    branches.filter(x => x.split("/").last.replaceFirst("\\*"," ").trim == branch).contains(true)
+  }
 }
