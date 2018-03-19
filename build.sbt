@@ -74,6 +74,7 @@ releaseProcess := Seq[ReleaseStep](
   commitNextVersion,
   pushChanges
 )
+libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
 libraryDependencies += "org.yaml" % "snakeyaml" % "1.20"
 libraryDependencies ++= Seq(
   Defaults.sbtPluginExtra(

@@ -1,14 +1,17 @@
 package nl.biopet.bioconda
 
+import org.kohsuke.github
 import sbt.{Def, _}
 import Keys._
 import com.typesafe.sbt.GitPlugin
-import ohnosequences.sbt.SbtGithubReleasePlugin.autoImport.ghreleaseAssets
+import ohnosequences.sbt.SbtGithubReleasePlugin.autoImport.ghreleaseGetRepo
 import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.GitRunner
 import GitKeys.{gitBranch, gitCurrentBranch, gitRemoteRepo}
+import org.kohsuke.github.GHRelease
 import sbt.internal.util.ManagedLogger
 
+import scala.collection.JavaConverters
 import scala.collection.mutable.ListBuffer
 
 object BiocondaPlugin extends AutoPlugin {
@@ -30,7 +33,6 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaUpdatedBranch := updateBranch.dependsOn(biocondaUpdatedRepository).value,
     biocondaRepository := new File(target.value, "bioconda"),
     biocondaRecipeDir := new File(target.value, "conda-recipe"),
-    biocondaSourceUrl :=
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -103,7 +105,18 @@ object BiocondaPlugin extends AutoPlugin {
       local
     }
   }
-  private def
+  private def getReleaseJar: Def.Initialize[Task[sbt.File]] =
+    Def.task {
+      val repo = ghreleaseGetRepo.value
+      val releaseList = repo.listReleases().asList()
+      val releases = JavaConverters.collectionAsScalaIterable(releaseList).toList
+      val currentRelease = releases.find(x => x.getTagName() == version.value)
+      if (currentRelease.isDefined) {
+        JavaConverters.collectionAsScalaIterable(currentRelease.get.getAssets()).
+      }
+      }
+
+
   private def createRecipe(name: Def.Initialize[Task[File]] = {
     Def.task {
       val recipe = new BiocondaRecipe(
@@ -112,7 +125,7 @@ object BiocondaPlugin extends AutoPlugin {
         sourceUrl = "",
         sourceSha256 = "",
         runRequirements = biocondaRequirements.value,
-        homeUrl = (homepage in bioconda).value
+        homeUrl = (homepage in bioconda).value,
         license = licenses.value.toList.last._2,
         buildRequirements = List(),
         summary = ""
