@@ -3,11 +3,13 @@ package nl.biopet.bioconda
 import sbt.{Def, _}
 import Keys._
 import com.typesafe.sbt.GitPlugin
-import ohnosequences.sbt.SbtGithubReleasePlugin
+import ohnosequences.sbt.SbtGithubReleasePlugin.autoImport.ghreleaseAssets
 import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.GitRunner
-import GitKeys.{gitBranch, gitRemoteRepo}
+import GitKeys.{gitBranch, gitCurrentBranch, gitRemoteRepo}
 import sbt.internal.util.ManagedLogger
+
+import scala.collection.mutable.ListBuffer
 
 object BiocondaPlugin extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
@@ -27,11 +29,12 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaUpdatedRepository := initBiocondaRepo.value,
     biocondaUpdatedBranch := updateBranch.dependsOn(biocondaUpdatedRepository).value,
     biocondaRepository := new File(target.value, "bioconda"),
-    biocondaRecipeDir := new File(target.value, "conda-recipe")
+    biocondaRecipeDir := new File(target.value, "conda-recipe"),
+    biocondaSourceUrl :=
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
-    )
+  )
 
 
   private def initBiocondaRepo: Def.Initialize[Task[File]] = {
@@ -67,7 +70,7 @@ object BiocondaPlugin extends AutoPlugin {
       // Check if biocondaMainBranch exists. If not create it.
 
 
-      if (branchExists(branch,local,git,s.log)){
+      if (branchExists(branch, local, git, s.log)) {
         git.apply("checkout", branch)(local, s.log)
       }
       else {
@@ -80,26 +83,42 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
 
-    private def updateBranch: Def.Initialize[Task[File]] = {
-      Def.task {
-        val git = GitKeys.gitRunner.value
-        val s = streams.value
-        val local: File = biocondaRepository.value
-        val branch: String = biocondaBranch.value
-        val mainBranch: String = biocondaMainBranch.value
+  private def updateBranch: Def.Initialize[Task[File]] = {
+    Def.task {
+      val git = GitKeys.gitRunner.value
+      val s = streams.value
+      val local: File = biocondaRepository.value
+      val branch: String = biocondaBranch.value
+      val mainBranch: String = biocondaMainBranch.value
 
-        // Check if tool branch exists, create it otherwise.
-        if (branchExists(branch,local,git,s.log)) {
-          git.apply("checkout", branch)(local, s.log)
-        }
-        else {
-          git.apply("checkout", "-b", branch)(local, s.log)
-        }
-        // Rebase tool branch on main branch
-        git.apply("rebase", mainBranch)(local,s.log)
-        local
+      // Check if tool branch exists, create it otherwise.
+      if (branchExists(branch, local, git, s.log)) {
+        git.apply("checkout", branch)(local, s.log)
       }
+      else {
+        git.apply("checkout", "-b", branch)(local, s.log)
+      }
+      // Rebase tool branch on main branch
+      git.apply("rebase", mainBranch)(local, s.log)
+      local
     }
+  }
+  private def
+  private def createRecipe(name: Def.Initialize[Task[File]] = {
+    Def.task {
+      val recipe = new BiocondaRecipe(
+        name = (name in bioconda).value,
+        version = (version in bioconda).value,
+        sourceUrl = "",
+        sourceSha256 = "",
+        runRequirements = biocondaRequirements.value,
+        homeUrl = (homepage in bioconda).value
+        license = licenses.value.toList.last._2,
+        buildRequirements = List(),
+        summary = ""
+      )
+    }
+  }
 
   def branchExists(branch: String,
                    repo: File,
@@ -107,16 +126,19 @@ object BiocondaPlugin extends AutoPlugin {
                    log: ManagedLogger
                    ): Boolean = {
     // TODO: Find a git command that just returns branches as a list. (Without * in front of the branch you are on)
-    val branches: Array[String] =
-      git.apply("branch", "-a")(repo, log).split("\\n")
 
-    branches.foreach(x => println(x.split("/").last.replaceFirst("\\*"," "))
+    // Without "--no-color" scala doesn't match the strings properly. Color matters in string comparison!
+    val branchList: Array[String] =
+      git.apply("branch", "-a", "--no-color")(repo, log).split("\\n")
+
+    val branches = new ListBuffer[String]
 
     // For each branch
-    // Split on / and get the last item(remotes/origin/branch) => branch
     // Remove that annonoying *
+    // Split on / and get the last item(remotes/origin/branch) => branch
     // Trim away all spaces
-    // Is this the branch we are looking for?
-    branches.filter(x => x.split("/").last.replaceFirst("\\*"," ").trim == branch).contains(true)
+    branchList.foreach(x => branches.append(x.replaceFirst("\\*","").split("/").last.trim()))
+    branches.toList.contains(branch)
+
   }
 }
