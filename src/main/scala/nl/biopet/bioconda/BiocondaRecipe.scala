@@ -19,7 +19,31 @@ class BiocondaRecipe(name: String,
   def wrapperFile: String = s"$name.py"
 
   def metaYaml: String = {
-    def meta = new Yaml()
+    def yaml = new Yaml()
+    def meta: Map[String,Any] = Map(
+      "package" ->
+        Map(
+          "name" -> "{{ name }}",
+          "version" -> "{{ version }}"
+        ),
+      "source" -> Map (
+        "url" -> sourceUrl,
+        "sha256" -> sourceSha256
+      ),
+      "build" -> Map(
+        "number" -> buildNumber
+      ),
+      "requirements" -> Map(
+        "run" -> runRequirements,
+        "build" -> buildRequirements
+      ),
+      "about" -> Map(
+        "home" -> homeUrl,
+        "license" -> license,
+        "summary" -> summary
+      )
+    )
+
 
     s"""# Based on OpenJDK recipe in conda-forge
        |# https://github.com/conda-forge/openjdk-feedstock/blob/master/recipe/meta.yaml
@@ -28,22 +52,7 @@ class BiocondaRecipe(name: String,
        |{% set name = "$name" %}
        |{% set version = "$version" % }
        |
-       |package:
-       |  name: "{{ name }}"
-       |  version: "{{ version }}"
-       |
-       |source:
-       |  url: "$sourceUrl"
-       |  sha256: "$sourceSha256"
-       |
-       |build:
-       |  number: "$buildNumber"
-       |
-       |about:
-       |  home: "$homeUrl"
-       |  license: "$license"
-       |  summary: "$summary"
-     """.stripMargin
+     """.stripMargin + yaml.dump(meta)
   }
 
   def buildScript: String =
