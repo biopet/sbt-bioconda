@@ -11,7 +11,6 @@ class BiocondaRecipe(name: String,
                      homeUrl: String,
                      license: String,
                      summary: String,
-                     description: String = "",
                      buildNumber: Int = 0,
                      notes: String = "") {
 
@@ -39,8 +38,6 @@ class BiocondaRecipe(name: String,
        |  home: "$homeUrl"
        |  license: "$license"
        |  summary: "$summary"
-       |  description: |
-       |    $description
      """.stripMargin
 
   def buildScript: String =

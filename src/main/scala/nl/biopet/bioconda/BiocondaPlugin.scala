@@ -37,7 +37,12 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaRepository := new File(target.value, "bioconda"),
     biocondaRecipeDir := new File(target.value, "conda-recipe"),
     biocondaSourceUrl := getSourceUrl.value,
-    biocondaSha256Sum := getSha256Sum.value
+    biocondaSha256Sum := getSha256Sum.value,
+    biocondaBuildNumber := 0,
+    biocondaRequirements := Seq("openjdk"),
+    biocondaBuildRequirements := Seq(),
+    biocondaNotes := "",
+    biocondaSummary := ""
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -113,9 +118,10 @@ object BiocondaPlugin extends AutoPlugin {
 
   private def getSha256Sum: Def.Initialize[Task[String]] =
     Def.task {
-      val jar: sbt.File = assemblyOutputPath.value
+      val jar: sbt.File = (assemblyOutputPath in assembly).value
       jar.sha256.hex
     }.dependsOn(assembly)
+
   private def getSourceUrl: Def.Initialize[Task[String]] =
     Def.task {
       val repo = ghreleaseGetRepo.value
@@ -126,7 +132,8 @@ object BiocondaPlugin extends AutoPlugin {
         throw new Exception(s"'${version.value}' tag not present on release page. Please release on github before publishing to bioconda.")
       }
       val assets = JavaConverters.collectionAsScalaIterable(currentRelease.getOrElse(new GHRelease).getAssets()).toList
-      val releaseJar = assets.find(x => x.getBrowserDownloadUrl.contains(assemblyJarName.value))
+      val jarName = (assemblyJarName in assembly).value
+      val releaseJar = assets.find(x => x.getBrowserDownloadUrl.contains(jarName))
       if (!releaseJar.isDefined) {
         throw new Exception (s"'")
       }
@@ -140,14 +147,13 @@ object BiocondaPlugin extends AutoPlugin {
         name = (name in bioconda).value,
         version = (version in bioconda).value,
         sourceUrl = biocondaSourceUrl.value,
-        sourceSha256 = "",
+        sourceSha256 = biocondaSha256Sum.value,
         runRequirements = biocondaRequirements.value,
         homeUrl = (homepage in bioconda).value.getOrElse("").toString,
-        license = licenses.value.toList.last._1,
-        buildRequirements = List(),
-        summary = "",
-        description = "",
-        buildNumber = 0,
+        license = (licenses in bioconda).value.toList.last._1,
+        buildRequirements = biocondaBuildRequirements.value,
+        summary = biocondaSummary.value,
+        buildNumber = biocondaBuildNumber.value,
         notes = ""
       )
       new File("/")
