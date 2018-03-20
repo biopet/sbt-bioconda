@@ -35,7 +35,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaUpdatedRepository := initBiocondaRepo.value,
     biocondaUpdatedBranch := updateBranch().dependsOn(biocondaUpdatedRepository).value,
     biocondaRepository := new File(target.value, "bioconda"),
-    biocondaRecipeDir := new File(target.value, "conda-recipe"),
+    biocondaRecipeDir := new File(target.value, "recipes"),
     biocondaSourceUrl := getSourceUrl.value,
     biocondaSha256Sum := getSha256Sum.value,
     biocondaBuildNumber := 0,
@@ -155,10 +155,12 @@ object BiocondaPlugin extends AutoPlugin {
         buildRequirements = biocondaBuildRequirements.value,
         summary = biocondaSummary.value,
         buildNumber = biocondaBuildNumber.value,
-        notes = biocondaNotes.value,
+        notes = Some(biocondaNotes.value),
         defaultJavaOptions = biocondaDefaultJavaOptions.value
       )
-      new File("/")
+      val recipeDir = new File(biocondaRecipeDir.value, (name in bioconda).value)
+      recipe.createRecipe(recipeDir)
+      recipeDir
     }
   }
 
