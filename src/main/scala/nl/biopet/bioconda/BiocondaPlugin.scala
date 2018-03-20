@@ -134,19 +134,23 @@ object BiocondaPlugin extends AutoPlugin {
       }
 
 
-  private def createRecipe(name: Def.Initialize[Task[File]] = {
+  private def createRecipe: Def.Initialize[Task[File]] = {
     Def.task {
       val recipe = new BiocondaRecipe(
         name = (name in bioconda).value,
         version = (version in bioconda).value,
-        sourceUrl = biocondaSourceUrl.value
+        sourceUrl = biocondaSourceUrl.value,
         sourceSha256 = "",
         runRequirements = biocondaRequirements.value,
         homeUrl = (homepage in bioconda).value.getOrElse("").toString,
         license = licenses.value.toList.last._1,
         buildRequirements = List(),
-        summary = ""
+        summary = "",
+        description = "",
+        buildNumber = 0,
+        notes = ""
       )
+      new File("/")
     }
   }
 
