@@ -3,7 +3,7 @@ package nl.biopet.bioconda
 import sbt._
 
 trait BiocondaKeys {
-  lazy val bioconda = config("bioconda") describedAs ("Configuration for bioconda repo")
+  lazy val Bioconda = config("bioconda") describedAs ("Configuration for bioconda repo")
   lazy val biocondaMainGitUrl = settingKey[String]("Git URL of biocondaMain")
   lazy val biocondaMainBranch =
     settingKey[String]("The default development branch on bioconda main.")

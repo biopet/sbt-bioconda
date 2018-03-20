@@ -1,7 +1,7 @@
 package nl.biopet.bioconda
 
 import org.yaml.snakeyaml.Yaml
-import java.io.{File.PrintWriter}
+import java.io.{File,PrintWriter}
 
 class BiocondaRecipe(name: String,
                      version: String,

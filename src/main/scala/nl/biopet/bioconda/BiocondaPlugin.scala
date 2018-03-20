@@ -4,9 +4,9 @@ import org.kohsuke.github
 import sbt.{Def, _}
 import Keys._
 import com.typesafe.sbt.GitPlugin
-//import ohnosequences.sbt.SbtGithubReleasePlugin.autoImport.
+import ohnosequences.sbt.SbtGithubReleasePlugin.tagNameArg
 import sbtassembly.AssemblyKeys.{assemblyJarName, assemblyOutputPath,assembly}
-import ohnosequences.sbt.GithubRelease.keys.{ghreleaseGetRepo, ghreleaseAssets}
+import ohnosequences.sbt.GithubRelease.keys.{ghreleaseGetRepo}
 import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.GitRunner
 import GitKeys.{gitBranch, gitCurrentBranch, gitRemoteRepo}
@@ -43,7 +43,8 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaBuildRequirements := Seq(),
     biocondaNotes := defaultNotes.value,
     biocondaSummary := defaultSummary.value,
-    biocondaDefaultJavaOptions := Seq()
+    biocondaDefaultJavaOptions := Seq(),
+    biocondaCreateRecipe := createRecipe.value
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -127,10 +128,11 @@ object BiocondaPlugin extends AutoPlugin {
     Def.task {
       val repo = ghreleaseGetRepo.value
       val releaseList = repo.listReleases().asList()
+      val tag = tagNameArg.value.parsed
       val releases = JavaConverters.collectionAsScalaIterable(releaseList).toList
-      val currentRelease = releases.find(x => x.getTagName == version.value)
+      val currentRelease = releases.find(x => x.getTagName == tag)
       if (!currentRelease.isDefined) {
-        throw new Exception(s"'${version.value}' tag not present on release page. Please release on github before publishing to bioconda.")
+        throw new Exception(s"'${tag}' tag not present on release page. Please release on github before publishing to bioconda.")
       }
       val assets = JavaConverters.collectionAsScalaIterable(currentRelease.getOrElse(new GHRelease).getAssets).toList
       val jarName = (assemblyJarName in assembly).value
@@ -145,20 +147,20 @@ object BiocondaPlugin extends AutoPlugin {
   private def createRecipe: Def.Initialize[Task[File]] = {
     Def.task {
       val recipe = new BiocondaRecipe(
-        name = (name in bioconda).value,
-        version = (version in bioconda).value,
+        name = (name in Bioconda).value,
+        version = (version in Bioconda).value,
         sourceUrl = biocondaSourceUrl.value,
         sourceSha256 = biocondaSha256Sum.value,
         runRequirements = biocondaRequirements.value,
-        homeUrl = (homepage in bioconda).value.getOrElse("").toString,
-        license = (licenses in bioconda).value.toList.last._1,
+        homeUrl = (homepage in Bioconda).value.getOrElse("").toString,
+        license = (licenses in Bioconda).value.toList.last._1,
         buildRequirements = biocondaBuildRequirements.value,
         summary = biocondaSummary.value,
         buildNumber = biocondaBuildNumber.value,
         notes = Some(biocondaNotes.value),
         defaultJavaOptions = biocondaDefaultJavaOptions.value
       )
-      val recipeDir = new File(biocondaRecipeDir.value, (name in bioconda).value)
+      val recipeDir = new File(biocondaRecipeDir.value, (name in Bioconda).value)
       recipe.createRecipe(recipeDir)
       recipeDir
     }
@@ -187,27 +189,25 @@ object BiocondaPlugin extends AutoPlugin {
   }
   private def defaultSummary: Def.Initialize[String] =
     Def.setting {
-      s"""This summary for ${(name in bioconda).value} is automatically generated.
-         |Please visit ${(homepage in bioconda).value} for more information about this program.
+      s"""This summary for ${(name in Bioconda).value} is automatically generated.
+         |Please visit ${(homepage in Bioconda).value} for more information about this program.
        """.stripMargin
     }
 
-  private def defaultNotes: Def.Initialize[String] = {
-    def javaOpts: String = {
-      val javaDefaults = biocondaDefaultJavaOptions.value
-      val builder = new StringBuilder
-      javaDefaults.foreach(x => builder.append(x + " "))
-      builder.toString().trim
-    }
-
+  private def defaultNotes: Def.Initialize[String] =
     Def.setting {
-      s"""${(name in bioconda).value} is Java program that comes with a custom wrapper shell script.
+      def javaOpts: String = {
+        val javaDefaults = biocondaDefaultJavaOptions.value
+        val builder = new StringBuilder
+        javaDefaults.foreach(x => builder.append(x + " "))
+        builder.toString().trim
+      }
+      s"""${(name in Bioconda).value} is Java program that comes with a custom wrapper shell script.
          |By default “${javaOpts}” is set in the wrapper.
          |If you want to overwrite it you can specify memory options directly after your binaries.
          |If you have _JAVA_OPTIONS set globally this will take precedence.
-         |For example run it with “${(name in bioconda).value} -Xms512m -Xmx1g”
+         |For example run it with “${(name in Bioconda).value} -Xms512m -Xmx1g”
          |
        """.stripMargin
-    }
   }
 }
