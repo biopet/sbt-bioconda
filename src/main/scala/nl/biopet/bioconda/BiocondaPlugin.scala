@@ -41,8 +41,9 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaBuildNumber := 0,
     biocondaRequirements := Seq("openjdk"),
     biocondaBuildRequirements := Seq(),
-    biocondaNotes := "",
-    biocondaSummary := ""
+    biocondaNotes := notes.value,
+    biocondaSummary := "",
+    biocondaDefaultJavaOptions := Seq()
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -154,7 +155,8 @@ object BiocondaPlugin extends AutoPlugin {
         buildRequirements = biocondaBuildRequirements.value,
         summary = biocondaSummary.value,
         buildNumber = biocondaBuildNumber.value,
-        notes = ""
+        notes = biocondaNotes.value,
+        defaultJavaOptions = biocondaDefaultJavaOptions.value
       )
       new File("/")
     }
@@ -180,5 +182,24 @@ object BiocondaPlugin extends AutoPlugin {
     branchList.foreach(x => branches.append(x.replaceFirst("\\*","").split("/").last.trim()))
     branches.toList.contains(branch)
 
+  }
+
+  private def notes: Def.Initialize[String] = {
+    def javaOpts: String = {
+      val javaDefaults = biocondaDefaultJavaOptions.value
+      val builder = new StringBuilder
+      javaDefaults.foreach(x => builder.append(x + " "))
+      builder.toString().trim
+    }
+
+    Def.setting {
+      s"""${(name in bioconda).value} is Java program that comes with a custom wrapper shell script.
+         |By default “${javaOpts}” is set in the wrapper.
+         |If you want to overwrite it you can specify memory options directly after your binaries.
+         |If you have _JAVA_OPTIONS set globally this will take precedence.
+         |For example run it with “${(name in bioconda).value} -Xms512m -Xmx1g”
+         |
+       """.stripMargin
+    }
   }
 }

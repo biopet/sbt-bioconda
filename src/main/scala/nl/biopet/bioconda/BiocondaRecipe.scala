@@ -11,6 +11,7 @@ class BiocondaRecipe(name: String,
                      homeUrl: String,
                      license: String,
                      summary: String,
+                     defaultJavaOptions: Seq[String],
                      buildNumber: Int = 0,
                      notes: String = "") {
 
@@ -57,7 +58,10 @@ class BiocondaRecipe(name: String,
     def script: String = {
       val wrapperStream =
         getClass.getResourceAsStream("nl/biopet/bioconda/wrapper.py")
-
+      val javaOpts = new StringBuilder
+      javaOpts.append("[")
+      defaultJavaOptions.foreach(x => javaOpts.append("'" + x + "',"))
+      javaOpts.append("]")
       s"""
          |#!/usr/bin/env python
          |#
@@ -79,7 +83,7 @@ class BiocondaRecipe(name: String,
          |
          |jar_file = '$fileName'
          |
-         |default_jvm_mem_opts = ['-Xms512m', '-Xmx2g']
+         |default_jvm_mem_opts = $javaOpts
          |
          |# !!! End of parameter section. No user-serviceable code below this line !!!
          |
