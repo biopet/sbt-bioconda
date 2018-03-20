@@ -33,7 +33,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaMainGitUrl := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master",
     biocondaUpdatedRepository := initBiocondaRepo.value,
-    biocondaUpdatedBranch := updateBranch.dependsOn(biocondaUpdatedRepository).value,
+    biocondaUpdatedBranch := updateBranch().dependsOn(biocondaUpdatedRepository).value,
     biocondaRepository := new File(target.value, "bioconda"),
     biocondaRecipeDir := new File(target.value, "conda-recipe"),
     biocondaSourceUrl := getSourceUrl.value,
@@ -41,8 +41,8 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaBuildNumber := 0,
     biocondaRequirements := Seq("openjdk"),
     biocondaBuildRequirements := Seq(),
-    biocondaNotes := notes.value,
-    biocondaSummary := "",
+    biocondaNotes := defaultNotes.value,
+    biocondaSummary := defaultSummary.value,
     biocondaDefaultJavaOptions := Seq()
   )
 
@@ -96,7 +96,7 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
 
-  private def updateBranch: Def.Initialize[Task[File]] = {
+  private def updateBranch(): Def.Initialize[Task[File]] = {
     Def.task {
       val git = GitKeys.gitRunner.value
       val s = streams.value
@@ -128,11 +128,11 @@ object BiocondaPlugin extends AutoPlugin {
       val repo = ghreleaseGetRepo.value
       val releaseList = repo.listReleases().asList()
       val releases = JavaConverters.collectionAsScalaIterable(releaseList).toList
-      val currentRelease = releases.find(x => x.getTagName() == version.value)
+      val currentRelease = releases.find(x => x.getTagName == version.value)
       if (!currentRelease.isDefined) {
         throw new Exception(s"'${version.value}' tag not present on release page. Please release on github before publishing to bioconda.")
       }
-      val assets = JavaConverters.collectionAsScalaIterable(currentRelease.getOrElse(new GHRelease).getAssets()).toList
+      val assets = JavaConverters.collectionAsScalaIterable(currentRelease.getOrElse(new GHRelease).getAssets).toList
       val jarName = (assemblyJarName in assembly).value
       val releaseJar = assets.find(x => x.getBrowserDownloadUrl.contains(jarName))
       if (!releaseJar.isDefined) {
@@ -183,8 +183,14 @@ object BiocondaPlugin extends AutoPlugin {
     branches.toList.contains(branch)
 
   }
+  private def defaultSummary: Def.Initialize[String] =
+    Def.setting {
+      s"""This summary for ${(name in bioconda).value} is automatically generated.
+         |Please visit ${(homepage in bioconda).value} for more information about this program.
+       """.stripMargin
+    }
 
-  private def notes: Def.Initialize[String] = {
+  private def defaultNotes: Def.Initialize[String] = {
     def javaOpts: String = {
       val javaDefaults = biocondaDefaultJavaOptions.value
       val builder = new StringBuilder
