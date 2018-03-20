@@ -4,11 +4,12 @@ import org.kohsuke.github
 import sbt.{Def, _}
 import Keys._
 import com.typesafe.sbt.GitPlugin
-import ohnosequences.sbt.SbtGithubReleasePlugin.autoImport.ghreleaseGetRepo
+//import ohnosequences.sbt.SbtGithubReleasePlugin.autoImport.
+import ohnosequences.sbt.GithubRelease.keys.{ghreleaseGetRepo, ghreleaseAssets}
 import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.GitRunner
 import GitKeys.{gitBranch, gitCurrentBranch, gitRemoteRepo}
-import org.kohsuke.github.GHRelease
+import org.kohsuke.github.{GHAsset, GHRelease}
 import sbt.internal.util.ManagedLogger
 
 import scala.collection.JavaConverters
@@ -33,6 +34,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaUpdatedBranch := updateBranch.dependsOn(biocondaUpdatedRepository).value,
     biocondaRepository := new File(target.value, "bioconda"),
     biocondaRecipeDir := new File(target.value, "conda-recipe"),
+    biocondaSourceUrl := getSourceUrl.value
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -105,15 +107,28 @@ object BiocondaPlugin extends AutoPlugin {
       local
     }
   }
-  private def getReleaseJar: Def.Initialize[Task[sbt.File]] =
+
+  private def getReleaseJar: Def.Initialize[String] =
+    Def.setting {
+      artifact.value.checksum.get.toString()
+
+      ""
+    }
+  private def getSourceUrl: Def.Initialize[Task[String]] =
     Def.task {
       val repo = ghreleaseGetRepo.value
       val releaseList = repo.listReleases().asList()
       val releases = JavaConverters.collectionAsScalaIterable(releaseList).toList
       val currentRelease = releases.find(x => x.getTagName() == version.value)
-      if (currentRelease.isDefined) {
-        JavaConverters.collectionAsScalaIterable(currentRelease.get.getAssets()).
+      if (!currentRelease.isDefined) {
+        throw new Exception(s"'${version.value}' tag not present on release page. Please release on github before publishing to bioconda.")
       }
+      val assets = JavaConverters.collectionAsScalaIterable(currentRelease.getOrElse(new GHRelease).getAssets()).toList
+      val releaseJar = assets.find(x => x.getBrowserDownloadUrl.contains(name.value))
+      if (!releaseJar.isDefined) {
+        throw new Exception (s"'")
+      }
+      releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl
       }
 
 
@@ -122,11 +137,11 @@ object BiocondaPlugin extends AutoPlugin {
       val recipe = new BiocondaRecipe(
         name = (name in bioconda).value,
         version = (version in bioconda).value,
-        sourceUrl = "",
+        sourceUrl = biocondaSourceUrl.value
         sourceSha256 = "",
         runRequirements = biocondaRequirements.value,
-        homeUrl = (homepage in bioconda).value,
-        license = licenses.value.toList.last._2,
+        homeUrl = (homepage in bioconda).value.getOrElse("").toString,
+        license = licenses.value.toList.last._1,
         buildRequirements = List(),
         summary = ""
       )
