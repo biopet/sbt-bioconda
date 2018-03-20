@@ -24,5 +24,5 @@ trait BiocondaKeys {
   lazy val biocondaBuildRequirements = settingKey[Seq[String]]("A list of build requirements for the tool")
   lazy val biocondaSourceUrl = settingKey[String]("The url the program can be downloaded from.")
   lazy val biocondaSha256Sum = settingKey[String]("The Sha256Sum in the bioconda recipe.")
-  lazy val biocondaJar =
+  lazy val biocondaJar = settingKey[sbt.File]("The jar that is uploaded to bioconda.")
 }

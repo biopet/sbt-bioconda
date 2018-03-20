@@ -5,13 +5,15 @@ import sbt.{Def, _}
 import Keys._
 import com.typesafe.sbt.GitPlugin
 //import ohnosequences.sbt.SbtGithubReleasePlugin.autoImport.
+import sbtassembly.AssemblyKeys.{assemblyJarName, assemblyOutputPath,assembly}
 import ohnosequences.sbt.GithubRelease.keys.{ghreleaseGetRepo, ghreleaseAssets}
 import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.GitRunner
 import GitKeys.{gitBranch, gitCurrentBranch, gitRemoteRepo}
 import org.kohsuke.github.{GHAsset, GHRelease}
 import sbt.internal.util.ManagedLogger
-
+import com.roundeights.hasher.Implicits._
+import scala.language.postfixOps
 import scala.collection.JavaConverters
 import scala.collection.mutable.ListBuffer
 
@@ -34,7 +36,8 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaUpdatedBranch := updateBranch.dependsOn(biocondaUpdatedRepository).value,
     biocondaRepository := new File(target.value, "bioconda"),
     biocondaRecipeDir := new File(target.value, "conda-recipe"),
-    biocondaSourceUrl := getSourceUrl.value
+    biocondaSourceUrl := getSourceUrl.value,
+    biocondaSha256Sum := getSha256Sum.value
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -108,12 +111,11 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
 
-  private def getReleaseJar: Def.Initialize[String] =
-    Def.setting {
-      artifact.value.checksum.get.toString()
-
-      ""
-    }
+  private def getSha256Sum: Def.Initialize[Task[String]] =
+    Def.task {
+      val jar: sbt.File = assemblyOutputPath.value
+      jar.sha256.hex
+    }.dependsOn(assembly)
   private def getSourceUrl: Def.Initialize[Task[String]] =
     Def.task {
       val repo = ghreleaseGetRepo.value
@@ -124,7 +126,7 @@ object BiocondaPlugin extends AutoPlugin {
         throw new Exception(s"'${version.value}' tag not present on release page. Please release on github before publishing to bioconda.")
       }
       val assets = JavaConverters.collectionAsScalaIterable(currentRelease.getOrElse(new GHRelease).getAssets()).toList
-      val releaseJar = assets.find(x => x.getBrowserDownloadUrl.contains(name.value))
+      val releaseJar = assets.find(x => x.getBrowserDownloadUrl.contains(assemblyJarName.value))
       if (!releaseJar.isDefined) {
         throw new Exception (s"'")
       }

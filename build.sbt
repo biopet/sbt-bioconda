@@ -76,6 +76,7 @@ releaseProcess := Seq[ReleaseStep](
 )
 libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
 libraryDependencies += "org.yaml" % "snakeyaml" % "1.20"
+libraryDependencies ++= Seq("com.roundeights" %% "hasher" % "1.2.0")
 libraryDependencies ++= Seq(
   Defaults.sbtPluginExtra(
     "ohnosequences" % "sbt-github-release" % "0.7.0",
@@ -86,5 +87,11 @@ libraryDependencies ++= Seq(
     "com.typesafe.sbt" % "sbt-git" % "0.9.3",
     (sbtBinaryVersion in pluginCrossBuild).value,
     (scalaBinaryVersion in pluginCrossBuild).value
+  ),
+  Defaults.sbtPluginExtra(
+    "com.eed3si9n" % "sbt-assembly" % "0.14.6",
+    (sbtBinaryVersion in pluginCrossBuild).value,
+    (scalaBinaryVersion in pluginCrossBuild).value
   )
+
 )
