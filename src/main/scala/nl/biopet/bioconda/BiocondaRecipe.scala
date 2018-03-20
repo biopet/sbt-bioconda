@@ -1,6 +1,7 @@
 package nl.biopet.bioconda
 
 import org.yaml.snakeyaml.Yaml
+import java.io.{File.PrintWriter}
 
 class BiocondaRecipe(name: String,
                      version: String,
@@ -13,10 +14,33 @@ class BiocondaRecipe(name: String,
                      summary: String,
                      defaultJavaOptions: Seq[String],
                      buildNumber: Int = 0,
-                     notes: String = "") {
+                     notes: Option[String] = None) {
 
   def fileName: String = sourceUrl.split("/").last
-  def wrapperFile: String = s"$name.py"
+  def wrapperFilename: String = s"$name.py"
+
+  def stringToFile(string: String, file: File):Unit = {
+    val writer = new PrintWriter(file)
+    writer.write(string)
+    writer.close()
+  }
+
+  def createRecipeFiles(dir: File): Unit = {
+    dir.mkdirs()
+    val buildSh = new File(dir, "build.sh")
+    val meta = new File(dir, "meta.yml")
+    val wrapper = new File(dir, wrapperFilename)
+    stringToFile(metaYaml,meta)
+    stringToFile(buildScript,buildSh)
+    stringToFile(wrapperScript,wrapper)
+  }
+
+  def createRecipe(dir: File): Unit = {
+    dir.mkdirs()
+    createRecipeFiles(dir)
+    //Also create a subdirectory with the version
+    createRecipeFiles(new File(dir,version))
+  }
 
   def metaYaml: String = {
     def yaml = new Yaml()
@@ -42,8 +66,14 @@ class BiocondaRecipe(name: String,
         "license" -> license,
         "summary" -> summary
       )
-    )
-
+    ) ++ {if(notes.isDefined){
+      Map("extra" -> Map(
+        "notes" -> notes.getOrElse("")
+      )
+      )
+    }
+        else Map()
+    }
 
     s"""# Based on OpenJDK recipe in conda-forge
        |# https://github.com/conda-forge/openjdk-feedstock/blob/master/recipe/meta.yaml
@@ -65,7 +95,7 @@ class BiocondaRecipe(name: String,
        |mkdir -p $$outdir
        |mkdir -p $$PREFIX/bin
        |cp $fileName $$outdir/$fileName
-       |cp $$RECIPE_DIR/${wrapperFile} $$outdir/$name
+       |cp $$RECIPE_DIR/${wrapperFilename} $$outdir/$name
      """.stripMargin
 
   def wrapperScript: String = {
