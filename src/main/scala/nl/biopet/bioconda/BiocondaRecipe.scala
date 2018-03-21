@@ -1,7 +1,9 @@
 package nl.biopet.bioconda
 
+import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.Yaml
 import java.io.{File, PrintWriter}
+import scala.collection.JavaConverters.seqAsJavaList
 
 class BiocondaRecipe(name: String,
                      version: String,
@@ -9,6 +11,7 @@ class BiocondaRecipe(name: String,
                      sourceSha256: String,
                      runRequirements: Seq[String],
                      buildRequirements: Seq[String],
+                     testCommands: Seq[String],
                      homeUrl: String,
                      license: String,
                      summary: String,
@@ -43,38 +46,21 @@ class BiocondaRecipe(name: String,
   }
 
   def metaYaml: String = {
-    def yaml = new Yaml()
-    def meta: Map[String, Any] =
-      Map(
-        "package" ->
-          Map(
-            "name" -> name,
-            "version" -> version
-          ),
-        "source" -> Map(
-          "url" -> sourceUrl,
-          "sha256" -> sourceSha256
-        ),
-        "build" -> Map(
-          "number" -> buildNumber
-        ),
-        "requirements" -> Map(
-          "run" -> { runRequirements ++ Seq("python=3") },
-          "build" -> buildRequirements
-        ),
-        "about" -> Map(
-          "home" -> homeUrl,
-          "license" -> license,
-          "summary" -> summary
-        )
-      ) ++ {
-        if (notes.isDefined) {
-          Map(
-            "extra" -> Map(
-              "notes" -> notes.getOrElse("")
-            ))
-        } else Map()
-      }
+    def yaml = new Yaml(new Constructor(classOf[BiocondaMetaYaml]))
+    def meta = new BiocondaMetaYaml
+
+    meta.package_info.name = name
+    meta.package_info.version = version
+    meta.source.url = sourceUrl
+    meta.source.sha256 = sourceSha256
+    meta.build.number = buildNumber
+    meta.requirements.run = seqAsJavaList[String](runRequirements ++ Seq("python=3"))
+    meta.requirements.build = seqAsJavaList[String](buildRequirements)
+    meta.about.home =homeUrl
+    meta.about.license = license
+    meta.about.summary = summary
+    meta.extra.notes = notes.getOrElse("")
+    meta.test.commands = seqAsJavaList[String](testCommands)
 
     s"""# Based on OpenJDK recipe in conda-forge
        |# https://github.com/conda-forge/openjdk-feedstock/blob/master/recipe/meta.yaml

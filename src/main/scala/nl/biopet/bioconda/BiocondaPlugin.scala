@@ -13,9 +13,12 @@ import GitKeys.{gitBranch, gitCurrentBranch, gitRemoteRepo}
 import org.kohsuke.github.{GHAsset, GHRelease}
 import sbt.internal.util.ManagedLogger
 import com.roundeights.hasher.Implicits._
+
 import scala.io.Source
 import org.yaml.snakeyaml.Yaml
 import java.io.FileInputStream
+
+import org.yaml.snakeyaml.constructor.Constructor
 
 import scala.language.postfixOps
 import scala.collection.JavaConverters
@@ -222,26 +225,28 @@ object BiocondaPlugin extends AutoPlugin {
     }
 
   private def getPublishedTags: Def.Initialize[Task[Seq[String]]] = {
+
     def getVersionFromYaml(metaYaml: File): String = {
-      val yaml = new Yaml()
+      def yaml = new Yaml(new Constructor(classOf[BiocondaMetaYaml]))
+
       val bla = new FileInputStream(metaYaml)
-      val meta = yaml.load[Map[String,Map[String,String]]](bla)
-      meta.get("package").get("version")
+      val meta: BiocondaMetaYaml = yaml.load(bla)
+      meta.package_info.version
     }
 
     Def
       .task {
         val recipes: File = new File(biocondaRepository.value, "recipes")
         val thisRecipe: File = new File(recipes, (name in Bioconda).value)
-        def tags: Seq[String] = {
-          if (thisRecipe.exists()) {
 
-            Seq()
-          } else
-            Seq()
+        def tags = new ArrayBuffer[String]
+
+        if (thisRecipe.exists()) {
+          thisRecipe.listFiles().find(x => x.base == "meta.yaml")
+
+          Seq()
         }
-
-        tags
+        tags.toSeq
       }
       .dependsOn(biocondaUpdatedBranch)
   }
