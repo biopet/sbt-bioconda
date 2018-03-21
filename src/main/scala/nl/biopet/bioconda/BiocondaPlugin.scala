@@ -5,17 +5,18 @@ import sbt.{Def, _}
 import Keys._
 import com.typesafe.sbt.GitPlugin
 import ohnosequences.sbt.SbtGithubReleasePlugin.tagNameArg
-import sbtassembly.AssemblyKeys.{assemblyJarName, assemblyOutputPath,assembly}
-import ohnosequences.sbt.GithubRelease.keys.{ghreleaseGetRepo}
+import sbtassembly.AssemblyKeys.{assembly, assemblyJarName, assemblyOutputPath}
+import ohnosequences.sbt.GithubRelease.keys.ghreleaseGetRepo
 import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.GitRunner
 import GitKeys.{gitBranch, gitCurrentBranch, gitRemoteRepo}
 import org.kohsuke.github.{GHAsset, GHRelease}
 import sbt.internal.util.ManagedLogger
 import com.roundeights.hasher.Implicits._
+
 import scala.language.postfixOps
 import scala.collection.JavaConverters
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 object BiocondaPlugin extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
@@ -36,7 +37,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaUpdatedBranch := updateBranch().dependsOn(biocondaUpdatedRepository).value,
     biocondaRepository := new File(target.value, "bioconda"),
     biocondaRecipeDir := new File(target.value, "recipes"),
-    biocondaSourceUrl := getSourceUrl.value,
+    biocondaSourceUrl := getSourceUrl("v0.1").value,
     biocondaSha256Sum := getSha256Sum.value,
     biocondaBuildNumber := 0,
     biocondaRequirements := Seq("openjdk"),
@@ -124,11 +125,10 @@ object BiocondaPlugin extends AutoPlugin {
       jar.sha256.hex
     }.dependsOn(assembly)
 
-  private def getSourceUrl: Def.Initialize[Task[String]] =
+  private def getSourceUrl(tag: String): Def.Initialize[Task[String]] =
     Def.task {
       val repo = ghreleaseGetRepo.value
       val releaseList = repo.listReleases().asList()
-      val tag = tagNameArg.value.parsed
       val releases = JavaConverters.collectionAsScalaIterable(releaseList).toList
       val currentRelease = releases.find(x => x.getTagName == tag)
       if (!currentRelease.isDefined) {
@@ -209,5 +209,16 @@ object BiocondaPlugin extends AutoPlugin {
          |For example run it with “${(name in Bioconda).value} -Xms512m -Xmx1g”
          |
        """.stripMargin
+  }
+
+  private def biocondaGetReleasedTags: Def.Initialize[Seq[String]] = {
+    Def.setting {
+      val repo = ghreleaseGetRepo.value
+      val releaseList = repo.listReleases().asList()
+      val releases = JavaConverters.collectionAsScalaIterable(releaseList).toList
+      val tags = new ArrayBuffer[String]()
+      releases.foreach(x => tags.append(x.getTagName))
+      tags
+    }
   }
 }
