@@ -13,6 +13,9 @@ import GitKeys.{gitBranch, gitCurrentBranch, gitRemoteRepo}
 import org.kohsuke.github.{GHAsset, GHRelease}
 import sbt.internal.util.ManagedLogger
 import com.roundeights.hasher.Implicits._
+import scala.io.Source
+import org.yaml.snakeyaml.Yaml
+import java.io.FileInputStream
 
 import scala.language.postfixOps
 import scala.collection.JavaConverters
@@ -211,7 +214,34 @@ object BiocondaPlugin extends AutoPlugin {
        """.stripMargin
   }
 
-  private def biocondaGetReleasedTags: Def.Initialize[Seq[String]] = {
+  private def getPublishedTags: Def.Initialize[Task[Seq[String]]] = {
+    def getVersionFromYaml(metaYaml: File): String = {
+      val yaml = new Yaml()
+      val bla = new FileInputStream(metaYaml)
+      val meta = yaml.load[Object](bla)
+
+      ""
+    }
+
+
+    Def.task {
+      val recipes: File = new File(biocondaRepository.value, "recipes")
+      val thisRecipe: File = new File (recipes, (name in Bioconda).value)
+      def tags: Seq[String] = {if (thisRecipe.exists()) {
+
+        Seq()
+      }
+      else
+        Seq()}
+
+      tags
+    }.dependsOn(biocondaUpdatedBranch)
+  }
+
+
+
+
+  private def getReleasedTags: Def.Initialize[Seq[String]] = {
     Def.setting {
       val repo = ghreleaseGetRepo.value
       val releaseList = repo.listReleases().asList()
