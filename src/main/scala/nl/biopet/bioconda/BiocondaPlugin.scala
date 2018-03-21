@@ -37,7 +37,9 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaMainGitUrl := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master",
     biocondaUpdatedRepository := initBiocondaRepo.value,
-    biocondaUpdatedBranch := updateBranch().dependsOn(biocondaUpdatedRepository).value,
+    biocondaUpdatedBranch := updateBranch()
+      .dependsOn(biocondaUpdatedRepository)
+      .value,
     biocondaRepository := new File(target.value, "bioconda"),
     biocondaRecipeDir := new File(target.value, "recipes"),
     biocondaSourceUrl := getSourceUrl("v0.1").value,
@@ -52,12 +54,12 @@ object BiocondaPlugin extends AutoPlugin {
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
-  )
-
+    )
 
   private def initBiocondaRepo: Def.Initialize[Task[File]] = {
     Def.task {
-      val initialized: Boolean = new File(biocondaRepository.value, ".git").exists()
+      val initialized: Boolean =
+        new File(biocondaRepository.value, ".git").exists()
       val git = GitKeys.gitRunner.value
       val s = streams.value
       val local = biocondaRepository.value
@@ -87,11 +89,9 @@ object BiocondaPlugin extends AutoPlugin {
 
       // Check if biocondaMainBranch exists. If not create it.
 
-
       if (branchExists(branch, local, git, s.log)) {
         git.apply("checkout", branch)(local, s.log)
-      }
-      else {
+      } else {
         git.apply("checkout", "-b", branch)(local, s.log)
       }
 
@@ -112,8 +112,7 @@ object BiocondaPlugin extends AutoPlugin {
       // Check if tool branch exists, create it otherwise.
       if (branchExists(branch, local, git, s.log)) {
         git.apply("checkout", branch)(local, s.log)
-      }
-      else {
+      } else {
         git.apply("checkout", "-b", branch)(local, s.log)
       }
       // Rebase tool branch on main branch
@@ -123,29 +122,36 @@ object BiocondaPlugin extends AutoPlugin {
   }
 
   private def getSha256Sum: Def.Initialize[Task[String]] =
-    Def.task {
-      val jar: sbt.File = (assemblyOutputPath in assembly).value
-      jar.sha256.hex
-    }.dependsOn(assembly)
+    Def
+      .task {
+        val jar: sbt.File = (assemblyOutputPath in assembly).value
+        jar.sha256.hex
+      }
+      .dependsOn(assembly)
 
   private def getSourceUrl(tag: String): Def.Initialize[Task[String]] =
     Def.task {
       val repo = ghreleaseGetRepo.value
       val releaseList = repo.listReleases().asList()
-      val releases = JavaConverters.collectionAsScalaIterable(releaseList).toList
+      val releases =
+        JavaConverters.collectionAsScalaIterable(releaseList).toList
       val currentRelease = releases.find(x => x.getTagName == tag)
       if (!currentRelease.isDefined) {
-        throw new Exception(s"'${tag}' tag not present on release page. Please release on github before publishing to bioconda.")
+        throw new Exception(
+          s"'${tag}' tag not present on release page. Please release on github before publishing to bioconda.")
       }
-      val assets = JavaConverters.collectionAsScalaIterable(currentRelease.getOrElse(new GHRelease).getAssets).toList
+      val assets = JavaConverters
+        .collectionAsScalaIterable(
+          currentRelease.getOrElse(new GHRelease).getAssets)
+        .toList
       val jarName = (assemblyJarName in assembly).value
-      val releaseJar = assets.find(x => x.getBrowserDownloadUrl.contains(jarName))
+      val releaseJar =
+        assets.find(x => x.getBrowserDownloadUrl.contains(jarName))
       if (!releaseJar.isDefined) {
-        throw new Exception (s"'")
+        throw new Exception(s"'")
       }
       releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl
-      }
-
+    }
 
   private def createRecipe: Def.Initialize[Task[File]] = {
     Def.task {
@@ -163,7 +169,8 @@ object BiocondaPlugin extends AutoPlugin {
         notes = Some(biocondaNotes.value),
         defaultJavaOptions = biocondaDefaultJavaOptions.value
       )
-      val recipeDir = new File(biocondaRecipeDir.value, (name in Bioconda).value)
+      val recipeDir =
+        new File(biocondaRecipeDir.value, (name in Bioconda).value)
       recipe.createRecipe(recipeDir)
       recipeDir
     }
@@ -172,8 +179,7 @@ object BiocondaPlugin extends AutoPlugin {
   def branchExists(branch: String,
                    repo: File,
                    git: GitRunner,
-                   log: ManagedLogger
-                   ): Boolean = {
+                   log: ManagedLogger): Boolean = {
     // TODO: Find a git command that just returns branches as a list. (Without * in front of the branch you are on)
 
     // Without "--no-color" scala doesn't match the strings properly. Color matters in string comparison!
@@ -186,7 +192,8 @@ object BiocondaPlugin extends AutoPlugin {
     // Remove that annonoying *
     // Split on / and get the last item(remotes/origin/branch) => branch
     // Trim away all spaces
-    branchList.foreach(x => branches.append(x.replaceFirst("\\*","").split("/").last.trim()))
+    branchList.foreach(x =>
+      branches.append(x.replaceFirst("\\*", "").split("/").last.trim()))
     branches.toList.contains(branch)
 
   }
@@ -212,40 +219,39 @@ object BiocondaPlugin extends AutoPlugin {
          |For example run it with “${(name in Bioconda).value} -Xms512m -Xmx1g”
          |
        """.stripMargin
-  }
+    }
 
   private def getPublishedTags: Def.Initialize[Task[Seq[String]]] = {
     def getVersionFromYaml(metaYaml: File): String = {
       val yaml = new Yaml()
       val bla = new FileInputStream(metaYaml)
-      val meta = yaml.load[Object](bla)
-
-      ""
+      val meta = yaml.load[Map[String,Map[String,String]]](bla)
+      meta.get("package").get("version")
     }
 
+    Def
+      .task {
+        val recipes: File = new File(biocondaRepository.value, "recipes")
+        val thisRecipe: File = new File(recipes, (name in Bioconda).value)
+        def tags: Seq[String] = {
+          if (thisRecipe.exists()) {
 
-    Def.task {
-      val recipes: File = new File(biocondaRepository.value, "recipes")
-      val thisRecipe: File = new File (recipes, (name in Bioconda).value)
-      def tags: Seq[String] = {if (thisRecipe.exists()) {
+            Seq()
+          } else
+            Seq()
+        }
 
-        Seq()
+        tags
       }
-      else
-        Seq()}
-
-      tags
-    }.dependsOn(biocondaUpdatedBranch)
+      .dependsOn(biocondaUpdatedBranch)
   }
-
-
-
 
   private def getReleasedTags: Def.Initialize[Seq[String]] = {
     Def.setting {
       val repo = ghreleaseGetRepo.value
       val releaseList = repo.listReleases().asList()
-      val releases = JavaConverters.collectionAsScalaIterable(releaseList).toList
+      val releases =
+        JavaConverters.collectionAsScalaIterable(releaseList).toList
       val tags = new ArrayBuffer[String]()
       releases.foreach(x => tags.append(x.getTagName))
       tags

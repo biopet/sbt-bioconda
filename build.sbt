@@ -93,5 +93,4 @@ libraryDependencies ++= Seq(
     (sbtBinaryVersion in pluginCrossBuild).value,
     (scalaBinaryVersion in pluginCrossBuild).value
   )
-
 )

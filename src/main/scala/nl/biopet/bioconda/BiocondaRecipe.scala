@@ -1,7 +1,7 @@
 package nl.biopet.bioconda
 
 import org.yaml.snakeyaml.Yaml
-import java.io.{File,PrintWriter}
+import java.io.{File, PrintWriter}
 
 class BiocondaRecipe(name: String,
                      version: String,
@@ -19,7 +19,7 @@ class BiocondaRecipe(name: String,
   def fileName: String = sourceUrl.split("/").last
   def wrapperFilename: String = s"$name.py"
 
-  def stringToFile(string: String, file: File):Unit = {
+  def stringToFile(string: String, file: File): Unit = {
     val writer = new PrintWriter(file)
     writer.write(string)
     writer.close()
@@ -30,50 +30,51 @@ class BiocondaRecipe(name: String,
     val buildSh = new File(dir, "build.sh")
     val meta = new File(dir, "meta.yml")
     val wrapper = new File(dir, wrapperFilename)
-    stringToFile(metaYaml,meta)
-    stringToFile(buildScript,buildSh)
-    stringToFile(wrapperScript,wrapper)
+    stringToFile(metaYaml, meta)
+    stringToFile(buildScript, buildSh)
+    stringToFile(wrapperScript, wrapper)
   }
 
   def createRecipe(dir: File): Unit = {
     dir.mkdirs()
     createRecipeFiles(dir)
     //Also create a subdirectory with the version
-    createRecipeFiles(new File(dir,version))
+    createRecipeFiles(new File(dir, version))
   }
 
   def metaYaml: String = {
     def yaml = new Yaml()
-    def meta: Map[String,Any] = Map(
-      "package" ->
-        Map(
-          "name" -> name,
-          "version" -> version
+    def meta: Map[String, Any] =
+      Map(
+        "package" ->
+          Map(
+            "name" -> name,
+            "version" -> version
+          ),
+        "source" -> Map(
+          "url" -> sourceUrl,
+          "sha256" -> sourceSha256
         ),
-      "source" -> Map (
-        "url" -> sourceUrl,
-        "sha256" -> sourceSha256
-      ),
-      "build" -> Map(
-        "number" -> buildNumber
-      ),
-      "requirements" -> Map(
-        "run" -> {runRequirements ++ Seq("python=3")},
-        "build" -> buildRequirements
-      ),
-      "about" -> Map(
-        "home" -> homeUrl,
-        "license" -> license,
-        "summary" -> summary
-      )
-    ) ++ {if(notes.isDefined){
-      Map("extra" -> Map(
-        "notes" -> notes.getOrElse("")
-      )
-      )
-    }
-        else Map()
-    }
+        "build" -> Map(
+          "number" -> buildNumber
+        ),
+        "requirements" -> Map(
+          "run" -> { runRequirements ++ Seq("python=3") },
+          "build" -> buildRequirements
+        ),
+        "about" -> Map(
+          "home" -> homeUrl,
+          "license" -> license,
+          "summary" -> summary
+        )
+      ) ++ {
+        if (notes.isDefined) {
+          Map(
+            "extra" -> Map(
+              "notes" -> notes.getOrElse("")
+            ))
+        } else Map()
+      }
 
     s"""# Based on OpenJDK recipe in conda-forge
        |# https://github.com/conda-forge/openjdk-feedstock/blob/master/recipe/meta.yaml
@@ -96,13 +97,13 @@ class BiocondaRecipe(name: String,
      """.stripMargin
 
   def wrapperScript: String = {
-      val wrapperStream =
-        getClass.getResourceAsStream("nl/biopet/bioconda/wrapper.py")
-      val javaOpts = new StringBuilder
-      javaOpts.append("[")
-      defaultJavaOptions.foreach(x => javaOpts.append("'" + x + "',"))
-      javaOpts.append("]")
-      s"""
+    val wrapperStream =
+      getClass.getResourceAsStream("nl/biopet/bioconda/wrapper.py")
+    val javaOpts = new StringBuilder
+    javaOpts.append("[")
+    defaultJavaOptions.foreach(x => javaOpts.append("'" + x + "',"))
+    javaOpts.append("]")
+    s"""
          |#!/usr/bin/env python
          |#
          |# Wrapper script for starting the $name JAR package
@@ -129,7 +130,6 @@ class BiocondaRecipe(name: String,
          |# !!! End of parameter section. No user-serviceable code below this line !!!
          |
        """.stripMargin + scala.io.Source.fromInputStream(wrapperStream).mkString
-    }
-
+  }
 
 }
