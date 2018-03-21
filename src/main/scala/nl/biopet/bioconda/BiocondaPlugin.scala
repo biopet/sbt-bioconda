@@ -233,6 +233,17 @@ object BiocondaPlugin extends AutoPlugin {
       val meta: BiocondaMetaYaml = yaml.load(bla)
       meta.package_info.version
     }
+    def crawlRecipe(recipe: File): Seq[String] = {
+      val files = recipe.listFiles()
+      for (file <- files){
+        if (file.isDirectory) {
+          crawlRecipe(file)
+        }
+        if (file.base == meta.yaml){
+
+        }
+      }
+    }
 
     Def
       .task {
