@@ -28,14 +28,11 @@ trait BiocondaKeys {
     settingKey[Seq[String]]("A list of requirements for the tool")
   lazy val biocondaBuildRequirements =
     settingKey[Seq[String]]("A list of build requirements for the tool")
-  lazy val biocondaSourceUrl =
-    taskKey[String]("The url the program can be downloaded from.")
-  lazy val biocondaSha256Sum =
-    taskKey[String]("The Sha256Sum in the bioconda recipe.")
   lazy val biocondaBuildNumber = settingKey[Int]("The build number")
   lazy val biocondaSummary =
     settingKey[String]("The summary describing the program")
   lazy val biocondaNotes = settingKey[String]("Usage notes for the program")
   lazy val biocondaDefaultJavaOptions = settingKey[Seq[String]](
     "The default java options for the program when started with the wrapperscript.")
+  lazy val biocondaTestCommands = settingKey[Seq[String]]("The commands that are used to test whether the program was succesfuly installed with conda.")
 }

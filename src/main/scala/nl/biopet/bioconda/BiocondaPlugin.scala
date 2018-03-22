@@ -6,7 +6,7 @@ import Keys._
 import com.typesafe.sbt.GitPlugin
 import ohnosequences.sbt.SbtGithubReleasePlugin.tagNameArg
 import sbtassembly.AssemblyKeys.{assembly, assemblyJarName, assemblyOutputPath}
-import ohnosequences.sbt.GithubRelease.keys.ghreleaseGetRepo
+import ohnosequences.sbt.GithubRelease.keys.{ghreleaseGetRepo,TagName}
 import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.GitRunner
 import GitKeys.{gitBranch, gitCurrentBranch, gitRemoteRepo}
@@ -45,8 +45,6 @@ object BiocondaPlugin extends AutoPlugin {
       .value,
     biocondaRepository := new File(target.value, "bioconda"),
     biocondaRecipeDir := new File(target.value, "recipes"),
-    biocondaSourceUrl := getSourceUrl("v0.1").value,
-    biocondaSha256Sum := getSha256Sum.value,
     biocondaBuildNumber := 0,
     biocondaRequirements := Seq("openjdk"),
     biocondaBuildRequirements := Seq(),
@@ -124,15 +122,14 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
 
-  private def getSha256Sum: Def.Initialize[Task[String]] =
-    Def
-      .task {
-        val jar: sbt.File = (assemblyOutputPath in assembly).value
-        jar.sha256.hex
-      }
-      .dependsOn(assembly)
+  private def getSha256SumFromDownload(url: String): String = {
+    val jar = scala.io.Source.fromURL(url)
+    jar.sha256.hex
+  }
 
-  private def getSourceUrl(tag: String): Def.Initialize[Task[String]] =
+
+
+  private def getSourceUrl(tag: TagName): Def.Initialize[Task[String]] =
     Def.task {
       val repo = ghreleaseGetRepo.value
       val releaseList = repo.listReleases().asList()
@@ -156,26 +153,28 @@ object BiocondaPlugin extends AutoPlugin {
       releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl
     }
 
-  private def createRecipe: Def.Initialize[Task[File]] = {
+  private def createRecipe(tag: TagName, dir: File): Def.Initialize[Task[File]] = {
     Def.task {
+      val sourceUrl = getSourceUrl(tag).value
       val recipe = new BiocondaRecipe(
         name = (name in Bioconda).value,
-        version = (version in Bioconda).value,
-        sourceUrl = biocondaSourceUrl.value,
-        sourceSha256 = biocondaSha256Sum.value,
+        //Hardcoded "v" prefix here.
+        version = tag.stripPrefix("v"),
+        sourceUrl = sourceUrl,
+        sourceSha256 = getSha256SumFromDownload(sourceUrl),
         runRequirements = biocondaRequirements.value,
         homeUrl = (homepage in Bioconda).value.getOrElse("").toString,
-        license = (licenses in Bioconda).value.toList.last._1,
+        license = (licenses in Bioconda).value.toList.head._1,
         buildRequirements = biocondaBuildRequirements.value,
         summary = biocondaSummary.value,
         buildNumber = biocondaBuildNumber.value,
         notes = Some(biocondaNotes.value),
-        defaultJavaOptions = biocondaDefaultJavaOptions.value
+        defaultJavaOptions = biocondaDefaultJavaOptions.value,
+        testCommands = biocondaTestCommands.value
       )
-      val recipeDir =
-        new File(biocondaRecipeDir.value, (name in Bioconda).value)
-      recipe.createRecipe(recipeDir)
-      recipeDir
+      dir.mkdirs()
+      recipe.createRecipeFiles(dir)
+      dir
     }
   }
 
