@@ -1,6 +1,6 @@
 package nl.biopet.bioconda
 
-import java.io.FileInputStream
+import java.io.{FileInputStream, PrintWriter}
 
 import com.roundeights.hasher.Implicits._
 import com.typesafe.sbt.GitPlugin
@@ -124,7 +124,11 @@ object BiocondaPlugin extends AutoPlugin {
 
   private def getSha256SumFromDownload(url: String): String = {
     val jar = scala.io.Source.fromURL(url)
-    jar.bufferedReader().sha256.hex
+    val tmp = java.io.File.createTempFile("bioconda",".jar")
+    val writer = new PrintWriter(tmp)
+    jar.getLines().foreach(line => writer.write(line))
+    writer.close()
+    tmp.sha256.hex
   }
 
 
@@ -154,6 +158,7 @@ object BiocondaPlugin extends AutoPlugin {
     // Tags that are released but not in bioconda yet should be published
     val toBePublishedTags = releasedTags.filter(tag => !publishedTags.contains(tag))
     val repo = ghreleaseGetRepo.value
+    val log = streams.value.log
     // Some sbt magic here. We initialize a task that returns the recipe dir.
     // We add dependencies to this task based on the tags
     for (tag <- toBePublishedTags) {
@@ -162,14 +167,14 @@ object BiocondaPlugin extends AutoPlugin {
       val publishDir = new File(biocondaRecipeDir.value, versionNumber)
       val sourceUrl = getSourceUrl(tag,repo)
       if (sourceUrl.isEmpty) {
-        streams.value.log.error(s"No released jar for tag: $tag. Skipping.")
+        log.error(s"No released jar for tag: $tag. Skipping.")
       }
       else {
         val recipe = new BiocondaRecipe(
           name = (name in Bioconda).value,
           //Hardcoded "v" prefix here.
           version = versionNumber,
-          sourceUrl = sourceUrl,
+          sourceUrl = sourceUrl.get,
           sourceSha256 = getSha256SumFromDownload(sourceUrl.get),
           runRequirements = biocondaRequirements.value,
           homeUrl = (homepage in Bioconda).value.getOrElse("").toString,
@@ -192,18 +197,19 @@ object BiocondaPlugin extends AutoPlugin {
     val releasedTags: Seq[TagName] = getReleasedTags.value
     val tag = releasedTags.sortBy(tag => tag.stripPrefix("v")).headOption.getOrElse("No version")
     val repo = ghreleaseGetRepo.value
+    val log = streams.value.log
     val versionNumber = tag.stripPrefix("v")
     val publishDir = biocondaRecipeDir.value
     val sourceUrl = getSourceUrl(tag,repo)
     if (sourceUrl.isEmpty) {
-      streams.value.log.error(s"No released jar for tag: $tag. Skipping.")
+      log.error(s"No released jar for tag: $tag. Skipping.")
     }
     else {
       val recipe = new BiocondaRecipe(
         name = (name in Bioconda).value,
         //Hardcoded "v" prefix here.
         version = versionNumber,
-        sourceUrl = sourceUrl,
+        sourceUrl = sourceUrl.get,
         sourceSha256 = getSha256SumFromDownload(sourceUrl.get),
         runRequirements = biocondaRequirements.value,
         homeUrl = (homepage in Bioconda).value.getOrElse("").toString,
