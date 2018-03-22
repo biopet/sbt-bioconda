@@ -12,6 +12,7 @@ import org.kohsuke.github.{GHAsset, GHRelease}
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import sbt.Keys._
+import sbt.Scoped.AnyInitTask
 import sbt.internal.util.ManagedLogger
 import sbt.{Def, _}
 
@@ -48,7 +49,9 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaDefaultJavaOptions := Seq(),
     biocondaCreateVersionRecipes := createVersionRecipes.value,
     biocondaCreateLatestRecipe := createLatestRecipes.value,
-    biocondaCreateRecipes := createLatestRecipes.dependsOn(createVersionRecipes).value
+    biocondaCreateRecipes := createLatestRecipes.dependsOn(createVersionRecipes).value,
+    biocondaReleasedTags := getReleasedTags.value,
+    biocondaPublishedTags := getPublishedTags.value
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -150,25 +153,28 @@ object BiocondaPlugin extends AutoPlugin {
       releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl
     }
 
-  private def createVersionRecipes: Def.Initialize[Task[File]] = Def.task {
-    val publishedTags: Seq[TagName] = getPublishedTags.value
-    val releasedTags: Seq[TagName] = getReleasedTags.value
+  private def createVersionRecipes: Def.Initialize[Task[File]] = Def.taskDyn {
+    val publishedTags: Seq[TagName] = biocondaPublishedTags.value
+    val releasedTags: Seq[TagName] = biocondaReleasedTags.value
     // Tags that are released but not in bioconda yet should be published
-    val toBePublishedTags = releasedTags.filter(tag => publishedTags.contains(tag))
+    val toBePublishedTags = releasedTags.filter(tag => !publishedTags.contains(tag))
+
+    // Some sbt magic here. We initialize a task that returns the recipe dir.
+    // We add dependencies to this task based on the tags
+    var task: Def.Initialize[Task[File]] = Def.task {biocondaRecipeDir.value}
     for (tag <- toBePublishedTags) {
       // Hardcoded "v".
       val version = tag.stripPrefix("v")
       val publishDir = new File(biocondaRecipeDir.value, version)
-      createRecipe(tag,publishDir).value
+      task = task.dependsOn(createRecipe(tag,publishDir))
     }
-    biocondaRecipeDir.value
+    task.dependsOn(biocondaUpdatedBranch)
   }
 
-  private def createLatestRecipes: Def.Initialize[Task[File]] = Def.task {
-    val releasedTags: Seq[TagName] = getReleasedTags.value
+  private def createLatestRecipes: Def.Initialize[Task[File]] = Def.taskDyn {
+    val releasedTags: Seq[TagName] = biocondaReleasedTags.value
     val latestRelease = releasedTags.sortBy(tag => tag.stripPrefix("v")).head
-    createRecipe(latestRelease, biocondaRecipeDir.value)
-    biocondaRecipeDir.value
+    Def.task {biocondaRecipeDir.value}.dependsOn(biocondaUpdatedBranch,createRecipe(latestRelease, biocondaRecipeDir.value))
   }
 
   private def createRecipe(tag: TagName, dir: File): Def.Initialize[Task[File]] = {
