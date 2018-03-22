@@ -224,25 +224,28 @@ object BiocondaPlugin extends AutoPlugin {
        """.stripMargin
     }
 
+  def getVersionFromYaml(metaYaml: File): String = {
+    def yaml = new Yaml(new Constructor(classOf[BiocondaMetaYaml]))
+
+    val bla = new FileInputStream(metaYaml)
+    val meta: BiocondaMetaYaml = yaml.load(bla)
+    meta.package_info.version
+  }
+
   private def getPublishedTags: Def.Initialize[Task[Seq[String]]] = {
 
-    def getVersionFromYaml(metaYaml: File): String = {
-      def yaml = new Yaml(new Constructor(classOf[BiocondaMetaYaml]))
-
-      val bla = new FileInputStream(metaYaml)
-      val meta: BiocondaMetaYaml = yaml.load(bla)
-      meta.package_info.version
-    }
-    def crawlRecipe(recipe: File): Seq[String] = {
+    def crawlRecipe(recipe: File): Seq[File] = {
       val files = recipe.listFiles()
+      val yamls = new ArrayBuffer[File]()
       for (file <- files){
         if (file.isDirectory) {
-          crawlRecipe(file)
+          yamls ++= crawlRecipe(file)
         }
-        if (file.base == meta.yaml){
-
+        if (file.base == "meta.yaml"){
+          yamls.append(file)
         }
       }
+      yamls
     }
 
     Def
@@ -253,11 +256,12 @@ object BiocondaPlugin extends AutoPlugin {
         def tags = new ArrayBuffer[String]
 
         if (thisRecipe.exists()) {
-          thisRecipe.listFiles().find(x => x.base == "meta.yaml")
-
-          Seq()
+          val metaYamls = crawlRecipe(thisRecipe)
+          // Hardcoded "v" prefix here. Is the standard in github release plugin.
+          // But not a very nice way of doing it.
+          metaYamls.foreach(x => tags.append("v" + getVersionFromYaml(x)))
         }
-        tags.toSeq
+          tags.toSeq
       }
       .dependsOn(biocondaUpdatedBranch)
   }
