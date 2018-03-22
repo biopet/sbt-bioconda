@@ -31,7 +31,7 @@ object BiocondaPlugin extends AutoPlugin {
   import autoImport._
 
   override def projectSettings: Seq[Setting[_]] = Def.settings(
-    biocondaBranch := normalizedName.value,
+    biocondaBranch := (normalizedName in Bioconda).value,
     biocondaMainGitUrl := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master",
     biocondaUpdatedRepository := initBiocondaRepo.value,
@@ -130,9 +130,9 @@ object BiocondaPlugin extends AutoPlugin {
       val releases =
         JavaConverters.collectionAsScalaIterable(releaseList).toList
       val currentRelease = releases.find(x => x.getTagName == tag)
-      if (!currentRelease.isDefined) {
+      if (currentRelease.isEmpty) {
         throw new Exception(
-          s"'${tag}' tag not present on release page. Please release on github before publishing to bioconda.")
+          s"'$tag' tag not present on release page. Please release on github before publishing to bioconda.")
       }
       val assets = JavaConverters
         .collectionAsScalaIterable(
@@ -141,7 +141,7 @@ object BiocondaPlugin extends AutoPlugin {
       val releaseJar =
         // Finds all jars. This assumes only one jar is released.
         assets.find(x => x.getBrowserDownloadUrl.contains(".jar"))
-      if (!releaseJar.isDefined) {
+      if (releaseJar.isEmpty) {
         throw new Exception(s"No .jar files found for this release")
       }
       releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl
@@ -209,7 +209,7 @@ object BiocondaPlugin extends AutoPlugin {
         builder.toString().trim
       }
       s"""${(name in Bioconda).value} is Java program that comes with a custom wrapper shell script.
-         |By default “${javaOpts}” is set in the wrapper.
+         |By default “$javaOpts” is set in the wrapper.
          |If you want to overwrite it you can specify memory options directly after your binaries.
          |If you have _JAVA_OPTIONS set globally this will take precedence.
          |For example run it with “${(name in Bioconda).value} -Xms512m -Xmx1g”
@@ -254,7 +254,7 @@ object BiocondaPlugin extends AutoPlugin {
           // But not a very nice way of doing it.
           metaYamls.foreach(x => tags.append("v" + getVersionFromYaml(x)))
         }
-          tags.toSeq
+          tags.toSeq.distinct
       }
       .dependsOn(biocondaUpdatedBranch)
   }
