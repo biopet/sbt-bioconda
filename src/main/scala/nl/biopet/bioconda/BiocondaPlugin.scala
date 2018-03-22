@@ -45,7 +45,10 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaBuildRequirements := Seq(),
     biocondaNotes := defaultNotes.value,
     biocondaSummary := defaultSummary.value,
-    biocondaDefaultJavaOptions := Seq()
+    biocondaDefaultJavaOptions := Seq(),
+    biocondaCreateVersionRecipes := createVersionRecipes.value,
+    biocondaCreateLatestRecipe := createLatestRecipes.value,
+    biocondaCreateRecipes := createLatestRecipes.dependsOn(createVersionRecipes).value
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -147,6 +150,27 @@ object BiocondaPlugin extends AutoPlugin {
       releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl
     }
 
+  private def createVersionRecipes: Def.Initialize[Task[File]] = Def.task {
+    val publishedTags: Seq[TagName] = getPublishedTags.value
+    val releasedTags: Seq[TagName] = getReleasedTags.value
+    // Tags that are released but not in bioconda yet should be published
+    val toBePublishedTags = releasedTags.filter(tag => publishedTags.contains(tag))
+    for (tag <- toBePublishedTags) {
+      // Hardcoded "v".
+      val version = tag.stripPrefix("v")
+      val publishDir = new File(biocondaRecipeDir.value, version)
+      createRecipe(tag,publishDir).value
+    }
+    biocondaRecipeDir.value
+  }
+
+  private def createLatestRecipes: Def.Initialize[Task[File]] = Def.task {
+    val releasedTags: Seq[TagName] = getReleasedTags.value
+    val latestRelease = releasedTags.sortBy(tag => tag.stripPrefix("v")).head
+    createRecipe(latestRelease, biocondaRecipeDir.value)
+    biocondaRecipeDir.value
+  }
+
   private def createRecipe(tag: TagName, dir: File): Def.Initialize[Task[File]] = {
     Def.task {
       val sourceUrl = getSourceUrl(tag).value
@@ -225,7 +249,7 @@ object BiocondaPlugin extends AutoPlugin {
     meta.package_info.version
   }
 
-  private def getPublishedTags: Def.Initialize[Task[Seq[String]]] = {
+  private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
 
     def crawlRecipe(recipe: File): Seq[File] = {
       val files = recipe.listFiles()
@@ -259,13 +283,13 @@ object BiocondaPlugin extends AutoPlugin {
       .dependsOn(biocondaUpdatedBranch)
   }
 
-  private def getReleasedTags: Def.Initialize[Task[Seq[String]]] = {
+  private def getReleasedTags: Def.Initialize[Task[Seq[TagName]]] = {
     Def.task {
       val repo = ghreleaseGetRepo.value
       val releaseList = repo.listReleases().asList()
       val releases =
         JavaConverters.collectionAsScalaIterable(releaseList).toList
-      val tags = new ArrayBuffer[String]()
+      val tags = new ArrayBuffer[TagName]()
       releases.foreach(x => tags.append(x.getTagName))
       tags
     }
