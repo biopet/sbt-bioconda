@@ -8,7 +8,7 @@ import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.GitRunner
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
 import ohnosequences.sbt.SbtGithubReleasePlugin
-import org.kohsuke.github.{GHAsset, GHRelease}
+import org.kohsuke.github.{GHAsset, GHRelease, GHRepository}
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import sbt.Keys._
@@ -51,7 +51,8 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaCreateLatestRecipe := createLatestRecipes.value,
     biocondaCreateRecipes := createLatestRecipes.dependsOn(createVersionRecipes).value,
     biocondaReleasedTags := getReleasedTags.value,
-    biocondaPublishedTags := getPublishedTags.value
+    biocondaPublishedTags := getPublishedTags.value,
+    biocondaLicense := (licenses in Bioconda).value.toList.head._1
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -129,66 +130,49 @@ object BiocondaPlugin extends AutoPlugin {
 
 
 
-  private def getSourceUrl(tag: TagName): Def.Initialize[Task[String]] =
-    Def.task {
-      val repo = ghreleaseGetRepo.value
-      val releaseList = repo.listReleases().asList()
-      val releases =
-        JavaConverters.collectionAsScalaIterable(releaseList).toList
-      val currentRelease = releases.find(x => x.getTagName == tag)
-      if (currentRelease.isEmpty) {
-        throw new Exception(
-          s"'$tag' tag not present on release page. Please release on github before publishing to bioconda.")
-      }
-      val assets = JavaConverters
-        .collectionAsScalaIterable(
-          currentRelease.getOrElse(new GHRelease).getAssets)
-        .toList
-      val releaseJar =
-        // Finds all jars. This assumes only one jar is released.
-        assets.find(x => x.getBrowserDownloadUrl.contains(".jar"))
-      if (releaseJar.isEmpty) {
-        throw new Exception(s"No .jar files found for this release")
-      }
-      releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl
+  private def getSourceUrl(tag: TagName, repo: GHRepository): String = {
+    val releaseList = repo.listReleases().asList()
+    val releases =
+      JavaConverters.collectionAsScalaIterable(releaseList).toList
+    val currentRelease = releases.find(x => x.getTagName == tag)
+    if (currentRelease.isEmpty) {
+      throw new Exception(
+        s"'$tag' tag not present on release page. Please release on github before publishing to bioconda.")
     }
-
-  private def createVersionRecipes: Def.Initialize[Task[File]] = Def.taskDyn {
+    val assets = JavaConverters
+      .collectionAsScalaIterable(
+        currentRelease.getOrElse(new GHRelease).getAssets)
+      .toList
+    val releaseJar =
+    // Finds all jars. This assumes only one jar is released.
+      assets.find(x => x.getBrowserDownloadUrl.contains(".jar"))
+    if (releaseJar.isEmpty) {
+      throw new Exception(s"No .jar files found for this release")
+    }
+    releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl
+  }
+  private def createVersionRecipes: Def.Initialize[Task[File]] = Def.task {
     val publishedTags: Seq[TagName] = biocondaPublishedTags.value
     val releasedTags: Seq[TagName] = biocondaReleasedTags.value
     // Tags that are released but not in bioconda yet should be published
     val toBePublishedTags = releasedTags.filter(tag => !publishedTags.contains(tag))
-
+    val repo = ghreleaseGetRepo.value
     // Some sbt magic here. We initialize a task that returns the recipe dir.
     // We add dependencies to this task based on the tags
-    var task: Def.Initialize[Task[File]] = Def.task {biocondaRecipeDir.value}
     for (tag <- toBePublishedTags) {
       // Hardcoded "v".
-      val version = tag.stripPrefix("v")
-      val publishDir = new File(biocondaRecipeDir.value, version)
-      task = task.dependsOn(createRecipe(tag,publishDir))
-    }
-    task.dependsOn(biocondaUpdatedBranch)
-  }
-
-  private def createLatestRecipes: Def.Initialize[Task[File]] = Def.taskDyn {
-    val releasedTags: Seq[TagName] = biocondaReleasedTags.value
-    val latestRelease = releasedTags.sortBy(tag => tag.stripPrefix("v")).head
-    Def.task {biocondaRecipeDir.value}.dependsOn(biocondaUpdatedBranch,createRecipe(latestRelease, biocondaRecipeDir.value))
-  }
-
-  private def createRecipe(tag: TagName, dir: File): Def.Initialize[Task[File]] = {
-    Def.task {
-      val sourceUrl = getSourceUrl(tag).value
+      val versionNumber = tag.stripPrefix("v")
+      val publishDir = new File(biocondaRecipeDir.value, versionNumber)
+      val sourceUrl = getSourceUrl(tag,repo)
       val recipe = new BiocondaRecipe(
         name = (name in Bioconda).value,
         //Hardcoded "v" prefix here.
-        version = tag.stripPrefix("v"),
+        version = versionNumber,
         sourceUrl = sourceUrl,
         sourceSha256 = getSha256SumFromDownload(sourceUrl),
         runRequirements = biocondaRequirements.value,
         homeUrl = (homepage in Bioconda).value.getOrElse("").toString,
-        license = (licenses in Bioconda).value.toList.head._1,
+        license = biocondaLicense.value,
         buildRequirements = biocondaBuildRequirements.value,
         summary = biocondaSummary.value,
         buildNumber = biocondaBuildNumber.value,
@@ -196,11 +180,40 @@ object BiocondaPlugin extends AutoPlugin {
         defaultJavaOptions = biocondaDefaultJavaOptions.value,
         testCommands = biocondaTestCommands.value
       )
-      dir.mkdirs()
-      recipe.createRecipeFiles(dir)
-      dir
+      publishDir.mkdirs()
+      recipe.createRecipeFiles(publishDir)
+
     }
-  }
+    biocondaRecipeDir.value
+  }.dependsOn(biocondaUpdatedBranch)
+
+  private def createLatestRecipes: Def.Initialize[Task[File]] = Def.task {
+    val releasedTags: Seq[TagName] = biocondaReleasedTags.value
+    val tag = releasedTags.sortBy(tag => tag.stripPrefix("v")).head
+    val repo = ghreleaseGetRepo.value
+    val versionNumber = tag.stripPrefix("v")
+    val publishDir = biocondaRecipeDir.value
+    val sourceUrl = getSourceUrl(tag,repo)
+    val recipe = new BiocondaRecipe(
+      name = (name in Bioconda).value,
+      //Hardcoded "v" prefix here.
+      version = versionNumber,
+      sourceUrl = sourceUrl,
+      sourceSha256 = getSha256SumFromDownload(sourceUrl),
+      runRequirements = biocondaRequirements.value,
+      homeUrl = (homepage in Bioconda).value.getOrElse("").toString,
+      license = biocondaLicense.value,
+      buildRequirements = biocondaBuildRequirements.value,
+      summary = biocondaSummary.value,
+      buildNumber = biocondaBuildNumber.value,
+      notes = Some(biocondaNotes.value),
+      defaultJavaOptions = biocondaDefaultJavaOptions.value,
+      testCommands = biocondaTestCommands.value
+    )
+    publishDir.mkdirs()
+    recipe.createRecipeFiles(publishDir)
+    biocondaRecipeDir.value
+  }.dependsOn(biocondaUpdatedBranch)
 
   def branchExists(branch: String,
                    repo: File,
