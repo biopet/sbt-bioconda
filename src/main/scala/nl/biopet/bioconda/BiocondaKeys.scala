@@ -38,7 +38,5 @@ trait BiocondaKeys {
   lazy val biocondaDefaultJavaOptions = settingKey[Seq[String]](
     "The default java options for the program when started with the wrapperscript.")
   lazy val biocondaTestCommands = settingKey[Seq[String]]("The commands that are used to test whether the program was succesfuly installed with conda.")
-  lazy val biocondaReleasedTags = taskKey[Seq[TagName]]("The tags that are released")
-  lazy val biocondaPublishedTags = taskKey[Seq[TagName]]("The tags that are already published on Bioconda")
   lazy val biocondaLicense = settingKey[String]("The license displayed in the bioconda recipe.")
 }
