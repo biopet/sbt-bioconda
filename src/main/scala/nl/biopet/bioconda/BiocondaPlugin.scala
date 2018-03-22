@@ -1,35 +1,30 @@
 package nl.biopet.bioconda
 
-import org.kohsuke.github
-import sbt.{Def, _}
-import Keys._
-import com.typesafe.sbt.GitPlugin
-import ohnosequences.sbt.SbtGithubReleasePlugin.tagNameArg
-import sbtassembly.AssemblyKeys.{assembly, assemblyJarName, assemblyOutputPath}
-import ohnosequences.sbt.GithubRelease.keys.{ghreleaseGetRepo,TagName}
-import com.typesafe.sbt.SbtGit.GitKeys
-import com.typesafe.sbt.git.GitRunner
-import GitKeys.{gitBranch, gitCurrentBranch, gitRemoteRepo}
-import org.kohsuke.github.{GHAsset, GHRelease}
-import sbt.internal.util.ManagedLogger
-import com.roundeights.hasher.Implicits._
-
-import scala.io.Source
-import org.yaml.snakeyaml.Yaml
 import java.io.FileInputStream
 
+import com.roundeights.hasher.Implicits._
+import com.typesafe.sbt.GitPlugin
+import com.typesafe.sbt.SbtGit.GitKeys
+import com.typesafe.sbt.git.GitRunner
+import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
+import ohnosequences.sbt.SbtGithubReleasePlugin
+import org.kohsuke.github.{GHAsset, GHRelease}
+import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
+import sbt.Keys._
+import sbt.internal.util.ManagedLogger
+import sbt.{Def, _}
 
-import scala.language.postfixOps
 import scala.collection.JavaConverters
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.language.postfixOps
 
 object BiocondaPlugin extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
 
   override def requires: Plugins = {
-    empty
-  } //GitPlugin && SbtGithubReleasePlugin
+    GitPlugin && SbtGithubReleasePlugin
+  }
 
   object autoImport extends BiocondaKeys
 
@@ -50,8 +45,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaBuildRequirements := Seq(),
     biocondaNotes := defaultNotes.value,
     biocondaSummary := defaultSummary.value,
-    biocondaDefaultJavaOptions := Seq(),
-    biocondaCreateRecipe := createRecipe.value
+    biocondaDefaultJavaOptions := Seq()
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -144,11 +138,11 @@ object BiocondaPlugin extends AutoPlugin {
         .collectionAsScalaIterable(
           currentRelease.getOrElse(new GHRelease).getAssets)
         .toList
-      val jarName = (assemblyJarName in assembly).value
       val releaseJar =
-        assets.find(x => x.getBrowserDownloadUrl.contains(jarName))
+        // Finds all jars. This assumes only one jar is released.
+        assets.find(x => x.getBrowserDownloadUrl.contains(".jar"))
       if (!releaseJar.isDefined) {
-        throw new Exception(s"'")
+        throw new Exception(s"No .jar files found for this release")
       }
       releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl
     }
@@ -226,8 +220,8 @@ object BiocondaPlugin extends AutoPlugin {
   def getVersionFromYaml(metaYaml: File): String = {
     def yaml = new Yaml(new Constructor(classOf[BiocondaMetaYaml]))
 
-    val bla = new FileInputStream(metaYaml)
-    val meta: BiocondaMetaYaml = yaml.load(bla)
+    val yamlFile = new FileInputStream(metaYaml)
+    val meta: BiocondaMetaYaml = yaml.load(yamlFile)
     meta.package_info.version
   }
 
@@ -265,8 +259,8 @@ object BiocondaPlugin extends AutoPlugin {
       .dependsOn(biocondaUpdatedBranch)
   }
 
-  private def getReleasedTags: Def.Initialize[Seq[String]] = {
-    Def.setting {
+  private def getReleasedTags: Def.Initialize[Task[Seq[String]]] = {
+    Def.task {
       val repo = ghreleaseGetRepo.value
       val releaseList = repo.listReleases().asList()
       val releases =
