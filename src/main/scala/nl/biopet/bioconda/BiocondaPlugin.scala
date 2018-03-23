@@ -6,6 +6,8 @@ import com.roundeights.hasher.Implicits._
 import com.typesafe.sbt.GitPlugin
 import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.GitRunner
+
+import scala.io.Source
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
 import ohnosequences.sbt.SbtGithubReleasePlugin
 import org.kohsuke.github.{GHAsset, GHRelease, GHRepository}
@@ -19,6 +21,7 @@ import sbt.{Def, _}
 import scala.collection.JavaConverters
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.language.postfixOps
+import scala.util.matching.Regex
 
 object BiocondaPlugin extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
@@ -274,11 +277,10 @@ object BiocondaPlugin extends AutoPlugin {
     }
 
   def getVersionFromYaml(metaYaml: File): String = {
-    def yaml = new Yaml(new Constructor(classOf[BiocondaMetaYaml]))
-
-    val yamlFile = new FileInputStream(metaYaml)
-    val meta: BiocondaMetaYaml = yaml.load(yamlFile)
-    meta.package_info.version
+    val versionRegex: Regex = "version\\:.([0-9\\.]]+)".r
+    val yaml = Source.fromFile(metaYaml).getLines().mkString
+    val matches = versionRegex.findAllIn(yaml).matchData
+    matches.toList.head.group(1)
   }
 
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
