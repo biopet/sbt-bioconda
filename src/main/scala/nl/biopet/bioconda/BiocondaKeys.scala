@@ -21,9 +21,12 @@ trait BiocondaKeys {
     settingKey[File]("Where the recipes will be created")
   lazy val biocondaPushRecipe = taskKey[File](
     "Copy the recipe in the bioconda repo, commit it and push the branch.")
-  lazy val biocondaCreateRecipes = taskKey[File]("Create the bioconda recipes for all released versions of the tool and the latest(default) version.")
-  lazy val biocondaCreateLatestRecipe = taskKey[File]("Create the bioconda recipe for the latest released version of the tool")
-  lazy val biocondaCreateVersionRecipes = taskKey[File]("Create the bioconda recipes for all released versions of the tool.")
+  lazy val biocondaCreateRecipes = taskKey[File](
+    "Create the bioconda recipes for all released versions of the tool and the latest(default) version.")
+  lazy val biocondaCreateLatestRecipe = taskKey[File](
+    "Create the bioconda recipe for the latest released version of the tool")
+  lazy val biocondaCreateVersionRecipes = taskKey[File](
+    "Create the bioconda recipes for all released versions of the tool.")
   lazy val biocondaRepository =
     settingKey[File](
       "Sandbox environment where the bioconda git branch is checked out.")
@@ -37,6 +40,8 @@ trait BiocondaKeys {
   lazy val biocondaNotes = settingKey[String]("Usage notes for the program")
   lazy val biocondaDefaultJavaOptions = settingKey[Seq[String]](
     "The default java options for the program when started with the wrapperscript.")
-  lazy val biocondaTestCommands = settingKey[Seq[String]]("The commands that are used to test whether the program was succesfuly installed with conda.")
-  lazy val biocondaLicense = settingKey[String]("The license displayed in the bioconda recipe.")
+  lazy val biocondaTestCommands = settingKey[Seq[String]](
+    "The commands that are used to test whether the program was succesfuly installed with conda.")
+  lazy val biocondaLicense =
+    settingKey[String]("The license displayed in the bioconda recipe.")
 }
