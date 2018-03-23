@@ -1,6 +1,5 @@
 package nl.biopet.bioconda
 
-
 import sbt.{File, URL}
 
 import scala.language.postfixOps

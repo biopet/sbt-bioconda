@@ -44,8 +44,8 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
 
   @Test
   def testRecipeValues(): Unit = {
-    testRecipe.fileName shouldBe("test.jar")
-    testRecipe.wrapperFilename shouldBe("test.py")
+    testRecipe.fileName shouldBe ("test.jar")
+    testRecipe.wrapperFilename shouldBe ("test.py")
   }
 
   @Test
@@ -60,7 +60,8 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     yaml should include("about:")
     yaml should include("  home: test.example.com/index.html")
     yaml should include("  license: MIT")
-    yaml should include("  summary: test is a tool that is tested in this test suite.")
+    yaml should include(
+      "  summary: test is a tool that is tested in this test suite.")
     yaml should include("requirements:")
     yaml should include("  run:")
     yaml should include("- openjdk")
@@ -81,18 +82,19 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     py should include("default_jvm_mem_opts = ['-Xms25m',]")
     py should include("#!/usr/bin/env python")
     py should include("if __name__ == '__main__':")
-    py should not include("Perl the best thing since sliced bread")
+    py should not include ("Perl the best thing since sliced bread")
   }
 
   @Test
   def testBuildScript(): Unit = {
     val build = testRecipe.buildScript
     build should include("#!/usr/bin/env bash")
-    build should include("outdir=$PREFIX/share/$PKG_NAME-$PKG_VERSION-$PKG_BUILDNUM")
+    build should include(
+      "outdir=$PREFIX/share/$PKG_NAME-$PKG_VERSION-$PKG_BUILDNUM")
     build should include("mkdir -p $outdir")
     build should include("mkdir -p $PREFIX/bin")
     build should include("cp test.jar $outdir/test.jar")
     build should include("cp $RECIPE_DIR/test.py $outdir/test")
-    build should not include("Some crazy text message")
+    build should not include ("Some crazy text message")
   }
 }
