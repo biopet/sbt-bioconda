@@ -123,11 +123,12 @@ object BiocondaPlugin extends AutoPlugin {
   }
 
   private def getSha256SumFromDownload(url: String): String = {
-    val jar = scala.io.Source.fromURL(url)
+    import sys.process._
+    val jar = new URL(url)
     val tmp = java.io.File.createTempFile("bioconda",".jar")
-    val writer = new PrintWriter(tmp)
-    jar.getLines().foreach(line => writer.write(line))
-    writer.close()
+    tmp.deleteOnExit()
+    val download = jar #> tmp
+    download.run()
     tmp.sha256.hex
   }
 
