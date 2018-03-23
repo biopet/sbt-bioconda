@@ -4,7 +4,6 @@ import java.io.File
 
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations
 import org.testng.annotations.Test
 class BiocondaRecipeTest extends TestNGSuite with Matchers {
 
