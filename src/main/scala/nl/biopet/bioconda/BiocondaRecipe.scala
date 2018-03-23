@@ -48,7 +48,6 @@ class BiocondaRecipe(name: String,
   def metaYaml: String = {
     def yaml = new Yaml(new Constructor(classOf[BiocondaMetaYaml]))
     def meta = new BiocondaMetaYaml
-    println(name)
     meta.package_info.name = name
     meta.package_info.version = version
     meta.source.url = sourceUrl

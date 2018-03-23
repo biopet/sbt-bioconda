@@ -74,6 +74,8 @@ releaseProcess := Seq[ReleaseStep](
   commitNextVersion,
   pushChanges
 )
+libraryDependencies += "org.testng" % "testng" % "6.14.2" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
 libraryDependencies += "org.yaml" % "snakeyaml" % "1.20"
 libraryDependencies ++= Seq("com.roundeights" %% "hasher" % "1.2.0")

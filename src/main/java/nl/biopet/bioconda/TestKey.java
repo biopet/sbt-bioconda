@@ -1,6 +1,6 @@
 package nl.biopet.bioconda;
 
 import java.util.List;
-public class Test {
+public class TestKey {
     public List<String> commands;
 }

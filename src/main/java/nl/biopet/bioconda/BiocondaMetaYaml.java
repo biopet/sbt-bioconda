@@ -6,7 +6,7 @@ public class BiocondaMetaYaml {
     public Source source;
     public Build build;
     public Requirements requirements;
-    public Test test;
+    public TestKey test;
     public Extra extra;
 
 }
