@@ -74,6 +74,7 @@ releaseProcess := Seq[ReleaseStep](
   commitNextVersion,
   pushChanges
 )
+libraryDependencies += "com.typesafe.play" %% "play-json" % "2.6.7"
 libraryDependencies += "org.testng" % "testng" % "6.14.2" % "test"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
@@ -87,11 +88,6 @@ libraryDependencies ++= Seq(
   ),
   Defaults.sbtPluginExtra(
     "com.typesafe.sbt" % "sbt-git" % "0.9.3",
-    (sbtBinaryVersion in pluginCrossBuild).value,
-    (scalaBinaryVersion in pluginCrossBuild).value
-  ),
-  Defaults.sbtPluginExtra(
-    "com.eed3si9n" % "sbt-assembly" % "0.14.6",
     (sbtBinaryVersion in pluginCrossBuild).value,
     (scalaBinaryVersion in pluginCrossBuild).value
   )
