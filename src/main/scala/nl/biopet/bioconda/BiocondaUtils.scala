@@ -14,6 +14,7 @@ import sbt.internal.util.ManagedLogger
 import scala.collection.JavaConverters
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
+import scala.util.matching
 import scala.util.matching.Regex
 
 object BiocondaUtils {
@@ -66,8 +67,10 @@ object BiocondaUtils {
     val versionRegex: Regex = "version:.([0-9\\.]+)".r
     val yaml = Source.fromFile(metaYaml).getLines().mkString
     val matches = versionRegex.findAllIn(yaml).matchData
+    if (matches.isEmpty) {
+      throw new Exception(s"No version found in: ${metaYaml.getPath}")
+    }
     val version = matches.toList.head.group(1)
-    println(version)
     version
   }
 
