@@ -4,6 +4,7 @@ import org.yaml.snakeyaml.Yaml
 import java.io.{File, PrintWriter}
 
 import scala.collection.JavaConverters._
+import scala.io.Source
 
 
 class BiocondaRecipe(name: String,
@@ -105,8 +106,7 @@ class BiocondaRecipe(name: String,
      """.stripMargin
 
   def wrapperScript: String = {
-    val wrapperStream =
-      getClass.getResourceAsStream("nl/biopet/bioconda/wrapper.py")
+    val pyScript: String = Source.fromResource("nl/biopet/bioconda/wrapper.py").mkString
     val javaOpts = new StringBuilder
     javaOpts.append("[")
     defaultJavaOptions.foreach(x => javaOpts.append("'" + x + "',"))
@@ -137,7 +137,7 @@ class BiocondaRecipe(name: String,
          |
          |# !!! End of parameter section. No user-serviceable code below this line !!!
          |
-       """.stripMargin + scala.io.Source.fromInputStream(wrapperStream).mkString
+       """.stripMargin + "\n" + pyScript
   }
 
 }

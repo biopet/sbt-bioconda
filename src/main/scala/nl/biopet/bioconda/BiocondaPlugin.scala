@@ -11,10 +11,7 @@ import scala.io.Source
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
 import ohnosequences.sbt.SbtGithubReleasePlugin
 import org.kohsuke.github.{GHAsset, GHRelease, GHRepository}
-import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.Constructor
 import sbt.Keys._
-import sbt.Scoped.AnyInitTask
 import sbt.internal.util.ManagedLogger
 import sbt.{Def, _}
 
@@ -255,7 +252,7 @@ object BiocondaPlugin extends AutoPlugin {
   private def defaultSummary: Def.Initialize[String] =
     Def.setting {
       s"""This summary for ${(name in Bioconda).value} is automatically generated.
-         |Please visit ${(homepage in Bioconda).value} for more information about this program.
+         |Please visit ${(homepage in Bioconda).value.getOrElse("the project's website")} for more information about this program.
        """.stripMargin
     }
 
@@ -265,7 +262,9 @@ object BiocondaPlugin extends AutoPlugin {
         val javaDefaults = biocondaDefaultJavaOptions.value
         val builder = new StringBuilder
         javaDefaults.foreach(x => builder.append(x + " "))
-        builder.toString().trim
+        val opts = builder.toString().trim
+        if (javaDefaults.isEmpty) "no default java option"
+        else opts
       }
       s"""${(name in Bioconda).value} is Java program that comes with a custom wrapper shell script.
          |By default “$javaOpts” is set in the wrapper.
@@ -280,7 +279,9 @@ object BiocondaPlugin extends AutoPlugin {
     val versionRegex: Regex = "version\\:.([0-9\\.]]+)".r
     val yaml = Source.fromFile(metaYaml).getLines().mkString
     val matches = versionRegex.findAllIn(yaml).matchData
-    matches.toList.head.group(1)
+    val version = matches.toList.head.group(1)
+    println(version)
+    version
   }
 
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {

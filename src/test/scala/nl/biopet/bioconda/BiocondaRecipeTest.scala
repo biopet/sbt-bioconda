@@ -1,7 +1,7 @@
 package nl.biopet.bioconda
 
-import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.Constructor
+import java.io.File
+
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations
@@ -23,9 +23,11 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     notes = Some("This is java"))
 
   @Test
-  def testYaml(): Unit = {
-    val metaYaml = testRecipe.metaYaml
-    println(metaYaml)
+  def testCreateRecipe(): Unit = {
+    val tmp = File.createTempFile("recipe","dir")
+    tmp.delete()
+    tmp.mkdir()
+    testRecipe.createRecipe(tmp)
 
   }
 }
