@@ -32,7 +32,7 @@ class BiocondaRecipe(name: String,
   def createRecipeFiles(dir: File): Unit = {
     dir.mkdirs()
     val buildSh = new File(dir, "build.sh")
-    val meta = new File(dir, "meta.yml")
+    val meta = new File(dir, "meta.yaml")
     val wrapper = new File(dir, wrapperFilename)
     stringToFile(metaYaml, meta)
     stringToFile(buildScript, buildSh)
