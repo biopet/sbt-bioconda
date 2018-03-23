@@ -169,7 +169,7 @@ object BiocondaPlugin extends AutoPlugin {
         val releasedTags: Seq[TagName] = getReleasedTags.value
         val tag = releasedTags
           .sortBy(tag => tag.stripPrefix("v"))
-          .headOption
+          .lastOption
           .getOrElse("No version")
         val repo = ghreleaseGetRepo.value
         val log = streams.value.log
@@ -179,12 +179,15 @@ object BiocondaPlugin extends AutoPlugin {
         if (sourceUrl.isEmpty) {
           log.error(s"No released jar for tag: $tag. Skipping.")
         } else {
+          log.info(s"Downloading jar from ${sourceUrl.get} to generate checksum.")
+          val sourceSha256 = getSha256SumFromDownload(sourceUrl.get)
+          log.info(s"Downloading finished.")
           val recipe = new BiocondaRecipe(
             name = (name in Bioconda).value,
             //Hardcoded "v" prefix here.
             version = versionNumber,
             sourceUrl = sourceUrl.get,
-            sourceSha256 = getSha256SumFromDownload(sourceUrl.get),
+            sourceSha256 = sourceSha256,
             runRequirements = biocondaRequirements.value,
             homeUrl = (homepage in Bioconda).value.getOrElse("").toString,
             license = biocondaLicense.value,
@@ -265,12 +268,20 @@ object BiocondaPlugin extends AutoPlugin {
 
   private def getReleasedTags: Def.Initialize[Task[Seq[TagName]]] = {
     Def.task {
+      val log = streams.value.log
       val repo = ghreleaseGetRepo.value
       val releaseList = repo.listReleases().asList()
       val releases =
         JavaConverters.collectionAsScalaIterable(releaseList).toList
       val tags = new ArrayBuffer[TagName]()
-      releases.foreach(x => tags.append(x.getTagName))
+      for (release <- releases) {
+        val tag = release.getTagName
+        val jar = getSourceUrl(tag, repo)
+        if (jar.isEmpty) {
+          log.info(s"Release $tag does not have a jar attached. Skipping")
+        }
+        else tags.append(tag)
+      }
       if (tags.isEmpty) {
         throw new Exception(
           "No tags have been released. Please release on github before publishing to bioconda")
