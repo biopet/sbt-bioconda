@@ -18,15 +18,10 @@ import scala.util.matching.Regex
 
 object BiocondaUtils {
   def getSha256SumFromDownload(url: String): String = {
-    import sys.process._
     val jar = new URL(url)
-    val tmp = java.io.File.createTempFile("bioconda", ".jar")
-    //tmp.deleteOnExit()
-    val download = jar #> tmp
-    download.run()
-    val byteArray: Array[Byte] = java.nio.file.Files.readAllBytes(tmp.toPath)
-    byteArray.sha256
+    jar.openStream().sha256
   }
+
   def getSourceUrl(tag: TagName, repo: GHRepository): Option[String] = {
     val releaseList = repo.listReleases().asList()
     val releases =
