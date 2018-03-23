@@ -63,7 +63,7 @@ object BiocondaUtils {
 
   }
   def getVersionFromYaml(metaYaml: File): String = {
-    val versionRegex: Regex = "version\\:.([0-9\\.]]+)".r
+    val versionRegex: Regex = "version:.([0-9\\.]+)".r
     val yaml = Source.fromFile(metaYaml).getLines().mkString
     val matches = versionRegex.findAllIn(yaml).matchData
     val version = matches.toList.head.group(1)
