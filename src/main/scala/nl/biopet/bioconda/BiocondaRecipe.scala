@@ -102,8 +102,11 @@ class BiocondaRecipe(name: String,
      """.stripMargin
 
   def wrapperScript: String = {
-    val pyScript: String =
-      Source.fromResource("nl/biopet/bioconda/wrapper.py").mkString
+    def pyScript: String = {
+      val source = getClass().getClassLoader().getResourceAsStream("nl/biopet/bioconda/wrapper.py")
+      Source.fromInputStream(source).mkString
+    }
+
     val javaOpts = new StringBuilder
     javaOpts.append("[")
     defaultJavaOptions.foreach(x => javaOpts.append("'" + x + "',"))
