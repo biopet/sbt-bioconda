@@ -38,11 +38,10 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaNotes := defaultNotes.value,
     biocondaSummary := defaultSummary.value,
     biocondaDefaultJavaOptions := Seq(),
-    biocondaCreateVersionRecipes := createVersionRecipes.value,
-    biocondaCreateLatestRecipe := createLatestRecipes.value,
-    biocondaCreateRecipes := createLatestRecipes
-      .dependsOn(createVersionRecipes)
-      .value,
+    biocondaCreateVersionRecipes := createRecipes(versions = true,
+                                                  latest = false).value,
+    biocondaCreateLatestRecipe := createRecipes(versions = false, latest = true).value,
+    biocondaCreateRecipes := createRecipes().value,
     biocondaLicense := (licenses in Bioconda).value.toList.headOption
       .getOrElse("No license", "")
       ._1,
@@ -117,93 +116,74 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
 
-  private def createVersionRecipes: Def.Initialize[Task[File]] =
+  private def createRecipes(
+      latest: Boolean = true,
+      versions: Boolean = true): Def.Initialize[Task[File]] = {
     Def
       .task {
         val publishedTags: Seq[TagName] = getPublishedTags.value
         val releasedTags: Seq[TagName] = getReleasedTags.value
         // Tags that are released but not in bioconda yet should be published
-        val toBePublishedTags =
-          releasedTags.filter(tag => !publishedTags.contains(tag))
+
+        val latestTag = releasedTags
+          .sortBy(tag => tag.stripPrefix("v"))
+          .lastOption
+          .getOrElse("No version")
+
+        // make sure latest tag is always published if latest.
+        val toBePublishedTags: Seq[TagName] =
+          (releasedTags.filter(tag => !publishedTags.contains(tag)) ++
+            (if (latest) Seq(latestTag) else Seq())).distinct
         val repo = ghreleaseGetRepo.value
         val log = streams.value.log
         // Some sbt magic here. We initialize a task that returns the recipe dir.
         // We add dependencies to this task based on the tags
         for (tag <- toBePublishedTags) {
-          // Hardcoded "v".
-          val versionNumber = tag.stripPrefix("v")
-          val publishDir = new File(biocondaRecipeDir.value, versionNumber)
-          val sourceUrl = {
-            getSourceUrl(tag, repo)
-          }
-          if (sourceUrl.isEmpty) {
-            log.error(s"No released jar for tag: $tag. Skipping.")
-          } else {
-            val recipe = new BiocondaRecipe(
-              name = (name in Bioconda).value,
-              //Hardcoded "v" prefix here.
-              version = versionNumber,
-              sourceUrl = sourceUrl.get,
-              sourceSha256 = getSha256SumFromDownload(sourceUrl.get),
-              runRequirements = biocondaRequirements.value,
-              homeUrl = (homepage in Bioconda).value.getOrElse("").toString,
-              license = biocondaLicense.value,
-              buildRequirements = biocondaBuildRequirements.value,
-              summary = biocondaSummary.value,
-              buildNumber = biocondaBuildNumber.value,
-              notes = Some(biocondaNotes.value),
-              defaultJavaOptions = biocondaDefaultJavaOptions.value,
-              testCommands = biocondaTestCommands.value
-            )
-            publishDir.mkdirs()
-            recipe.createRecipeFiles(publishDir)
-          }
-        }
-        biocondaRecipeDir.value
-      }
-      .dependsOn(biocondaUpdatedBranch)
 
-  private def createLatestRecipes: Def.Initialize[Task[File]] =
-    Def
-      .task {
-        val releasedTags: Seq[TagName] = getReleasedTags.value
-        val tag = releasedTags
-          .sortBy(tag => tag.stripPrefix("v"))
-          .lastOption
-          .getOrElse("No version")
-        val repo = ghreleaseGetRepo.value
-        val log = streams.value.log
-        val versionNumber = tag.stripPrefix("v")
-        val publishDir = biocondaRecipeDir.value
-        val sourceUrl = getSourceUrl(tag, repo)
-        if (sourceUrl.isEmpty) {
-          log.error(s"No released jar for tag: $tag. Skipping.")
-        } else {
-          log.info(s"Downloading jar from ${sourceUrl.get} to generate checksum.")
-          val sourceSha256 = getSha256SumFromDownload(sourceUrl.get)
-          log.info(s"Downloading finished.")
-          val recipe = new BiocondaRecipe(
-            name = (name in Bioconda).value,
-            //Hardcoded "v" prefix here.
-            version = versionNumber,
-            sourceUrl = sourceUrl.get,
-            sourceSha256 = sourceSha256,
-            runRequirements = biocondaRequirements.value,
-            homeUrl = (homepage in Bioconda).value.getOrElse("").toString,
-            license = biocondaLicense.value,
-            buildRequirements = biocondaBuildRequirements.value,
-            summary = biocondaSummary.value,
-            buildNumber = biocondaBuildNumber.value,
-            notes = Some(biocondaNotes.value),
-            defaultJavaOptions = biocondaDefaultJavaOptions.value,
-            testCommands = biocondaTestCommands.value
-          )
-          publishDir.mkdirs()
-          recipe.createRecipeFiles(publishDir)
+          // Only evaluate if versions need to be published.
+          if (versions || (latest && tag == latestTag)) {
+
+            // Hardcoded "v".
+            val versionNumber = tag.stripPrefix("v")
+            val publishDir = new File(biocondaRecipeDir.value, versionNumber)
+            val sourceUrl = {
+              getSourceUrl(tag, repo)
+            }
+            if (sourceUrl.isEmpty) {
+              log.error(s"No released jar for tag: $tag. Skipping.")
+            } else {
+              log.info(
+                s"Downloading jar from ${sourceUrl.get} to generate checksum.")
+              val sourceSha256 = getSha256SumFromDownload(sourceUrl.get)
+              log.info(s"Downloading finished.")
+              val recipe = new BiocondaRecipe(
+                name = (name in Bioconda).value,
+                //Hardcoded "v" prefix here.
+                version = versionNumber,
+                sourceUrl = sourceUrl.get,
+                sourceSha256 = sourceSha256,
+                runRequirements = biocondaRequirements.value,
+                homeUrl = (homepage in Bioconda).value.getOrElse("").toString,
+                license = biocondaLicense.value,
+                buildRequirements = biocondaBuildRequirements.value,
+                summary = biocondaSummary.value,
+                buildNumber = biocondaBuildNumber.value,
+                notes = Some(biocondaNotes.value),
+                defaultJavaOptions = biocondaDefaultJavaOptions.value,
+                testCommands = biocondaTestCommands.value
+              )
+              publishDir.mkdirs()
+              recipe.createRecipeFiles(publishDir)
+              if (tag == latestTag) {
+                recipe.createRecipeFiles(biocondaRecipeDir.value)
+              }
+            }
+          }
         }
         biocondaRecipeDir.value
       }
       .dependsOn(biocondaUpdatedBranch)
+  }
 
   private def defaultSummary: Def.Initialize[String] =
     Def.setting {
@@ -279,8 +259,7 @@ object BiocondaPlugin extends AutoPlugin {
         val jar = getSourceUrl(tag, repo)
         if (jar.isEmpty) {
           log.info(s"Release $tag does not have a jar attached. Skipping")
-        }
-        else tags.append(tag)
+        } else tags.append(tag)
       }
       if (tags.isEmpty) {
         throw new Exception(

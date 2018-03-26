@@ -103,7 +103,9 @@ class BiocondaRecipe(name: String,
 
   def wrapperScript: String = {
     def pyScript: String = {
-      val source = getClass().getClassLoader().getResourceAsStream("nl/biopet/bioconda/wrapper.py")
+      val source = getClass()
+        .getClassLoader()
+        .getResourceAsStream("nl/biopet/bioconda/wrapper.py")
       Source.fromInputStream(source).mkString
     }
 
