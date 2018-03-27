@@ -8,8 +8,6 @@ import ohnosequences.sbt.SbtGithubReleasePlugin
 import sbt.Keys._
 import sbt.{Def, _}
 
-import java.nio.file.StandardCopyOption.REPLACE_EXISTING
-import java.nio.file.Files.copy
 import scala.collection.JavaConverters
 import scala.collection.mutable.ArrayBuffer
 
@@ -50,7 +48,8 @@ object BiocondaPlugin extends AutoPlugin {
       ._1,
     biocondaTestCommands := Seq(),
     biocondaCommitMessage := s"Automated update for recipes of ${(name in Bioconda).value}",
-    biocondaAddRecipes := addRecipes.value
+    biocondaAddRecipes := addRecipes.value,
+    biocondaTestRecipes := testRecipes.value
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -287,8 +286,13 @@ object BiocondaPlugin extends AutoPlugin {
       val recipes: File = biocondaRecipeDir.value
       val git = GitKeys.gitRunner.value
       val message = biocondaCommitMessage.value
-      copy(recipes.toPath,new File(repo,"recipes").toPath,REPLACE_EXISTING)
-      git.apply("commit", "-m", message)
+      val recipeFiles = recipes.listFiles()
+      val biocondaRecipes = new File(new File(repo, "recipes"),(name in Bioconda).value).getAbsolutePath
+      for (file <- recipeFiles) {
+        copy(file.getAbsolutePath,biocondaRecipes,recursive = true)
+      }
+      git.apply("add", ".")(repo,log)
+      git.apply("commit", "-m", message)(repo,log)
       repo
     }
   }

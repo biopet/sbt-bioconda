@@ -45,5 +45,6 @@ trait BiocondaKeys {
   lazy val biocondaLicense =
     settingKey[String]("The license displayed in the bioconda recipe.")
   lazy val biocondaAddRecipes = taskKey[File]("Adds generated recipes to bioconda recipe and commits them")
-  lazy val biocondaCommitMessage = taskKey[String]("The commit message with which new recipes will be submitted")
+  lazy val biocondaCommitMessage = settingKey[String]("The commit message with which new recipes will be submitted")
+  lazy val biocondaTestRecipes = taskKey[File]("Tests the generated recipes with circleci")
 }

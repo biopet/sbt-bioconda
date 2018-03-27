@@ -110,4 +110,17 @@ object BiocondaUtils {
     val test = Process(circleCiCommand(Seq("build")),cwd = directory)
     test.run()
   }
+
+  /**
+    * Executes a copy command on the system command line
+    * @param source source string
+    * @param dest destination string
+    * @param recursive set to true for recursive copying.
+    */
+  def copy(source: String, dest: String, recursive: Boolean = false):Unit = {
+    val r = if (recursive) "-r" else ""
+    val copyCommand = s"cp $r $source $dest"
+    println(copyCommand)
+    Process(Seq("bash", "-c",copyCommand)).run()
+  }
 }
