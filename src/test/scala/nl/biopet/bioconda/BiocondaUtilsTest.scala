@@ -5,9 +5,13 @@ import java.io.{File, PrintWriter}
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
+import sbt.Keys.streams
 import BiocondaUtils._
 import ohnosequences.sbt.GithubRelease.keys.TagName
 import org.kohsuke.github.{GHAsset, GHRelease, GHRepository, GitHub}
+import sbt.internal.util.{BufferedLogger, ConsoleLogger, ManagedLogger}
+import org.apache.logging.log4j.core.LoggerContext
+import org.scalatest.exceptions.TestFailedException
 
 import scala.io.Source
 
@@ -41,5 +45,11 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
     writer.write(string)
     writer.close()
     getVersionFromYaml(tmp) shouldBe ("0.9.0")
+  }
+
+  @Test
+  def testDockerNotInstalled(): Unit = {
+    intercept[Exception] {
+      dockerInstalled(path=Some(""))}.getMessage() shouldBe "Docker does not run: Nonzero exit value: 127"
   }
 }

@@ -1,5 +1,7 @@
 package nl.biopet.bioconda
 
+import java.io.FileNotFoundException
+
 import sbt.{File, URL}
 
 import scala.language.postfixOps
@@ -7,9 +9,11 @@ import com.roundeights.hasher.Implicits._
 import com.roundeights.hasher.ByteReader
 import com.typesafe.sbt.git.GitRunner
 import ohnosequences.sbt.GithubRelease.keys.TagName
+import org.eclipse.jgit.errors.CommandFailedException
 import org.kohsuke.github.{GHAsset, GHRelease, GHRepository}
 import sbt.internal.util.ManagedLogger
 
+import sys.process._
 import scala.collection.JavaConverters
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -77,4 +81,19 @@ object BiocondaUtils {
     version
   }
 
+  def dockerInstalled(path: Option[String] = None) : Unit = {
+    val testCommand = "docker version -f  '{{.Client.Version}}'"
+    def test = Process(Seq("bash", "-c", testCommand), None, "PATH" -> path.getOrElse("$PATH"))
+    try {println(test.!!)}
+    catch {
+      case e: Exception => throw new Exception(s"Docker does not run: ${e.getMessage}")
+    }
+    }
+  def testBioconda(directory: File): Unit = {
+
+    dockerInstalled()
+    val test = Process(command = Seq("circleci", "build"),
+      cwd = directory)
+    test.run()
+  }
 }
