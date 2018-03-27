@@ -155,27 +155,33 @@ object BiocondaPlugin extends AutoPlugin {
               log.info(
                 s"Downloading jar from ${sourceUrl.get} to generate checksum.")
               val sourceSha256 = getSha256SumFromDownload(sourceUrl.get)
-              log.info(s"Downloading finished.")
-              val recipe = new BiocondaRecipe(
-                name = (name in Bioconda).value,
-                //Hardcoded "v" prefix here.
-                version = versionNumber,
-                sourceUrl = sourceUrl.get,
-                sourceSha256 = sourceSha256,
-                runRequirements = biocondaRequirements.value,
-                homeUrl = (homepage in Bioconda).value.getOrElse("").toString,
-                license = biocondaLicense.value,
-                buildRequirements = biocondaBuildRequirements.value,
-                summary = biocondaSummary.value,
-                buildNumber = biocondaBuildNumber.value,
-                notes = Some(biocondaNotes.value),
-                defaultJavaOptions = biocondaDefaultJavaOptions.value,
-                testCommands = biocondaTestCommands.value
-              )
-              publishDir.mkdirs()
-              recipe.createRecipeFiles(publishDir)
-              if (tag == latestTag) {
-                recipe.createRecipeFiles(biocondaRecipeDir.value)
+              if (sourceSha256.isEmpty) {
+                s"Downloading of ${sourceUrl.get} failed. Skipping."
+              } else {
+                log.info(s"Downloading finished.")
+
+                val recipe = new BiocondaRecipe(
+                  name = (name in Bioconda).value,
+                  //Hardcoded "v" prefix here.
+                  version = versionNumber,
+                  sourceUrl = sourceUrl.getOrElse("No valid source url was found."),
+                  sourceSha256 = sourceSha256.getOrElse("No valid checksum was generated."),
+                  runRequirements = biocondaRequirements.value,
+                  homeUrl = (homepage in Bioconda).value.getOrElse("No homepage was given.").toString,
+                  license = biocondaLicense.value,
+                  buildRequirements = biocondaBuildRequirements.value,
+                  summary = biocondaSummary.value,
+                  buildNumber = biocondaBuildNumber.value,
+                  notes = Some(biocondaNotes.value),
+                  defaultJavaOptions = biocondaDefaultJavaOptions.value,
+                  testCommands = biocondaTestCommands.value
+                )
+                publishDir.mkdirs()
+                recipe.createRecipeFiles(publishDir)
+                if (tag == latestTag) {
+                  recipe.createRecipeFiles(biocondaRecipeDir.value)
+
+                }
               }
             }
           }

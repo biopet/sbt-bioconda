@@ -17,9 +17,13 @@ import scala.util.matching
 import scala.util.matching.Regex
 
 object BiocondaUtils {
-  def getSha256SumFromDownload(url: String): String = {
+  def getSha256SumFromDownload(url: String): Option[String] = {
     val jar = new URL(url)
-    jar.openStream().sha256
+    try {
+      Some(jar.openStream().sha256.hex)
+    } catch {
+      case e:java.io.FileNotFoundException => None
+    }
   }
 
   def getSourceUrl(tag: TagName, repo: GHRepository): Option[String] = {
