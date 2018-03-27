@@ -63,7 +63,7 @@ class BiocondaRecipe(name: String,
             "number" -> buildNumber
           ).asJava,
           "requirements" -> Map(
-            "run" -> seqAsJavaList[String](runRequirements),
+            "run" -> seqAsJavaList[String](runRequirements ++ Seq("python")),
             "build" -> seqAsJavaList[String](buildRequirements)
           ).asJava,
           "about" -> Map(
