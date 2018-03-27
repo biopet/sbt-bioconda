@@ -156,7 +156,7 @@ object BiocondaPlugin extends AutoPlugin {
                 s"Downloading jar from ${sourceUrl.get} to generate checksum.")
               val sourceSha256 = getSha256SumFromDownload(sourceUrl.get)
               if (sourceSha256.isEmpty) {
-                s"Downloading of ${sourceUrl.get} failed. Skipping."
+                log.error(s"Downloading of ${sourceUrl.get} failed. Skipping.")
               } else {
                 log.info(s"Downloading finished.")
 
