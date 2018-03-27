@@ -89,26 +89,28 @@ object BiocondaUtils {
     else {
       Process(Seq("bash", "-c", testCommand), None)
     }
-    try { log.info("Docker version:" + test.!!)}
+    try { test.run(log)}
 
     catch {
       case e: Exception => throw new Exception(s"Docker does not run: ${e.getMessage}")
     }
     }
-  def testBioconda(log: ManagedLogger, directory: File): Unit = {
-    dockerInstalled(log)
-    val path = directory.getPath
-
-    def circleCiCommand(args: Seq[String]) =
-      Seq("docker",
+  def circleCiCommand(cwd: File, args: Seq[String], log:ManagedLogger) = {
+    val path = cwd.getPath
+    Seq("docker",
       "run",
       "--rm",
-        "-v","/var/run/docker.sock:/var/run/docker.sock",
-        "-v",s"$path:$path",
-        "--workdir", s"$path",
-        "circleci") ++ args
-    val test = Process(circleCiCommand(Seq("build")),cwd = directory)
-    test.run()
+      "-v", "/var/run/docker.sock:/var/run/docker.sock",
+      "-v", s"$path:$path",
+      "--workdir", s"$path",
+      "circleci/picard",
+      "circleci") ++ args
+  }
+
+  def testBioconda(log: ManagedLogger, directory: File): Unit = {
+    dockerInstalled(log)
+    val test = Process(circleCiCommand(directory,Seq("build"),log=log),cwd = directory)
+    test.run(log)
   }
 
   /**
@@ -117,10 +119,9 @@ object BiocondaUtils {
     * @param dest destination string
     * @param recursive set to true for recursive copying.
     */
-  def copy(source: String, dest: String, recursive: Boolean = false):Unit = {
+  def copy(source: String, dest: String, log: ManagedLogger, recursive: Boolean = false):Unit = {
     val r = if (recursive) "-r" else ""
     val copyCommand = s"cp $r $source $dest"
-    println(copyCommand)
-    Process(Seq("bash", "-c",copyCommand)).run()
+    Process(Seq("bash", "-c",copyCommand)).run(log)
   }
 }

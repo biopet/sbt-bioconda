@@ -58,4 +58,10 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
   def testDockerInstalled(): Unit = {
     dockerInstalled(log)
   }
+
+  @Test
+  def testCircleciCommand(): Unit = {
+    circleCiCommand(new File(""),Seq("version"),log)
+
+  }
 }

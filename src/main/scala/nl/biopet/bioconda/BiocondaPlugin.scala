@@ -289,7 +289,7 @@ object BiocondaPlugin extends AutoPlugin {
       val recipeFiles = recipes.listFiles()
       val biocondaRecipes = new File(new File(repo, "recipes"),(name in Bioconda).value).getAbsolutePath
       for (file <- recipeFiles) {
-        copy(file.getAbsolutePath,biocondaRecipes,recursive = true)
+        copy(file.getAbsolutePath,biocondaRecipes,log,recursive = true)
       }
       git.apply("add", ".")(repo,log)
       git.apply("commit", "-m", message)(repo,log)
@@ -298,7 +298,7 @@ object BiocondaPlugin extends AutoPlugin {
   }
   private def testRecipes: Def.Initialize[Task[File]] =
     Def.task {
-      val repo = biocondaAddRecipes.value
+      val repo = biocondaRepository.value
       val log = streams.value.log
       testBioconda(log,repo)
       repo
