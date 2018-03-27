@@ -8,6 +8,8 @@ import ohnosequences.sbt.SbtGithubReleasePlugin
 import sbt.Keys._
 import sbt.{Def, _}
 
+import java.nio.file.StandardCopyOption.REPLACE_EXISTING
+import java.nio.file.Files.copy
 import scala.collection.JavaConverters
 import scala.collection.mutable.ArrayBuffer
 
@@ -24,6 +26,7 @@ object BiocondaPlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Setting[_]] = Def.settings(
     biocondaBranch := (normalizedName in Bioconda).value,
+    name in Bioconda := (normalizedName.value),
     biocondaMainGitUrl := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master",
     biocondaUpdatedRepository := initBiocondaRepo.value,
@@ -45,7 +48,9 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaLicense := (licenses in Bioconda).value.toList.headOption
       .getOrElse("No license", "")
       ._1,
-    biocondaTestCommands := Seq()
+    biocondaTestCommands := Seq(),
+    biocondaCommitMessage := s"Automated update for recipes of ${(name in Bioconda).value}",
+    biocondaAddRecipes := addRecipes.value
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -273,5 +278,25 @@ object BiocondaPlugin extends AutoPlugin {
       }
       tags
     }
+  }
+
+  private def addRecipes: Def.Initialize[Task[File]] = {
+    Def.task {
+      val log = streams.value.log
+      val repo: File = biocondaUpdatedBranch.value
+      val recipes: File = biocondaRecipeDir.value
+      val git = GitKeys.gitRunner.value
+      val message = biocondaCommitMessage.value
+      copy(recipes.toPath,new File(repo,"recipes").toPath,REPLACE_EXISTING)
+      git.apply("commit", "-m", message)
+      repo
+    }
+  }
+  private def testRecipes: Def.Initialize[Task[File]] =
+    Def.task {
+      val repo = biocondaAddRecipes.value
+      val log = streams.value.log
+      testBioconda(log,repo)
+      repo
   }
 }
