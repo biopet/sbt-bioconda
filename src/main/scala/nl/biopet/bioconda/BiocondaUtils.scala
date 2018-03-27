@@ -81,19 +81,33 @@ object BiocondaUtils {
     version
   }
 
-  def dockerInstalled(path: Option[String] = None) : Unit = {
-    val testCommand = "docker version -f  '{{.Client.Version}}'"
-    def test = Process(Seq("bash", "-c", testCommand), None, "PATH" -> path.getOrElse("$PATH"))
-    try {println(test.!!)}
+  def dockerInstalled(log: ManagedLogger, path: Option[String] = None) : Unit = {
+    val testCommand = "docker version -f '{{.Client.Version}}'"
+    def test: ProcessBuilder = if (path.isDefined) {
+      Process(Seq("bash", "-c", testCommand), None, "PATH" -> path.getOrElse("$PATH"))
+    }
+    else {
+      Process(Seq("bash", "-c", testCommand), None)
+    }
+    try { log.info("Docker version:" + test.!!)}
+
     catch {
       case e: Exception => throw new Exception(s"Docker does not run: ${e.getMessage}")
     }
     }
-  def testBioconda(directory: File): Unit = {
+  def testBioconda(log: ManagedLogger, directory: File): Unit = {
+    dockerInstalled(log)
+    val path = directory.getPath
 
-    dockerInstalled()
-    val test = Process(command = Seq("circleci", "build"),
-      cwd = directory)
+    def circleCiCommand(args: Seq[String]) =
+      Seq("docker",
+      "run",
+      "--rm",
+        "-v","/var/run/docker.sock:/var/run/docker.sock",
+        "-v",s"$path:$path",
+        "--workdir", s"$path",
+        "circleci") ++ args
+    val test = Process(circleCiCommand(Seq("build")),cwd = directory)
     test.run()
   }
 }

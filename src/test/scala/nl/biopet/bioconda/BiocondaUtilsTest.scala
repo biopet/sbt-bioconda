@@ -16,7 +16,8 @@ import org.scalatest.exceptions.TestFailedException
 import scala.io.Source
 
 class BiocondaUtilsTest extends TestNGSuite with Matchers {
-
+  val s4j = new LoggerContext("test").getLogger("test")
+  val log = new ManagedLogger("test", None, None, s4j)
   @Test
   def testSha256Sum(): Unit = {
     // Taken the README from Biopet 0.9.0. Small, link should be stable
@@ -50,6 +51,11 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
   @Test
   def testDockerNotInstalled(): Unit = {
     intercept[Exception] {
-      dockerInstalled(path=Some(""))}.getMessage() shouldBe "Docker does not run: Nonzero exit value: 127"
+      dockerInstalled(log,path=Some(""))}.getMessage() shouldBe "Docker does not run: Nonzero exit value: 127"
+  }
+
+  @Test
+  def testDockerInstalled(): Unit = {
+    dockerInstalled(log)
   }
 }
