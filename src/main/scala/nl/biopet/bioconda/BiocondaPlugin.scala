@@ -240,7 +240,7 @@ object BiocondaPlugin extends AutoPlugin {
 
     Def
       .task {
-        val recipes: File = new File(biocondaRepository.value, "recipes")
+        val recipes: File = new File(new File(biocondaRepository.value, "recipes"),(name in Bioconda).value)
         val thisRecipe: File = new File(recipes, (name in Bioconda).value)
 
         def tags = new ArrayBuffer[String]
