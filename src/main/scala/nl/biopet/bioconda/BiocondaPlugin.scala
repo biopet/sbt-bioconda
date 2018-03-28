@@ -25,6 +25,7 @@ object BiocondaPlugin extends AutoPlugin {
   override def projectSettings: Seq[Setting[_]] = Def.settings(
     biocondaBranch := (normalizedName in Bioconda).value,
     name in Bioconda := (normalizedName.value),
+    biocondaCommand := (name in Bioconda).value,
     biocondaMainGitUrl := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master",
     biocondaUpdatedRepository := initBiocondaRepo.value,
@@ -166,8 +167,8 @@ object BiocondaPlugin extends AutoPlugin {
 
                 val recipe = new BiocondaRecipe(
                   name = (name in Bioconda).value,
-                  //Hardcoded "v" prefix here.
                   version = versionNumber,
+                  command = biocondaCommand.value,
                   sourceUrl = sourceUrl.getOrElse("No valid source url was found."),
                   sourceSha256 = sourceSha256.getOrElse("No valid checksum was generated."),
                   runRequirements = biocondaRequirements.value,

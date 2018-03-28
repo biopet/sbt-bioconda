@@ -12,6 +12,7 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
   val testRecipe = new BiocondaRecipe(
     name = "test",
     version = "1.0",
+    command = "testing",
     sourceUrl = "test.example.com/test.jar",
     sourceSha256 = "af15", //incorrect but that is irrelevant
     runRequirements = Seq("openjdk"),
@@ -94,7 +95,8 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     build should include("mkdir -p $outdir")
     build should include("mkdir -p $PREFIX/bin")
     build should include("cp test.jar $outdir/test.jar")
-    build should include("cp $RECIPE_DIR/test.py $outdir/test")
+    build should include("cp $RECIPE_DIR/test.py $outdir/testing")
+    build should include("ln -s $outdir/testing $PREFIX/bin")
     build should not include ("Some crazy text message")
   }
 }

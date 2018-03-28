@@ -8,6 +8,7 @@ import scala.io.Source
 
 class BiocondaRecipe(name: String,
                      version: String,
+                     command: String,
                      sourceUrl: String,
                      sourceSha256: String,
                      runRequirements: Seq[String],
@@ -98,8 +99,8 @@ class BiocondaRecipe(name: String,
        |mkdir -p $$outdir
        |mkdir -p $$PREFIX/bin
        |cp $fileName $$outdir/$fileName
-       |cp $$RECIPE_DIR/${wrapperFilename} $$outdir/$name
-       |ln -s $$outdir/$name $$PREFIX/bin
+       |cp $$RECIPE_DIR/${wrapperFilename} $$outdir/$command
+       |ln -s $$outdir/$command $$PREFIX/bin
       """.stripMargin
 
   def wrapperScript: String = {

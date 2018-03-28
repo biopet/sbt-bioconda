@@ -96,7 +96,7 @@ object BiocondaUtils {
     else {
       Process(Seq("bash", "-c", testCommand), None)
     }
-    try { test.run(log)}
+    try { test.!!(log)}
 
     catch {
       case e: Exception => throw new Exception(s"Docker does not run: ${e.getMessage}")
