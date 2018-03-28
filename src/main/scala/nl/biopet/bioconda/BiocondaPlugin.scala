@@ -28,9 +28,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaMainGitUrl := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master",
     biocondaUpdatedRepository := initBiocondaRepo.value,
-    biocondaUpdatedBranch := updateBranch()
-      .dependsOn(biocondaUpdatedRepository)
-      .value,
+    biocondaUpdatedBranch := updateBranch().value,
     biocondaRepository := new File(target.value, "bioconda"),
     biocondaRecipeDir := new File(target.value, "recipes"),
     biocondaBuildNumber := 0,
@@ -49,7 +47,8 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaTestCommands := Seq(),
     biocondaCommitMessage := s"Automated update for recipes of ${(name in Bioconda).value}",
     biocondaAddRecipes := addRecipes.value,
-    biocondaTestRecipes := testRecipes.value
+    biocondaTestRecipes := testRecipes.value,
+    biocondaOverwriteRecipes := false
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -108,16 +107,17 @@ object BiocondaPlugin extends AutoPlugin {
       val branch: String = biocondaBranch.value
       val mainBranch: String = biocondaMainBranch.value
 
-      // Check if tool branch exists, create it otherwise.
+      // Check if tool branch exists, delete it if so.
+      // This will allow for the recreation of failed recipes that
+      // are not yet in bioconda main.
       if (branchExists(branch, local, git, s.log)) {
-        git.apply("checkout", branch)(local, s.log)
-      } else {
-        git.apply("checkout", "-b", branch)(local, s.log)
+        git.apply("branch","-D", branch)(local, s.log)
       }
+      git.apply("checkout", "-b", branch)(local, s.log)
       // Rebase tool branch on main branch
       git.apply("rebase", mainBranch)(local, s.log)
       local
-    }
+    }.dependsOn(biocondaUpdatedRepository)
   }
 
   private def createRecipes(
@@ -223,20 +223,6 @@ object BiocondaPlugin extends AutoPlugin {
     }
 
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
-
-    def crawlRecipe(recipe: File): Seq[File] = {
-      val files = recipe.listFiles()
-      val yamls = new ArrayBuffer[File]()
-      for (file <- files) {
-        if (file.isDirectory) {
-          yamls ++= crawlRecipe(file)
-        }
-        if (file.base == "meta.yaml") {
-          yamls.append(file)
-        }
-      }
-      yamls
-    }
 
     Def
       .task {

@@ -2,7 +2,7 @@ package nl.biopet.bioconda
 
 import java.io.FileNotFoundException
 
-import sbt.{File, URL}
+import sbt.{URL, File}
 
 import scala.language.postfixOps
 import com.roundeights.hasher.Implicits._
@@ -15,7 +15,7 @@ import sbt.internal.util.ManagedLogger
 
 import sys.process._
 import scala.collection.JavaConverters
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 import scala.util.matching
 import scala.util.matching.Regex
@@ -123,5 +123,19 @@ object BiocondaUtils {
     val r = if (recursive) "-r" else ""
     val copyCommand = s"cp $r $source $dest"
     Process(Seq("bash", "-c",copyCommand)).run(log)
+  }
+
+  def crawlRecipe(recipe: File): Seq[File] = {
+    val files = recipe.listFiles()
+    val yamls = new ArrayBuffer[File]()
+    for (file <- files) {
+      if (file.isDirectory) {
+        yamls ++= crawlRecipe(file)
+      }
+      if (file.getName == "meta.yaml") {
+        yamls.append(file)
+      }
+    }
+    yamls
   }
 }
