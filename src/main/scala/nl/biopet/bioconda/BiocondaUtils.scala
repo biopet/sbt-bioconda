@@ -52,13 +52,20 @@ object BiocondaUtils {
   def branchExists(branch: String,
                    repo: File,
                    git: GitRunner,
-                   log: ManagedLogger): Boolean = {
+                   log: ManagedLogger,
+                   remotes: Boolean = false
+                  ): Boolean = {
     // TODO: Find a git command that just returns branches as a list. (Without * in front of the branch you are on)
 
     // Without "--no-color" scala doesn't match the strings properly. Color matters in string comparison!
-    val branchList: Array[String] =
-      git.apply("branch", "-a", "--no-color")(repo, log).split("\\n")
-
+    val branchList: Array[String] = {
+      if (remotes) {
+        git.apply("branch", "-a", "--no-color")(repo, log).split("\\n")
+      }
+      else {
+        git.apply("branch", "--no-color")(repo, log).split("\\n")
+      }
+    }
     val branches = new ListBuffer[String]
 
     // For each branch

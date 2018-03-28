@@ -87,7 +87,7 @@ object BiocondaPlugin extends AutoPlugin {
 
       // Check if biocondaMainBranch exists. If not create it.
 
-      if (branchExists(branch, local, git, s.log)) {
+      if (branchExists(branch, local, git, s.log, remotes=true)) {
         git.apply("checkout", branch)(local, s.log)
       } else {
         git.apply("checkout", "-b", branch)(local, s.log)
@@ -223,23 +223,33 @@ object BiocondaPlugin extends AutoPlugin {
     }
 
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
-
-    Def
-      .task {
-        val recipes: File = new File(new File(biocondaRepository.value, "recipes"),(name in Bioconda).value)
-        val thisRecipe: File = new File(recipes, (name in Bioconda).value)
-
-        def tags = new ArrayBuffer[String]
-
-        if (thisRecipe.exists()) {
-          val metaYamls = crawlRecipe(thisRecipe)
-          // Hardcoded "v" prefix here. Is the standard in github release plugin.
-          // But not a very nice way of doing it.
-          metaYamls.foreach(x => tags.append("v" + getVersionFromYaml(x)))
+    Def.taskDyn {
+      // If recipes are overwritten, they are for the purposes of this plugin not published.
+      if (biocondaOverwriteRecipes.value) {
+        Def.task {
+          val emptyList: Seq[TagName] = Seq()
+          emptyList
         }
-        tags.toSeq.distinct
       }
-      .dependsOn(biocondaUpdatedBranch)
+      else {
+        Def
+          .task {
+            val recipes: File = new File(new File(biocondaRepository.value, "recipes"), (name in Bioconda).value)
+            val thisRecipe: File = new File(recipes, (name in Bioconda).value)
+
+            def tags = new ArrayBuffer[String]
+
+            if (thisRecipe.exists()) {
+              val metaYamls = crawlRecipe(thisRecipe)
+              // Hardcoded "v" prefix here. Is the standard in github release plugin.
+              // But not a very nice way of doing it.
+              metaYamls.foreach(x => tags.append("v" + getVersionFromYaml(x)))
+            }
+            tags.toSeq.distinct
+          }
+          .dependsOn(biocondaUpdatedBranch)
+      }
+    }
   }
 
   private def getReleasedTags: Def.Initialize[Task[Seq[TagName]]] = {
