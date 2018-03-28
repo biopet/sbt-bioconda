@@ -114,7 +114,8 @@ object BiocondaUtils {
       "--workdir", s"$path",
       "circleci/picard",
       "circleci") ++ args
-    Process(command,cwd).!!(log)
+    val exit = Process(command,cwd).!(log)
+    if (exit == 1) throw new Exception(s"Command ${command.mkString(" ")} failed.")
   }
 
   /**
