@@ -113,8 +113,7 @@ class BiocondaRecipe(name: String,
     javaOpts.append("[")
     defaultJavaOptions.foreach(x => javaOpts.append("'" + x + "',"))
     javaOpts.append("]")
-    s"""
-         |#!/usr/bin/env python
+    s""" |#!/usr/bin/env python
          |#
          |# Wrapper script for starting the $name JAR package
          |#
