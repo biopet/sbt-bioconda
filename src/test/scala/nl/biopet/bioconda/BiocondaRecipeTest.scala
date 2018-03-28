@@ -29,6 +29,7 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
   @Test
   def testCreateRecipeFiles(): Unit = {
     val tmp = File.createTempFile("recipe", "dir")
+    // The file should be a dir.
     tmp.delete()
     tmp.mkdir()
     testRecipe.createRecipeFiles(tmp)
@@ -38,6 +39,9 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     metaYaml should exist
     buildSh should exist
     wrapper should exist
+    assert(wrapper.canExecute)
+    assert(!buildSh.canExecute)
+    assert(!metaYaml.canExecute)
     Source.fromFile(metaYaml).mkString should equal(testRecipe.metaYaml)
     Source.fromFile(buildSh).mkString should equal(testRecipe.buildScript)
     Source.fromFile(wrapper).mkString should equal(testRecipe.wrapperScript)

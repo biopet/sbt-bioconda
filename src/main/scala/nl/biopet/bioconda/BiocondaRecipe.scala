@@ -38,6 +38,8 @@ class BiocondaRecipe(name: String,
     stringToFile(metaYaml, meta)
     stringToFile(buildScript, buildSh)
     stringToFile(wrapperScript, wrapper)
+    // Wrapper should be executable
+    wrapper.setExecutable(true)
   }
 
   def createRecipe(dir: File): Unit = {
