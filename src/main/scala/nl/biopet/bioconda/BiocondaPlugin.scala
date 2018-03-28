@@ -199,9 +199,9 @@ object BiocondaPlugin extends AutoPlugin {
   private def defaultSummary: Def.Initialize[String] =
     Def.setting {
       s"""This summary for ${(name in Bioconda).value} is automatically generated.
-         |Please visit ${(homepage in Bioconda).value.getOrElse(
-           "the project's website")} for more information about this program.
-       """.stripMargin
+         |Please visit ${(homepage in Bioconda).value.getOrElse("the project's website")}
+         |for more information about this program.
+       """.stripMargin.replace("\n"," ")
     }
 
   private def defaultNotes: Def.Initialize[String] =
@@ -216,12 +216,11 @@ object BiocondaPlugin extends AutoPlugin {
       }
       s"""${(name in Bioconda).value} is Java program that comes with a custom wrapper shell script.
          |By default “$javaOpts” is set in the wrapper.
-         |The command that runs the program is "${biocondaCommand.value}"
+         |The command that runs the program is "${biocondaCommand.value}."
          |If you want to overwrite it you can specify memory options directly after your binaries.
          |If you have _JAVA_OPTIONS set globally this will take precedence.
-         |For example run it with “${biocondaCommand.value} -Xms512m -Xmx1g”
-         |
-       """.stripMargin
+         |For example run it with “${biocondaCommand.value} -Xms512m -Xmx1g”.
+       """.stripMargin.replace("\n"," ")
     }
 
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
