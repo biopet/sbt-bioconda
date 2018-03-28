@@ -61,7 +61,10 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
 
   @Test
   def testCircleciCommand(): Unit = {
-    circleCiCommand(new File(""),Seq("version"),log)
+    val tmp = File.createTempFile("docker","test")
+    tmp.delete()
+    tmp.mkdir()
+    circleCiCommand(tmp,Seq("version"),log)
 
   }
 }

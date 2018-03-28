@@ -297,7 +297,8 @@ object BiocondaPlugin extends AutoPlugin {
     Def.task {
       val repo = biocondaRepository.value
       val log = streams.value.log
-      testBioconda(log,repo)
+      dockerInstalled(log)
+      circleCiCommand(repo,Seq("build"),log)
       repo
   }
 }

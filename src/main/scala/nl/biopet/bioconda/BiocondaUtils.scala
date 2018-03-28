@@ -104,20 +104,17 @@ object BiocondaUtils {
     }
   def circleCiCommand(cwd: File, args: Seq[String], log:ManagedLogger) = {
     val path = cwd.getPath
-    Seq("docker",
+    val command = Seq("docker",
       "run",
       "--rm",
+      "-a", "STDOUT",
+      "-a", "STDERR",
       "-v", "/var/run/docker.sock:/var/run/docker.sock",
       "-v", s"$path:$path",
       "--workdir", s"$path",
       "circleci/picard",
       "circleci") ++ args
-  }
-
-  def testBioconda(log: ManagedLogger, directory: File): Unit = {
-    dockerInstalled(log)
-    val test = Process(circleCiCommand(directory,Seq("build"),log=log),cwd = directory)
-    test.run(log)
+    Process(command,cwd).!!(log)
   }
 
   /**
@@ -129,7 +126,7 @@ object BiocondaUtils {
   def copy(source: String, dest: String, log: ManagedLogger, recursive: Boolean = false):Unit = {
     val r = if (recursive) "-r" else ""
     val copyCommand = s"cp $r $source $dest"
-    Process(Seq("bash", "-c",copyCommand)).run(log)
+    Process(Seq("bash", "-c",copyCommand)).!!(log)
   }
 
   def crawlRecipe(recipe: File): Seq[File] = {
