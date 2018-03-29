@@ -34,6 +34,8 @@ scalafmt := (scalafmt in Compile)
   .dependsOn(scalafmt in Sbt)
   .value
 
+headerCreate := (headerCreate in Compile).dependsOn(headerCreate in Test).value
+headerCheck := (headerCheck in Compile).dependsOn(headerCheck in Test).value
 publishTo := {
   if (isSnapshot.value)
     Some(Opts.resolver.sonatypeSnapshots)
@@ -70,7 +72,7 @@ releaseProcess := Seq[ReleaseStep](
   commitNextVersion,
   pushChanges
 )
-libraryDependencies += "com.typesafe.play" %% "play-json" % "2.6.7"
+
 libraryDependencies += "org.testng" % "testng" % "6.14.2" % "test"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
