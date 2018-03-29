@@ -68,7 +68,10 @@ object BiocondaUtils {
       .toList
     val releaseJar =
       // Finds all jars. This assumes only one jar is released.
-      assets.find(x => x.getBrowserDownloadUrl.contains(".jar"))
+      assets.find(
+        x =>
+          x.getBrowserDownloadUrl
+            .endsWith(".jar") && !x.getBrowserDownloadUrl().contains("javadoc"))
     if (releaseJar.isEmpty) { None } else
       Some(releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl)
   }
