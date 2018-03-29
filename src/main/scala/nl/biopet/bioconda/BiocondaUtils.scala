@@ -135,10 +135,12 @@ object BiocondaUtils {
       }
       else {
         FileUtils.copyFile(file,destination)
-        destination.setReadable(file.canRead)
-        destination.setWritable(file.canWrite)
-        destination.setExecutable(file.canExecute)
-      }
+        if (permissions) {
+          destination.setReadable(file.canRead)
+          destination.setWritable(file.canWrite)
+          destination.setExecutable(file.canExecute)
+        }
+        }
     }
   }
 
