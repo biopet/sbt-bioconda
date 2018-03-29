@@ -16,11 +16,7 @@ developers := List(
   Developer(id = "rhpvorderman",
             name = "Ruben Vorderman",
             email = "r.h.p.vorderman@lumc.nl",
-            url = url("https://github.com/rhpvorderman")),
-  Developer(id = "ffinfo",
-            name = "Peter van 't Hof",
-            email = "pjrvanthof@gmail.com",
-            url = url("https://github.com/ffinfo"))
+            url = url("https://github.com/rhpvorderman"))
 )
 
 publishMavenStyle := true

@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2018 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package nl.biopet.bioconda
 
 import java.io.{FileNotFoundException, IOException}
@@ -28,7 +49,7 @@ object BiocondaUtils {
     try {
       Some(jar.openStream().sha256.hex)
     } catch {
-      case e:java.io.FileNotFoundException => None
+      case e: java.io.FileNotFoundException => None
     }
   }
 
@@ -55,16 +76,14 @@ object BiocondaUtils {
                    repo: File,
                    git: GitRunner,
                    log: ManagedLogger,
-                   remotes: Boolean = false
-                  ): Boolean = {
+                   remotes: Boolean = false): Boolean = {
     // TODO: Find a git command that just returns branches as a list. (Without * in front of the branch you are on)
 
     // Without "--no-color" scala doesn't match the strings properly. Color matters in string comparison!
     val branchList: Array[String] = {
       if (remotes) {
         git.apply("branch", "-a", "--no-color")(repo, log).split("\\n")
-      }
-      else {
+      } else {
         git.apply("branch", "--no-color")(repo, log).split("\\n")
       }
     }
@@ -90,62 +109,70 @@ object BiocondaUtils {
     version
   }
 
-  def dockerInstalled(log: ManagedLogger, path: Option[String] = None) : Unit = {
+  def dockerInstalled(log: ManagedLogger, path: Option[String] = None): Unit = {
     val testCommand = "docker version -f '{{.Client.Version}}'"
-    def test: ProcessBuilder = if (path.isDefined) {
-      Process(Seq("bash", "-c", testCommand), None, "PATH" -> path.getOrElse("$PATH"))
+    def test: ProcessBuilder =
+      if (path.isDefined) {
+        Process(Seq("bash", "-c", testCommand),
+                None,
+                "PATH" -> path.getOrElse("$PATH"))
+      } else {
+        Process(Seq("bash", "-c", testCommand), None)
+      }
+    try { test.!!(log) } catch {
+      case e: Exception =>
+        throw new Exception(s"Docker does not run: ${e.getMessage}")
     }
-    else {
-      Process(Seq("bash", "-c", testCommand), None)
-    }
-    try { test.!!(log)}
-
-    catch {
-      case e: Exception => throw new Exception(s"Docker does not run: ${e.getMessage}")
-    }
-    }
-  def circleCiCommand(cwd: File, args: Seq[String], log:ManagedLogger) = {
+  }
+  def circleCiCommand(cwd: File, args: Seq[String], log: ManagedLogger) = {
     val path = cwd.getPath
     val command = Seq("docker",
-      "run",
-      "--rm",
-      "-v", "/var/run/docker.sock:/var/run/docker.sock",
-      "-v", s"$path:$path",
-      "--workdir", s"$path",
-      "circleci/picard",
-      "circleci") ++ args
-    (Process(command,cwd).lineStream(log)).foreach(line => log.info(line))
+                      "run",
+                      "--rm",
+                      "-v",
+                      "/var/run/docker.sock:/var/run/docker.sock",
+                      "-v",
+                      s"$path:$path",
+                      "--workdir",
+                      s"$path",
+                      "circleci/picard",
+                      "circleci") ++ args
+    (Process(command, cwd).lineStream(log)).foreach(line => log.info(line))
     // if (exit != 0) throw new Exception(s"Command ${command.mkString(" ")} failed with exit code: ${exit}.")
   }
 
   def pullLatestUtils(log: ManagedLogger) = {
-    Process(Seq("docker", "pull", "bioconda/bioconda-utils-build-env")).lineStream(log).foreach(line => log.info(line))
+    Process(Seq("docker", "pull", "bioconda/bioconda-utils-build-env"))
+      .lineStream(log)
+      .foreach(line => log.info(line))
   }
 
-  def copyDirectory(source: File, dest: File, permissions: Boolean = true):Unit = {
-    assert(source.isDirectory,"Source should be a directory")
+  def copyDirectory(source: File,
+                    dest: File,
+                    permissions: Boolean = true): Unit = {
+    assert(source.isDirectory, "Source should be a directory")
     if (dest.exists()) {
       if (!dest.isDirectory) {
-        throw new IOException(s"Destination ${dest.getAbsolutePath} is a file, not a directory.")
+        throw new IOException(
+          s"Destination ${dest.getAbsolutePath} is a file, not a directory.")
       }
     } else {
       dest.mkdirs()
     }
     for (file <- source.listFiles()) {
-      val destination = new File(dest,file.getName)
+      val destination = new File(dest, file.getName)
       if (file.isDirectory) {
         destination.mkdir()
-        copyDirectory(file,destination,permissions = permissions)
-      }
-      else {
+        copyDirectory(file, destination, permissions = permissions)
+      } else {
         // Simple file copy is used here for maximum control.
-        FileUtils.copyFile(file,destination)
+        FileUtils.copyFile(file, destination)
         if (permissions) {
           destination.setReadable(file.canRead)
           destination.setWritable(file.canWrite)
           destination.setExecutable(file.canExecute)
         }
-        }
+      }
     }
   }
 

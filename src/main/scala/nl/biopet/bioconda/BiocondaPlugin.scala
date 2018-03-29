@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2018 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package nl.biopet.bioconda
 
 import com.typesafe.sbt.GitPlugin
@@ -40,8 +61,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaNotes := defaultNotes.value,
     biocondaSummary := defaultSummary.value,
     biocondaDefaultJavaOptions := Seq(),
-    biocondaCreateVersionRecipes := createRecipes(
-      latest = false).value,
+    biocondaCreateVersionRecipes := createRecipes(latest = false).value,
     biocondaCreateLatestRecipe := createRecipes(versions = false).value,
     biocondaCreateRecipes := createRecipes().value,
     biocondaLicense := (licenses in Bioconda).value.toList.headOption
@@ -94,7 +114,7 @@ object BiocondaPlugin extends AutoPlugin {
 
       // Check if biocondaMainBranch exists. If not create it.
 
-      if (branchExists(branch, local, git, s.log, remotes=true)) {
+      if (branchExists(branch, local, git, s.log, remotes = true)) {
         git.apply("checkout", branch)(local, s.log)
       } else {
         git.apply("checkout", "-b", branch)(local, s.log)
@@ -107,24 +127,26 @@ object BiocondaPlugin extends AutoPlugin {
   }
 
   private def updateBranch(): Def.Initialize[Task[File]] = {
-    Def.task {
-      val git = GitKeys.gitRunner.value
-      val s = streams.value
-      val local: File = biocondaRepository.value
-      val branch: String = biocondaBranch.value
-      val mainBranch: String = biocondaMainBranch.value
+    Def
+      .task {
+        val git = GitKeys.gitRunner.value
+        val s = streams.value
+        val local: File = biocondaRepository.value
+        val branch: String = biocondaBranch.value
+        val mainBranch: String = biocondaMainBranch.value
 
-      // Check if tool branch exists, delete it if so.
-      // This will allow for the recreation of failed recipes that
-      // are not yet in bioconda main.
-      if (branchExists(branch, local, git, s.log)) {
-        git.apply("branch","-D", branch)(local, s.log)
+        // Check if tool branch exists, delete it if so.
+        // This will allow for the recreation of failed recipes that
+        // are not yet in bioconda main.
+        if (branchExists(branch, local, git, s.log)) {
+          git.apply("branch", "-D", branch)(local, s.log)
+        }
+        git.apply("checkout", "-b", branch)(local, s.log)
+        // Rebase tool branch on main branch
+        git.apply("rebase", mainBranch)(local, s.log)
+        local
       }
-      git.apply("checkout", "-b", branch)(local, s.log)
-      // Rebase tool branch on main branch
-      git.apply("rebase", mainBranch)(local, s.log)
-      local
-    }.dependsOn(biocondaUpdatedRepository)
+      .dependsOn(biocondaUpdatedRepository)
   }
 
   private def createRecipes(
@@ -175,10 +197,14 @@ object BiocondaPlugin extends AutoPlugin {
                   name = (name in Bioconda).value,
                   version = versionNumber,
                   command = biocondaCommand.value,
-                  sourceUrl = sourceUrl.getOrElse("No valid source url was found."),
-                  sourceSha256 = sourceSha256.getOrElse("No valid checksum was generated."),
+                  sourceUrl =
+                    sourceUrl.getOrElse("No valid source url was found."),
+                  sourceSha256 =
+                    sourceSha256.getOrElse("No valid checksum was generated."),
                   runRequirements = biocondaRequirements.value,
-                  homeUrl = (homepage in Bioconda).value.getOrElse("No homepage was given.").toString,
+                  homeUrl = (homepage in Bioconda).value
+                    .getOrElse("No homepage was given.")
+                    .toString,
                   license = biocondaLicense.value,
                   buildRequirements = biocondaBuildRequirements.value,
                   summary = biocondaSummary.value,
@@ -202,7 +228,6 @@ object BiocondaPlugin extends AutoPlugin {
       .dependsOn(biocondaUpdatedBranch)
   }
 
-
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
     Def.taskDyn {
       // If recipes are overwritten, they are for the purposes of this plugin not published.
@@ -211,11 +236,12 @@ object BiocondaPlugin extends AutoPlugin {
           val emptyList: Seq[TagName] = Seq()
           emptyList
         }
-      }
-      else {
+      } else {
         Def
           .task {
-            val recipes: File = new File(new File(biocondaRepository.value, "recipes"), (name in Bioconda).value)
+            val recipes: File =
+              new File(new File(biocondaRepository.value, "recipes"),
+                       (name in Bioconda).value)
             val thisRecipe: File = new File(recipes, (name in Bioconda).value)
 
             def tags = new ArrayBuffer[String]
@@ -264,10 +290,11 @@ object BiocondaPlugin extends AutoPlugin {
       val recipes: File = biocondaRecipeDir.value
       val git = GitKeys.gitRunner.value
       val message = biocondaCommitMessage.value
-      val biocondaRecipes = new File(new File(repo, "recipes"),(name in Bioconda).value)
+      val biocondaRecipes =
+        new File(new File(repo, "recipes"), (name in Bioconda).value)
       copyDirectory(recipes, biocondaRecipes)
-      git.apply("add", ".")(repo,log)
-      git.apply("commit", "-m", message)(repo,log)
+      git.apply("add", ".")(repo, log)
+      git.apply("commit", "-m", message)(repo, log)
       repo
     }
   }
@@ -277,16 +304,16 @@ object BiocondaPlugin extends AutoPlugin {
       val log = streams.value.log
       dockerInstalled(log)
       pullLatestUtils(log)
-      circleCiCommand(repo,Seq("build"),log)
+      circleCiCommand(repo, Seq("build"), log)
       repo
-  }
+    }
 
   private def pushRecipe: Def.Initialize[Task[Unit]] =
     Def.task {
       val log = streams.value.log
       val repo = biocondaRepository.value
       val git = GitKeys.gitRunner.value
-      git.apply("push", "origin", biocondaBranch.value)(repo,log)
+      git.apply("push", "origin", biocondaBranch.value)(repo, log)
     }
 
   private def createPullRequest: Def.Initialize[Task[Unit]] =
@@ -294,7 +321,8 @@ object BiocondaPlugin extends AutoPlugin {
       val biocondaMain = new GitUrlParser(biocondaMainGitUrl.value)
       val biocondaOwn = new GitUrlParser(biocondaGitUrl.value)
       val github = GitHub.connect()
-      val biocondaMainRepo = github.getRepository(s"${biocondaMain.owner}/${biocondaMain.repo}")
+      val biocondaMainRepo =
+        github.getRepository(s"${biocondaMain.owner}/${biocondaMain.repo}")
 
       // title of pull request
       val title = biocondaPullRequestTitle.value
@@ -308,6 +336,6 @@ object BiocondaPlugin extends AutoPlugin {
       // Text accompanying the pull request
       val body = biocondaPullRequestBody.value
 
-      biocondaMainRepo.createPullRequest(title,head,base,body)
+      biocondaMainRepo.createPullRequest(title, head, base, body)
     }
 }
