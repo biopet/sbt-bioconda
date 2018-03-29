@@ -2,14 +2,13 @@ package nl.biopet.bioconda
 
 import com.typesafe.sbt.GitPlugin
 import com.typesafe.sbt.SbtGit.GitKeys
-import nl.biopet.bioconda.BiocondaUtils._
 import nl.biopet.bioconda.BiocondaDefaults._
+import nl.biopet.bioconda.BiocondaUtils._
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
 import ohnosequences.sbt.SbtGithubReleasePlugin
-import org.apache.commons.io.FileUtils
+import org.kohsuke.github.GitHub
 import sbt.Keys._
 import sbt.{Def, _}
-import org.kohsuke.github.{GitHub}
 
 import scala.collection.JavaConverters
 import scala.collection.mutable.ArrayBuffer
@@ -27,7 +26,7 @@ object BiocondaPlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Setting[_]] = Def.settings(
     biocondaBranch := (normalizedName in Bioconda).value,
-    name in Bioconda := (normalizedName.value),
+    name in Bioconda := normalizedName.value,
     biocondaCommand := (name in Bioconda).value,
     biocondaMainGitUrl := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master",
@@ -41,19 +40,22 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaNotes := defaultNotes.value,
     biocondaSummary := defaultSummary.value,
     biocondaDefaultJavaOptions := Seq(),
-    biocondaCreateVersionRecipes := createRecipes(versions = true,
-                                                  latest = false).value,
-    biocondaCreateLatestRecipe := createRecipes(versions = false, latest = true).value,
+    biocondaCreateVersionRecipes := createRecipes(
+      latest = false).value,
+    biocondaCreateLatestRecipe := createRecipes(versions = false).value,
     biocondaCreateRecipes := createRecipes().value,
     biocondaLicense := (licenses in Bioconda).value.toList.headOption
       .getOrElse("No license", "")
       ._1,
     biocondaTestCommands := Seq(),
     biocondaCommitMessage := s"Automated update for recipes of ${(name in Bioconda).value}",
-    biocondaAddRecipes := addRecipes.value,
+    biocondaAddRecipes := addRecipes().value,
     biocondaTestRecipes := testRecipes.value,
     biocondaOverwriteRecipes := false,
-    biocondaPushRecipes := pushRecipe.value
+    biocondaPushRecipes := pushRecipe.value,
+    biocondaPullRequestBody := defaultPullRequestBody.value,
+    biocondaPullRequestTitle := defaultPullRequestTitle.value,
+    biocondaPullRequest := createPullRequest.value
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -224,6 +226,7 @@ object BiocondaPlugin extends AutoPlugin {
               // But not a very nice way of doing it.
               metaYamls.foreach(x => tags.append("v" + getVersionFromYaml(x)))
             }
+            // toSeq necessary. Otherwise IDE goes crazy. Even though it is implicitly converted.
             tags.toSeq.distinct
           }
           .dependsOn(biocondaUpdatedBranch)
@@ -254,7 +257,7 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
 
-  private def addRecipes: Def.Initialize[Task[File]] = {
+  private def addRecipes(): Def.Initialize[Task[File]] = {
     Def.task {
       val log = streams.value.log
       val repo: File = biocondaUpdatedBranch.value
@@ -262,7 +265,7 @@ object BiocondaPlugin extends AutoPlugin {
       val git = GitKeys.gitRunner.value
       val message = biocondaCommitMessage.value
       val biocondaRecipes = new File(new File(repo, "recipes"),(name in Bioconda).value)
-      copyDirectory(recipes, biocondaRecipes,permissions=true)
+      copyDirectory(recipes, biocondaRecipes)
       git.apply("add", ".")(repo,log)
       git.apply("commit", "-m", message)(repo,log)
       repo
@@ -273,6 +276,7 @@ object BiocondaPlugin extends AutoPlugin {
       val repo = biocondaRepository.value
       val log = streams.value.log
       dockerInstalled(log)
+      pullLatestUtils(log)
       circleCiCommand(repo,Seq("build"),log)
       repo
   }
@@ -282,18 +286,18 @@ object BiocondaPlugin extends AutoPlugin {
       val log = streams.value.log
       val repo = biocondaRepository.value
       val git = GitKeys.gitRunner.value
-      val message = git.apply("push", "origin", biocondaBranch.value)(repo,log)
+      git.apply("push", "origin", biocondaBranch.value)(repo,log)
     }
 
   private def createPullRequest: Def.Initialize[Task[Unit]] =
     Def.task {
       val biocondaMain = new GitUrlParser(biocondaMainGitUrl.value)
       val biocondaOwn = new GitUrlParser(biocondaGitUrl.value)
-      val github = new GitHub()
+      val github = GitHub.connect()
       val biocondaMainRepo = github.getRepository(s"${biocondaMain.owner}/${biocondaMain.repo}")
 
       // title of pull request
-      val title = ""
+      val title = biocondaPullRequestTitle.value
 
       // branch that should be merged in "owner:branch" format
       val head = s"${biocondaOwn.owner}:${biocondaBranch.value}"
@@ -302,7 +306,7 @@ object BiocondaPlugin extends AutoPlugin {
       val base = biocondaMainBranch.value
 
       // Text accompanying the pull request
-      val body = ""
+      val body = biocondaPullRequestBody.value
 
       biocondaMainRepo.createPullRequest(title,head,base,body)
     }
