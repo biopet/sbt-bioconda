@@ -81,4 +81,6 @@ trait BiocondaKeys {
     settingKey[String]("The title of the pull request")
   lazy val biocondaPullRequestBody =
     settingKey[String]("The message accompanying the pull request")
+  lazy val biocondaRelease = taskKey[Unit](
+    "Create recipes, test them, and create a pull request on bioconda main.")
 }

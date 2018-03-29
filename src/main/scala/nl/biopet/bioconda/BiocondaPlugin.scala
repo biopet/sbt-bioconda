@@ -75,11 +75,21 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaPushRecipes := pushRecipe.value,
     biocondaPullRequestBody := defaultPullRequestBody.value,
     biocondaPullRequestTitle := defaultPullRequestTitle.value,
-    biocondaPullRequest := createPullRequest.value
+    biocondaPullRequest := createPullRequest.value,
+    biocondaRelease := release.value
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
     )
+
+  private def release: Def.Initialize[Task[Unit]] =
+    Def
+      .task {}
+      .dependsOn(biocondaPullRequest)
+      .dependsOn(biocondaPushRecipes)
+      .dependsOn(biocondaTestRecipes)
+      .dependsOn(biocondaAddRecipes)
+      .dependsOn(biocondaCreateRecipes)
 
   private def initBiocondaRepo: Def.Initialize[Task[File]] = {
     Def.task {
@@ -225,7 +235,6 @@ object BiocondaPlugin extends AutoPlugin {
         }
         biocondaRecipeDir.value
       }
-      .dependsOn(biocondaUpdatedBranch)
   }
 
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
