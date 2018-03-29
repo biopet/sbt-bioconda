@@ -70,8 +70,10 @@ object BiocondaUtils {
       // Finds all jars. This assumes only one jar is released.
       assets.find(
         x =>
-          x.getBrowserDownloadUrl
-            .endsWith(".jar") && !x.getBrowserDownloadUrl().contains("javadoc"))
+          x.getBrowserDownloadUrl.endsWith(".jar") &&
+            !x.getBrowserDownloadUrl().endsWith("javadoc.jar") &&
+            !x.getBrowserDownloadUrl.endsWith("sources.jar")
+      )
     if (releaseJar.isEmpty) { None } else
       Some(releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl)
   }
