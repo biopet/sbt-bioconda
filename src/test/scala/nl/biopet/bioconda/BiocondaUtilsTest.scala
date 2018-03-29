@@ -76,4 +76,12 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
       circleCiCommand(tmp, Seq("bladnajsdnk"), log)
     }.getMessage() should include("Nonzero exit code: 1")
   }
+
+  @Test
+  def testGitUrlParser(): Unit = {
+    new GitUrlParser("git@github.com:bioconda/bioconda-recipes.git").owner shouldBe "bioconda"
+    new GitUrlParser("git@github.com:bioconda/bioconda-recipes.git").repo shouldBe "bioconda-recipes"
+    new GitUrlParser("https://github.com/bioconda/bioconda-recipes.git").owner shouldBe "bioconda"
+    new GitUrlParser("https://github.com/bioconda/bioconda-recipes.git").repo shouldBe "bioconda-recipes"
+  }
 }

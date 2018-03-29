@@ -158,4 +158,11 @@ object BiocondaUtils {
     }
     yamls
   }
+
+  class GitUrlParser(gitUrl: String) {
+    assert(gitUrl.startsWith("http") || gitUrl.startsWith("git"))
+    val gitUrlParts = gitUrl.split(":/".toCharArray).reverse
+    def repo = gitUrlParts(0).stripSuffix(".git")
+    def owner = gitUrlParts(1)
+  }
 }

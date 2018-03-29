@@ -308,4 +308,9 @@ object BiocondaPlugin extends AutoPlugin {
       val git = GitKeys.gitRunner.value
       val message = git.apply("push", "origin", biocondaBranch.value)(repo,log)
     }
+
+  private def createPullRequest: Def.Initialize[Task[Unit]] =
+    Def.task {
+
+    }
 }
