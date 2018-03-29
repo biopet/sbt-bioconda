@@ -84,4 +84,9 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
     new GitUrlParser("https://github.com/bioconda/bioconda-recipes.git").owner shouldBe "bioconda"
     new GitUrlParser("https://github.com/bioconda/bioconda-recipes.git").repo shouldBe "bioconda-recipes"
   }
+
+  @Test
+  def testPullLatestUtils(): Unit = {
+    pullLatestUtils(log)
+  }
 }

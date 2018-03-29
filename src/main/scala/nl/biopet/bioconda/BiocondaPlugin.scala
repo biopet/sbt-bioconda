@@ -3,11 +3,13 @@ package nl.biopet.bioconda
 import com.typesafe.sbt.GitPlugin
 import com.typesafe.sbt.SbtGit.GitKeys
 import nl.biopet.bioconda.BiocondaUtils._
+import nl.biopet.bioconda.BiocondaDefaults._
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
 import ohnosequences.sbt.SbtGithubReleasePlugin
 import org.apache.commons.io.FileUtils
 import sbt.Keys._
 import sbt.{Def, _}
+import org.kohsuke.github.{GitHub}
 
 import scala.collection.JavaConverters
 import scala.collection.mutable.ArrayBuffer
@@ -198,32 +200,6 @@ object BiocondaPlugin extends AutoPlugin {
       .dependsOn(biocondaUpdatedBranch)
   }
 
-  private def defaultSummary: Def.Initialize[String] =
-    Def.setting {
-      s"""This summary for ${(name in Bioconda).value} is automatically generated.
-         |Please visit ${(homepage in Bioconda).value.getOrElse("the project's website")}
-         |for more information about this program.
-       """.stripMargin.replace("\n"," ")
-    }
-
-  private def defaultNotes: Def.Initialize[String] =
-    Def.setting {
-      def javaOpts: String = {
-        val javaDefaults = biocondaDefaultJavaOptions.value
-        val builder = new StringBuilder
-        javaDefaults.foreach(x => builder.append(x + " "))
-        val opts = builder.toString().trim
-        if (javaDefaults.isEmpty) "no default java option"
-        else opts
-      }
-      s"""${(name in Bioconda).value} is Java program that comes with a custom wrapper shell script.
-         |By default “$javaOpts” is set in the wrapper.
-         |The command that runs the program is "${biocondaCommand.value}."
-         |If you want to overwrite it you can specify memory options directly after your binaries.
-         |If you have _JAVA_OPTIONS set globally this will take precedence.
-         |For example run it with “${biocondaCommand.value} -Xms512m -Xmx1g”.
-       """.stripMargin.replace("\n"," ")
-    }
 
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
     Def.taskDyn {
@@ -311,6 +287,23 @@ object BiocondaPlugin extends AutoPlugin {
 
   private def createPullRequest: Def.Initialize[Task[Unit]] =
     Def.task {
+      val biocondaMain = new GitUrlParser(biocondaMainGitUrl.value)
+      val biocondaOwn = new GitUrlParser(biocondaGitUrl.value)
+      val github = new GitHub()
+      val biocondaMainRepo = github.getRepository(s"${biocondaMain.owner}/${biocondaMain.repo}")
 
+      // title of pull request
+      val title = ""
+
+      // branch that should be merged in "owner:branch" format
+      val head = s"${biocondaOwn.owner}:${biocondaBranch.value}"
+
+      // branch that we merge into
+      val base = biocondaMainBranch.value
+
+      // Text accompanying the pull request
+      val body = ""
+
+      biocondaMainRepo.createPullRequest(title,head,base,body)
     }
 }

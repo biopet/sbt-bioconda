@@ -118,6 +118,10 @@ object BiocondaUtils {
     // if (exit != 0) throw new Exception(s"Command ${command.mkString(" ")} failed with exit code: ${exit}.")
   }
 
+  def pullLatestUtils(log: ManagedLogger) = {
+    Process(Seq("docker", "pull", "bioconda/bioconda-utils-build-env")).lineStream(log).foreach(line => log.info(line))
+  }
+
   def copyDirectory(source: File, dest: File, permissions: Boolean = true):Unit = {
     assert(source.isDirectory,"Source should be a directory")
     if (dest.exists()) {

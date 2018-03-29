@@ -49,4 +49,7 @@ trait BiocondaKeys {
   lazy val biocondaTestRecipes = taskKey[File]("Tests the generated recipes with circleci")
   lazy val biocondaOverwriteRecipes = settingKey[Boolean]("Whether recipes already published on bioconda main should be overwritten")
   lazy val biocondaCommand = settingKey[String]("The command that is used when the tool is installed in the environment")
+  lazy val biocondaPullRequest = taskKey[Unit]("Create a pull request on bioconda main")
+  lazy val biocondaPullRequestTitle = settingKey[String]("The title of the pull request")
+  lazy val biocondaPullRequestBody = settingKey[String]("The message accompanying the pull request")
 }
