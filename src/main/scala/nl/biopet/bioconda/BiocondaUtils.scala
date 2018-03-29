@@ -134,6 +134,7 @@ object BiocondaUtils {
         copyDirectory(file,destination,permissions = permissions)
       }
       else {
+        // Simple file copy is used here for maximum control.
         FileUtils.copyFile(file,destination)
         if (permissions) {
           destination.setReadable(file.canRead)

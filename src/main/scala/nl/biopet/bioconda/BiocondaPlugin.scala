@@ -50,7 +50,8 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaCommitMessage := s"Automated update for recipes of ${(name in Bioconda).value}",
     biocondaAddRecipes := addRecipes.value,
     biocondaTestRecipes := testRecipes.value,
-    biocondaOverwriteRecipes := false
+    biocondaOverwriteRecipes := false,
+    biocondaPushRecipe := pushRecipe.value
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -299,4 +300,12 @@ object BiocondaPlugin extends AutoPlugin {
       circleCiCommand(repo,Seq("build"),log)
       repo
   }
+
+  private def pushRecipe: Def.Initialize[Task[Unit]] =
+    Def.task {
+      val log = streams.value.log
+      val repo = biocondaRepository.value
+      val git = GitKeys.gitRunner.value
+      git.apply("push", "origin", biocondaBranch.value)(repo,log)
+    }
 }
