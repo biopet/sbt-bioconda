@@ -323,7 +323,7 @@ object BiocondaPlugin extends AutoPlugin {
       val repo = biocondaRepository.value
       val git = GitKeys.gitRunner.value
       // Force the push. This automated branch should prevail.
-      git.apply("push","-f", "origin", biocondaBranch.value)(repo, log)
+      git.apply("push", "-f", "origin", biocondaBranch.value)(repo, log)
     }
 
   private def createPullRequest: Def.Initialize[Task[Unit]] =
