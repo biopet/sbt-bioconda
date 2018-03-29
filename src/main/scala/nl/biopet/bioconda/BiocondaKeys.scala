@@ -19,7 +19,7 @@ trait BiocondaKeys {
     taskKey[File]("Update the tool branch to the main bioconda-recipes repo")
   lazy val biocondaRecipeDir =
     settingKey[File]("Where the recipes will be created")
-  lazy val biocondaPushRecipe = taskKey[Unit](
+  lazy val biocondaPushRecipes = taskKey[Unit](
     "Push the branch with the recipe.")
   lazy val biocondaCreateRecipes = taskKey[File](
     "Create the bioconda recipes for all released versions of the tool and the latest(default) version.")

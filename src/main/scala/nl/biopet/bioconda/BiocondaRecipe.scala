@@ -103,7 +103,7 @@ class BiocondaRecipe(name: String,
        |cp $fileName $$outdir/$fileName
        |cp $$RECIPE_DIR/${wrapperFilename} $$outdir/$command
        |ln -s $$outdir/$command $$PREFIX/bin
-      """.stripMargin
+       |""".stripMargin + "\n"
 
   def wrapperScript: String = {
     def pyScript: String = {

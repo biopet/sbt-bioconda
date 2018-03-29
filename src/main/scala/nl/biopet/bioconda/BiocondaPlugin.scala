@@ -51,7 +51,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaAddRecipes := addRecipes.value,
     biocondaTestRecipes := testRecipes.value,
     biocondaOverwriteRecipes := false,
-    biocondaPushRecipe := pushRecipe.value
+    biocondaPushRecipes := pushRecipe.value
   )
 
   override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
@@ -65,7 +65,7 @@ object BiocondaPlugin extends AutoPlugin {
       val s = streams.value
       val local = biocondaRepository.value
       val upstream = biocondaMainGitUrl.value
-      val origin = biocondaMainGitUrl.value
+      val origin = biocondaGitUrl.value
       val branch = biocondaMainBranch.value
 
       //Check if git repo already exits
@@ -306,6 +306,6 @@ object BiocondaPlugin extends AutoPlugin {
       val log = streams.value.log
       val repo = biocondaRepository.value
       val git = GitKeys.gitRunner.value
-      git.apply("push", "origin", biocondaBranch.value)(repo,log)
+      val message = git.apply("push", "origin", biocondaBranch.value)(repo,log)
     }
 }
