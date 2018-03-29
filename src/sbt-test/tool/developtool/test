@@ -1,6 +1,0 @@
-> biocondaUpdatedRepository
-$ exists target/bioconda/.github
-$ exists target/bioconda/recipes
-$ exists target/bioconda/scripts
-$ exists target/bioconda/recipes/biopet
-$ exists target/bioconda/config.yml
