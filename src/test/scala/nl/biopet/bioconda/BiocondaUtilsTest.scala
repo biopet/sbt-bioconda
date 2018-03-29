@@ -67,4 +67,13 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
     circleCiCommand(tmp,Seq("version"),log)
 
   }
+  @Test
+  def testCircleCiCommandFail(): Unit = {
+    val tmp = File.createTempFile("docker","test")
+    tmp.delete()
+    tmp.mkdir()
+    intercept[Exception] {
+      circleCiCommand(tmp, Seq("bladnajsdnk"), log)
+    }.getMessage() should include("circleci bladnajsdnk failed with exit code: 1.")
+  }
 }

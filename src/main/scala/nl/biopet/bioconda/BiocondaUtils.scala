@@ -107,15 +107,13 @@ object BiocondaUtils {
     val command = Seq("docker",
       "run",
       "--rm",
-      "-a", "STDOUT",
-      "-a", "STDERR",
       "-v", "/var/run/docker.sock:/var/run/docker.sock",
       "-v", s"$path:$path",
       "--workdir", s"$path",
       "circleci/picard",
       "circleci") ++ args
     val exit = Process(command,cwd).!(log)
-    if (exit == 1) throw new Exception(s"Command ${command.mkString(" ")} failed.")
+    if (exit != 0) throw new Exception(s"Command ${command.mkString(" ")} failed with exit code: ${exit}.")
   }
 
   /**
