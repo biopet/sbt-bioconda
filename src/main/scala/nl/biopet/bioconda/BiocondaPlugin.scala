@@ -5,6 +5,7 @@ import com.typesafe.sbt.SbtGit.GitKeys
 import nl.biopet.bioconda.BiocondaUtils._
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
 import ohnosequences.sbt.SbtGithubReleasePlugin
+import org.apache.commons.io.FileUtils
 import sbt.Keys._
 import sbt.{Def, _}
 
@@ -283,11 +284,8 @@ object BiocondaPlugin extends AutoPlugin {
       val recipes: File = biocondaRecipeDir.value
       val git = GitKeys.gitRunner.value
       val message = biocondaCommitMessage.value
-      val recipeFiles = recipes.listFiles()
-      val biocondaRecipes = new File(new File(repo, "recipes"),(name in Bioconda).value).getAbsolutePath
-      for (file <- recipeFiles) {
-        copy(file.getAbsolutePath,biocondaRecipes,log,recursive = true)
-      }
+      val biocondaRecipes = new File(new File(repo, "recipes"),(name in Bioconda).value)
+      FileUtils.copyDirectory(recipes,biocondaRecipes)
       git.apply("add", ".")(repo,log)
       git.apply("commit", "-m", message)(repo,log)
       repo

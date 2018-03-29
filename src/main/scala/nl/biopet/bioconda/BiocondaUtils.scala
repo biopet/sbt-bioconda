@@ -2,13 +2,14 @@ package nl.biopet.bioconda
 
 import java.io.FileNotFoundException
 
-import sbt.{URL, File}
+import sbt.{File, URL}
 
 import scala.language.postfixOps
 import com.roundeights.hasher.Implicits._
 import com.roundeights.hasher.ByteReader
 import com.typesafe.sbt.git.GitRunner
 import ohnosequences.sbt.GithubRelease.keys.TagName
+import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.errors.CommandFailedException
 import org.kohsuke.github.{GHAsset, GHRelease, GHRepository}
 import sbt.internal.util.ManagedLogger
@@ -112,20 +113,8 @@ object BiocondaUtils {
       "--workdir", s"$path",
       "circleci/picard",
       "circleci") ++ args
-    val exit = Process(command,cwd).!(log)
+    log(Process(command,cwd).lineStream(log))
     if (exit != 0) throw new Exception(s"Command ${command.mkString(" ")} failed with exit code: ${exit}.")
-  }
-
-  /**
-    * Executes a copy command on the system command line
-    * @param source source string
-    * @param dest destination string
-    * @param recursive set to true for recursive copying.
-    */
-  def copy(source: String, dest: String, log: ManagedLogger, recursive: Boolean = false):Unit = {
-    val r = if (recursive) "-r" else ""
-    val copyCommand = s"cp $r $source $dest"
-    Process(Seq("bash", "-c",copyCommand)).!!(log)
   }
 
   def crawlRecipe(recipe: File): Seq[File] = {
