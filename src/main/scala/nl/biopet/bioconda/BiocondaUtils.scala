@@ -1,6 +1,7 @@
 package nl.biopet.bioconda
 
-import java.io.FileNotFoundException
+import java.io.{FileNotFoundException, IOException}
+import java.util.function.Supplier
 
 import sbt.{File, URL}
 
@@ -113,8 +114,32 @@ object BiocondaUtils {
       "--workdir", s"$path",
       "circleci/picard",
       "circleci") ++ args
-    log(Process(command,cwd).lineStream(log))
-    if (exit != 0) throw new Exception(s"Command ${command.mkString(" ")} failed with exit code: ${exit}.")
+    (Process(command,cwd).lineStream(log)).foreach(line => log.info(line))
+    // if (exit != 0) throw new Exception(s"Command ${command.mkString(" ")} failed with exit code: ${exit}.")
+  }
+
+  def copyDirectory(source: File, dest: File, permissions: Boolean = true):Unit = {
+    assert(source.isDirectory,"Source should be a directory")
+    if (dest.exists()) {
+      if (!dest.isDirectory) {
+        throw new IOException(s"Destination ${dest.getAbsolutePath} is a file, not a directory.")
+      }
+    } else {
+      dest.mkdirs()
+    }
+    for (file <- source.listFiles()) {
+      val destination = new File(dest,file.getName)
+      if (file.isDirectory) {
+        destination.mkdir()
+        copyDirectory(file,destination,permissions = permissions)
+      }
+      else {
+        FileUtils.copyFile(file,destination)
+        destination.setReadable(file.canRead)
+        destination.setWritable(file.canWrite)
+        destination.setExecutable(file.canExecute)
+      }
+    }
   }
 
   def crawlRecipe(recipe: File): Seq[File] = {

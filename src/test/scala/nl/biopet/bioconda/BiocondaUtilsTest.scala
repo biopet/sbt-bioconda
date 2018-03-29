@@ -74,6 +74,6 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
     tmp.mkdir()
     intercept[Exception] {
       circleCiCommand(tmp, Seq("bladnajsdnk"), log)
-    }.getMessage() should include("circleci bladnajsdnk failed with exit code: 1.")
+    }.getMessage() should include("Nonzero exit code: 1")
   }
 }

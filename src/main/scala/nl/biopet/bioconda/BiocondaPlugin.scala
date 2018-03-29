@@ -285,7 +285,7 @@ object BiocondaPlugin extends AutoPlugin {
       val git = GitKeys.gitRunner.value
       val message = biocondaCommitMessage.value
       val biocondaRecipes = new File(new File(repo, "recipes"),(name in Bioconda).value)
-      FileUtils.copyDirectory(recipes,biocondaRecipes)
+      copyDirectory(recipes, biocondaRecipes,permissions=true)
       git.apply("add", ".")(repo,log)
       git.apply("commit", "-m", message)(repo,log)
       repo
