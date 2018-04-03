@@ -38,7 +38,7 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     sourceSha256 = "af15", //incorrect but that is irrelevant
     runRequirements = Seq("openjdk"),
     buildRequirements = Seq(),
-    testCommands = Seq("test --version"),
+    testCommands = Seq("testing --version"),
     homeUrl = "test.example.com/index.html",
     license = "MIT",
     summary = "test is a tool that is tested in this test suite.",
@@ -94,7 +94,7 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     yaml should include("  build:")
     yaml should include("test:")
     yaml should include("  commands:")
-    yaml should include("- test --version")
+    yaml should include("- testing --version")
     yaml should include("extra:")
     yaml should include("notes: This is java")
     yaml shouldNot include("Nederlandse tekst ")
