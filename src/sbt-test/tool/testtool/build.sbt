@@ -26,13 +26,8 @@ def getRepo: Def.Initialize[Task[GHRepository]] = Def.task {
 def biocondaTempDir: File = {
   val homeTest = new File(sys.env("HOME"))
   val dir = java.io.File.createTempFile("bioconda",".d",homeTest)
-
   dir.delete()
   dir.mkdirs()
   dir.deleteOnExit()
   dir
 }
-
-
-
-

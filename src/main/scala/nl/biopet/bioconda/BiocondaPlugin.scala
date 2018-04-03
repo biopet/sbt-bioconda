@@ -270,7 +270,7 @@ object BiocondaPlugin extends AutoPlugin {
         val jar = getSourceUrl(tag, repo)
         if (jar.isEmpty) {
           log.info(s"Release $tag does not have a jar attached. Skipping")
-          none[TagName]
+          None
         } else Some(tag)
       })
       if (tags.isEmpty) {
