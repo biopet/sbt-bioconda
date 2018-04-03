@@ -1,3 +1,4 @@
+import org.kohsuke.github.{GHRepository,GitHub}
 lazy val root = (project in file(".")).settings(
   name := "testtool",
   organizationName := "biopet",
@@ -9,11 +10,18 @@ lazy val root = (project in file(".")).settings(
   biocondaMainGitUrl := "https://github.com/biopet/bioconda-recipes.git",
   licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
   libraryDependencies += "com.github.biopet" %% "tool-utils" % "0.2",
+  libraryDependencies += "org.kohsuke" % "github-api" % "1.92",
   ghreleaseRepoOrg := "biopet",
   ghreleaseRepoName := "testtool",
+  ghreleaseGetRepo := getRepo.value,
   biocondaRepository := biocondaTempDir
 )
 
+def getRepo: Def.Initialize[Task[GHRepository]] = Def.task {
+  val github = GitHub.connectAnonymously()
+  val repo = s"${ghreleaseRepoOrg.value}/${ghreleaseRepoName.value}"
+  github.getRepository(repo)
+}
 // Home directory is used because using /tmp gives errors while testing
 def biocondaTempDir: File = {
   val homeTest = new File(sys.env("HOME"))
