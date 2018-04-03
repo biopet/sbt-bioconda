@@ -50,7 +50,7 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
   }
   @Test
   def testGetSourceUrl(): Unit = {
-    val github: GitHub = GitHub.connect()
+    val github: GitHub = GitHub.connectAnonymously()
     // Use old biopet repo to get test data. Should be stable.
     val repository: GHRepository =
       github.getOrganization("biopet").getRepository("biopet")
