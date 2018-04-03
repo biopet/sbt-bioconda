@@ -20,8 +20,6 @@
  */
 
 package nl.biopet.bioconda
-
-import ohnosequences.sbt.GithubRelease.keys.TagName
 import sbt._
 
 trait BiocondaKeys {

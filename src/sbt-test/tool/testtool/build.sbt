@@ -14,6 +14,7 @@ lazy val root = (project in file(".")).settings(
   biocondaRepository := biocondaTempDir
 )
 
+// Home directory is used because using /tmp gives errors while testing
 def biocondaTempDir: File = {
   val homeTest = new File(sys.env("HOME"))
   val dir = java.io.File.createTempFile("bioconda",".d",homeTest)
