@@ -33,7 +33,7 @@ import com.typesafe.sbt.git.GitRunner
 import ohnosequences.sbt.GithubRelease.keys.TagName
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.errors.CommandFailedException
-import org.kohsuke.github.{GHAsset, GHRelease, GHRepository}
+import org.kohsuke.github.{GitHub, GHAsset, GHRelease, GHRepository}
 import sbt.internal.util.ManagedLogger
 
 import sys.process._
@@ -54,7 +54,11 @@ object BiocondaUtils {
   }
 
   def getSourceUrl(tag: TagName, repo: GHRepository): Option[String] = {
-    val releaseList = repo.listReleases().asList()
+    val repoName = repo.getName()
+    val repoOwner = repo.getOwnerName()
+    // Disable authentication. These jars should be accessible for non authenticated users.
+    val noAuthRepo = GitHub.connect().getRepository(s"$repoOwner/$repoName")
+    val releaseList = noAuthRepo.listReleases().asList()
     val releases =
       JavaConverters.collectionAsScalaIterable(releaseList).toList
     val currentRelease = releases.find(x => x.getTagName == tag)
