@@ -1,4 +1,10 @@
 import org.kohsuke.github.{GHRepository,GitHub}
+import org.scalatest.Matchers
+
+lazy val checkRepo = taskKey[Unit] = "checks if repo is checked out"
+lazy val checkRecipes = taskKey[Unit] = "checks if recipes are created"
+lazy val checkCopy = taskKey[Unit] = "checks if recipes are copied"
+
 lazy val root = (project in file(".")).settings(
   name := "testtool",
   organizationName := "biopet",
@@ -11,6 +17,7 @@ lazy val root = (project in file(".")).settings(
   licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
   libraryDependencies += "com.github.biopet" %% "tool-utils" % "0.2",
   libraryDependencies += "org.kohsuke" % "github-api" % "1.92",
+  libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5",
   ghreleaseRepoOrg := "biopet",
   ghreleaseRepoName := "testtool",
   ghreleaseGetRepo := getRepo.value,
