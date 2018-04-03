@@ -110,21 +110,18 @@ object BiocondaPlugin extends AutoPlugin {
 
       def addRemote(remote: String, url: String): Unit = {
         if (remotes.contains(remote)) {
-          val currentRemote = git("remote", "-v")(local,s.log).split("\\n").find(x => x.startsWith(remote))
-          val currentUrl = currentRemote.getOrElse("         ").split(" ")(2) // "remote  url (fetch)" (2) should be the url
-          if (currentUrl == remote) {}
-          else {
+          val currentRemoteUrl = git("remote", "get-url", remote)(local, s.log)
+          if (currentRemoteUrl == url) {} else {
             throw new Exception(
-              s"""Git repository already has url: '$currentUrl' defined for remote
+              s"""Git repository already has url: '$currentRemoteUrl' defined for remote
                  |'$remote'. Will not set '$remote' to '$url'.""".stripMargin)
           }
-        }
-        else {
-          git("remote", "add", "upstream", upstream)(local, s.log)
+        } else {
+          git("remote", "add", remote, url)(local, s.log)
         }
       }
 
-      addRemote("upstream",upstream)
+      addRemote("upstream", upstream)
       addRemote("origin", origin)
 
       // Check if biocondaMainBranch exists. If not create it.
