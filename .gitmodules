@@ -1,3 +1,0 @@
-[submodule "src/sbt-test/tool/testtool"]
-	path = src/sbt-test/tool/testtool
-	url = https://github.com/biopet/testtool.git
