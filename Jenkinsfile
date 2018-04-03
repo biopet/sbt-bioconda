@@ -8,20 +8,20 @@ node('local') {
             tool 'sbt 0.13.15'
             checkout scm
             sh 'git submodule update --init --recursive'
-            // Remove sbt-biopet SNAPSHOT plugin from cache.
-            sh 'rm -rf $HOME/.ivy2/cache/scala_*/sbt_*/com.github.biopet/sbt-biopet/*/*SNAPSHOT*'
+            // Remove sbt-bioconda SNAPSHOT plugin from cache.
+            sh 'rm -rf $HOME/.ivy2/cache/scala_*/sbt_*/com.github.biopet/sbt-bioconda/*/*SNAPSHOT*'
         }
 
         stage('Build & Test') {
-            sh "${tool name: 'sbt 0.13.15', type: 'org.jvnet.hudson.plugins.SbtPluginBuilder$SbtInstallation'}/bin/sbt -no-colors clean scalafmt scripted headerCheck"
+            sh "${tool name: 'sbt 0.13.15', type: 'org.jvnet.hudson.plugins.SbtPluginBuilder$SbtInstallation'}/bin/sbt -no-colors clean coverage test coverageAggregate coverageReport scalafmt scripted headerCheck"
             sh "git diff --exit-code || (echo \"ERROR: Git changes detected, please regenerate the readme and run scalafmt with: sbt headerCreate scalafmt\" && exit 1)"
         }
 
         stage('Results') {
-            //step([$class: 'ScoveragePublisher', reportDir: 'target/scala-2.11/scoverage-report/', reportFile: 'scoverage.xml'])
-            //junit '**/test-output/junitreports/*.xml'
-            // Remove locally published sbt-biopet plugin from cache to avoid conflicts with other tools.
-            sh 'rm -rf $HOME/.ivy2/cache/scala_2.10/sbt_0.13/com.github.biopet/sbt-biopet'
+            step([$class: 'ScoveragePublisher', reportDir: 'target/scala-2.11/scoverage-report/', reportFile: 'scoverage.xml'])
+            junit '**/test-output/junitreports/*.xml'
+            // remove locally published sbt-bioconda plugin from cache to avoid conflicts with other tools.
+            sh 'rm -rf $HOME/.ivy2/cache/scala_2.10/sbt_0.13/com.github.biopet/sbt-bioconda'
         }
 
         if (env.BRANCH_NAME == 'develop') stage('Publish') {
@@ -42,8 +42,8 @@ node('local') {
         } else {
             slackSend(color: '#FFFF00', message: "${currentBuild.result}: Job '${env.JOB_NAME} #${env.BUILD_NUMBER}' (<${env.BUILD_URL}|Open>)", channel: '#biopet-bot', teamDomain: 'lumc', tokenCredentialId: 'lumc')
         }
-        // Remove sbt-biopet SNAPSHOT plugin from cache.
-        sh 'rm -rf $HOME/.ivy2/cache/scala_*/sbt_*/com.github.biopet/sbt-biopet/*SNAPSHOT*'
+        // Remove sbt-bioconda SNAPSHOT plugin from cache.
+        sh 'rm -rf $HOME/.ivy2/cache/scala_*/sbt_*/com.github.biopet/sbt-bioconda/*SNAPSHOT*'
         //junit '**/test-output/junitreports/*.xml'
 
         throw e
