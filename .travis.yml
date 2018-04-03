@@ -1,5 +1,10 @@
 language: scala
 
+# Docker required to test plugin fully.
+sudo: required
+services:
+  - docker
+
 scala:
   - 2.11.11
 
