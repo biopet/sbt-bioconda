@@ -181,56 +181,51 @@ object BiocondaPlugin extends AutoPlugin {
             (if (latest) Seq(latestTag) else Seq())).distinct
         val repo = ghreleaseGetRepo.value
         val log = streams.value.log
-        // Some sbt magic here. We initialize a task that returns the recipe dir.
-        // We add dependencies to this task based on the tags
-        for (tag <- toBePublishedTags) {
-
-          // Only evaluate if versions need to be published.
-          if (versions || (latest && tag == latestTag)) {
-
-            // Hardcoded "v".
-            val versionNumber = tag.stripPrefix("v")
-            val publishDir = new File(biocondaRecipeDir.value, versionNumber)
-            val sourceUrl = {
-              getSourceUrl(tag, repo)
-            }
-            if (sourceUrl.isEmpty) {
-              log.error(s"No released jar for tag: $tag. Skipping.")
+        // Only evaluate if versions need to be published.
+        for (tag <- toBePublishedTags
+             if versions || (latest && tag == latestTag)) {
+          // Hardcoded "v".
+          val versionNumber = tag.stripPrefix("v")
+          val publishDir = new File(biocondaRecipeDir.value, versionNumber)
+          val sourceUrl = {
+            getSourceUrl(tag, repo)
+          }
+          if (sourceUrl.isEmpty) {
+            log.error(s"No released jar for tag: $tag. Skipping.")
+          } else {
+            log.info(
+              s"Downloading jar from ${sourceUrl.get} to generate checksum.")
+            val sourceSha256 = getSha256SumFromDownload(sourceUrl.get)
+            if (sourceSha256.isEmpty) {
+              log.error(s"Downloading of ${sourceUrl.get} failed. Skipping.")
             } else {
-              log.info(
-                s"Downloading jar from ${sourceUrl.get} to generate checksum.")
-              val sourceSha256 = getSha256SumFromDownload(sourceUrl.get)
-              if (sourceSha256.isEmpty) {
-                log.error(s"Downloading of ${sourceUrl.get} failed. Skipping.")
-              } else {
-                log.info(s"Downloading finished.")
+              log.info(s"Downloading finished.")
 
-                val recipe = new BiocondaRecipe(
-                  name = (name in Bioconda).value,
-                  version = versionNumber,
-                  command = biocondaCommand.value,
-                  sourceUrl =
-                    sourceUrl.getOrElse("No valid source url was found."),
-                  sourceSha256 =
-                    sourceSha256.getOrElse("No valid checksum was generated."),
-                  runRequirements = biocondaRequirements.value,
-                  homeUrl = (homepage in Bioconda).value
-                    .getOrElse("No homepage was given.")
-                    .toString,
-                  license = biocondaLicense.value,
-                  buildRequirements = biocondaBuildRequirements.value,
-                  summary = biocondaSummary.value,
-                  buildNumber = biocondaBuildNumber.value,
-                  notes = Some(biocondaNotes.value),
-                  defaultJavaOptions = biocondaDefaultJavaOptions.value,
-                  testCommands = biocondaTestCommands.value
-                )
-                publishDir.mkdirs()
-                recipe.createRecipeFiles(publishDir)
-                if (tag == latestTag) {
-                  recipe.createRecipeFiles(biocondaRecipeDir.value)
+              val recipe = new BiocondaRecipe(
+                name = (name in Bioconda).value,
+                version = versionNumber,
+                command = biocondaCommand.value,
+                sourceUrl =
+                  sourceUrl.getOrElse("No valid source url was found."),
+                sourceSha256 =
+                  sourceSha256.getOrElse("No valid checksum was generated."),
+                runRequirements = biocondaRequirements.value,
+                homeUrl = (homepage in Bioconda).value
+                  .getOrElse("No homepage was given.")
+                  .toString,
+                license = biocondaLicense.value,
+                buildRequirements = biocondaBuildRequirements.value,
+                summary = biocondaSummary.value,
+                buildNumber = biocondaBuildNumber.value,
+                notes = Some(biocondaNotes.value),
+                defaultJavaOptions = biocondaDefaultJavaOptions.value,
+                testCommands = biocondaTestCommands.value
+              )
+              publishDir.mkdirs()
+              recipe.createRecipeFiles(publishDir)
+              if (tag == latestTag) {
+                recipe.createRecipeFiles(biocondaRecipeDir.value)
 
-                }
               }
             }
           }
@@ -242,34 +237,24 @@ object BiocondaPlugin extends AutoPlugin {
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
     Def.taskDyn {
       // If recipes are overwritten, they are for the purposes of this plugin not published.
-      if (biocondaOverwriteRecipes.value) {
-        Def.task {
-          val emptyList: Seq[TagName] = Seq()
-          emptyList
-        }
-      } else {
         Def
           .task {
-            val recipes: File =
-              new File(new File(biocondaRepository.value, "recipes"),
-                       (name in Bioconda).value)
-            val thisRecipe: File = new File(recipes, (name in Bioconda).value)
-
-            def tags = new ArrayBuffer[String]
-
-            if (thisRecipe.exists()) {
-              val metaYamls = crawlRecipe(thisRecipe)
-              // Hardcoded "v" prefix here. Is the standard in github release plugin.
-              // But not a very nice way of doing it.
-              metaYamls.foreach(x => tags.append("v" + getVersionFromYaml(x)))
-            }
-            // toSeq necessary. Otherwise IDE goes crazy. Even though it is implicitly converted.
-            tags.toSeq.distinct
+            if (biocondaOverwriteRecipes.value) {
+                Seq()
+            } else {
+              val biocondaRecipes: File = new File(biocondaRepository.value, "recipes")
+              val toolRecipes = new File(biocondaRecipes, (name in Bioconda).value)
+              val thisRecipe: File = new File(toolRecipes, (name in Bioconda).value)
+              if (thisRecipe.exists()) {
+                // Hardcoded "v" prefix here. Is the standard in github release plugin.
+                // But not a very nice way of doing it.
+                crawlRecipe(thisRecipe).map(x => "v" + getVersionFromYaml(x))
+              }
+              else Seq()            }
           }
           .dependsOn(biocondaUpdatedBranch)
       }
     }
-  }
 
   private def getReleasedTags: Def.Initialize[Task[Seq[TagName]]] = {
     Def.task {
@@ -301,9 +286,9 @@ object BiocondaPlugin extends AutoPlugin {
       val recipes: File = biocondaRecipeDir.value
       val git = GitKeys.gitRunner.value
       val message = biocondaCommitMessage.value
-      val biocondaRecipes =
-        new File(new File(repo, "recipes"), (name in Bioconda).value)
-      copyDirectory(recipes, biocondaRecipes)
+      val biocondaRecipes = new File(repo, "recipes")
+      val toolRecipes = new File(biocondaRecipes, (name in Bioconda).value)
+      copyDirectory(recipes, toolRecipes)
       git("add", ".")(repo, log)
       git("commit", "-m", message)(repo, log)
       repo
