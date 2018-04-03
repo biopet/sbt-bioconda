@@ -13,3 +13,5 @@ lazy val root = (project in file(".")).settings(
 libraryDependencies += "com.github.biopet" %% "tool-utils" % "0.2"
 
 
+ghreleaseRepoOrg := "biopet"
+ghreleaseRepoName := "testtool"
