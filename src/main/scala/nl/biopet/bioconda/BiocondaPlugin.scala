@@ -79,9 +79,6 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaRelease := release.value
   )
 
-  override def globalSettings: Seq[Def.Setting[_]] = Def.settings(
-    )
-
   private def release: Def.Initialize[Task[Unit]] =
     Def
       .task {}

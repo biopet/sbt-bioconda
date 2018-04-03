@@ -23,16 +23,13 @@ package nl.biopet.bioconda
 
 import java.io.{File, PrintWriter}
 
+import nl.biopet.bioconda.BiocondaUtils._
+import org.apache.logging.log4j.core.LoggerContext
+import org.kohsuke.github.{GHRepository, GitHub}
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
-import sbt.Keys.streams
-import BiocondaUtils._
-import ohnosequences.sbt.GithubRelease.keys.TagName
-import org.kohsuke.github.{GHAsset, GHRelease, GHRepository, GitHub}
-import sbt.internal.util.{BufferedLogger, ConsoleLogger, ManagedLogger}
-import org.apache.logging.log4j.core.LoggerContext
-import org.scalatest.exceptions.TestFailedException
+import sbt.internal.util.ManagedLogger
 
 import scala.io.Source
 
@@ -50,7 +47,7 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
   }
   @Test
   def testGetSourceUrl(): Unit = {
-    if (sys.env.getOrElse("TRAVIS","false") != "true") {
+    if (sys.env.getOrElse("TRAVIS", "false") != "true") {
       val github: GitHub = GitHub.connectAnonymously()
       // Use old biopet repo to get test data. Should be stable.
       val repository: GHRepository =

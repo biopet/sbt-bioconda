@@ -21,8 +21,9 @@
 
 package nl.biopet.bioconda
 
-import org.yaml.snakeyaml.Yaml
 import java.io.{File, PrintWriter}
+
+import org.yaml.snakeyaml.Yaml
 
 import scala.collection.JavaConverters._
 import scala.io.Source
