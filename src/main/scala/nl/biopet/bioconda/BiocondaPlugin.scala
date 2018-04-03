@@ -76,10 +76,10 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaPullRequestBody := defaultPullRequestBody.value,
     biocondaPullRequestTitle := defaultPullRequestTitle.value,
     biocondaPullRequest := createPullRequest.value,
-    biocondaRelease := release.value
+    biocondaRelease := releaseProcedure().value
   )
 
-  private def release: Def.Initialize[Task[Unit]] =
+  private def releaseProcedure(): Def.Initialize[Task[Unit]] =
     Def
       .task {}
       .dependsOn(biocondaPullRequest)
@@ -263,15 +263,16 @@ object BiocondaPlugin extends AutoPlugin {
       val releaseList = repo.listReleases().asList()
       val releases =
         JavaConverters.collectionAsScalaIterable(releaseList).toList
-      val tags = new ArrayBuffer[TagName]()
-      for (release <- releases) {
-        val tag = release.getTagName
-        val jar = getSourceUrl(tag, repo)
+      val tags = releases.flatMap(release => {
+        val tag: TagName = release.getTagName
+        val jar = getSourceUrl(tag,repo)
         if (jar.isEmpty) {
           log.info(s"Release $tag does not have a jar attached. Skipping")
-        } else tags.append(tag)
-      }
-      if (tags.isEmpty) {
+          none[TagName]
+        }
+        else Some(tag)
+      })
+     if (tags.isEmpty) {
         throw new Exception(
           "No tags have been released. Please release on github before publishing to bioconda")
       }
