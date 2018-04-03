@@ -92,9 +92,9 @@ object BiocondaUtils {
     // Without "--no-color" scala doesn't match the strings properly. Color matters in string comparison!
     val branchList: Array[String] = {
       if (remotes) {
-        git.apply("branch", "-a", "--no-color")(repo, log).split("\\n")
+        git("branch", "-a", "--no-color")(repo, log).split("\\n")
       } else {
-        git.apply("branch", "--no-color")(repo, log).split("\\n")
+        git("branch", "--no-color")(repo, log).split("\\n")
       }
     }
     val branches = new ListBuffer[String]

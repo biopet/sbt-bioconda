@@ -104,34 +104,34 @@ object BiocondaPlugin extends AutoPlugin {
 
       //Check if git repo already exits
       if (!initialized) {
-        git.apply("init")(local, s.log)
+        git("init")(local, s.log)
       }
 
       // Check if remotes have been set properly
       val remotes: Array[String] =
-        git.apply("remote")(local, s.log).split("\\n")
+        git("remote")(local, s.log).split("\\n")
 
       if (remotes.contains("upstream")) {
-        git.apply("remote", "set-url", "upstream", upstream)(local, s.log)
+        git("remote", "set-url", "upstream", upstream)(local, s.log)
       } else {
-        git.apply("remote", "add", "upstream", upstream)(local, s.log)
+        git("remote", "add", "upstream", upstream)(local, s.log)
       }
       if (remotes.contains("origin")) {
-        git.apply("remote", "set-url", "origin", origin)(local, s.log)
+        git("remote", "set-url", "origin", origin)(local, s.log)
       } else {
-        git.apply("remote", "add", "origin", origin)(local, s.log)
+        git("remote", "add", "origin", origin)(local, s.log)
       }
 
       // Check if biocondaMainBranch exists. If not create it.
 
       if (branchExists(branch, local, git, s.log, remotes = true)) {
-        git.apply("checkout", branch)(local, s.log)
+        git("checkout", branch)(local, s.log)
       } else {
-        git.apply("checkout", "-b", branch)(local, s.log)
+        git("checkout", "-b", branch)(local, s.log)
       }
 
       // Get latest recipes from main repository.
-      git.apply("pull", "upstream", branch)(local, s.log)
+      git("pull", "upstream", branch)(local, s.log)
       local
     }
   }
@@ -149,11 +149,11 @@ object BiocondaPlugin extends AutoPlugin {
         // This will allow for the recreation of failed recipes that
         // are not yet in bioconda main.
         if (branchExists(branch, local, git, s.log)) {
-          git.apply("branch", "-D", branch)(local, s.log)
+          git("branch", "-D", branch)(local, s.log)
         }
-        git.apply("checkout", "-b", branch)(local, s.log)
+        git("checkout", "-b", branch)(local, s.log)
         // Rebase tool branch on main branch
-        git.apply("rebase", mainBranch)(local, s.log)
+        git("rebase", mainBranch)(local, s.log)
         local
       }
       .dependsOn(biocondaUpdatedRepository)
@@ -302,8 +302,8 @@ object BiocondaPlugin extends AutoPlugin {
       val biocondaRecipes =
         new File(new File(repo, "recipes"), (name in Bioconda).value)
       copyDirectory(recipes, biocondaRecipes)
-      git.apply("add", ".")(repo, log)
-      git.apply("commit", "-m", message)(repo, log)
+      git("add", ".")(repo, log)
+      git("commit", "-m", message)(repo, log)
       repo
     }
   }
@@ -323,7 +323,7 @@ object BiocondaPlugin extends AutoPlugin {
       val repo = biocondaRepository.value
       val git = GitKeys.gitRunner.value
       // Force the push. This automated branch should prevail.
-      git.apply("push", "-f", "origin", biocondaBranch.value)(repo, log)
+      git("push", "-f", "origin", biocondaBranch.value)(repo, log)
     }
 
   private def createPullRequest: Def.Initialize[Task[Unit]] =
