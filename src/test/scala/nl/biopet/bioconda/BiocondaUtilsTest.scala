@@ -50,13 +50,15 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
   }
   @Test
   def testGetSourceUrl(): Unit = {
-    val github: GitHub = GitHub.connectAnonymously()
-    // Use old biopet repo to get test data. Should be stable.
-    val repository: GHRepository =
-      github.getOrganization("biopet").getRepository("biopet")
-    val link: Option[String] = Some(
-      "https://github.com/biopet/biopet/releases/download/v0.9.0/Biopet-0.9.0-be7838f2.jar")
-    getSourceUrl(tag = "v0.9.0", repository) shouldBe (link)
+    if (sys.env("TRAVIS") != "true") {
+      val github: GitHub = GitHub.connectAnonymously()
+      // Use old biopet repo to get test data. Should be stable.
+      val repository: GHRepository =
+        github.getOrganization("biopet").getRepository("biopet")
+      val link: Option[String] = Some(
+        "https://github.com/biopet/biopet/releases/download/v0.9.0/Biopet-0.9.0-be7838f2.jar")
+      getSourceUrl(tag = "v0.9.0", repository) shouldBe (link)
+    }
   }
 
   @Test

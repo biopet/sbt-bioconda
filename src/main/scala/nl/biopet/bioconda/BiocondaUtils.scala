@@ -57,7 +57,8 @@ object BiocondaUtils {
     val repoName = repo.getName()
     val repoOwner = repo.getOwnerName()
     // Disable authentication. These jars should be accessible for non authenticated users.
-    val noAuthRepo = GitHub.connectAnonymously().getUser(repoOwner).getRepository(repoName)
+    val noAuthRepo =
+      GitHub.connectAnonymously().getUser(repoOwner).getRepository(repoName)
     val releaseList = noAuthRepo.listReleases().asList()
     val releases =
       JavaConverters.collectionAsScalaIterable(releaseList).toList
