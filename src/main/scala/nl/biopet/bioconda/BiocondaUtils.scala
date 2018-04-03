@@ -32,7 +32,6 @@ import sbt.internal.util.ManagedLogger
 import sbt.{File, URL}
 
 import scala.collection.JavaConverters
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 import scala.language.postfixOps
 import scala.sys.process._
@@ -92,15 +91,12 @@ object BiocondaUtils {
         git("branch", "--no-color")(repo, log).split("\\n")
       }
     }
-    val branches = new ListBuffer[String]
-
-    // For each branch
-    // Remove that annonoying *
-    // Split on / and get the last item(remotes/origin/branch) => branch
-    // Trim away all spaces
-    branchList.foreach(x =>
-      branches.append(x.replaceFirst("\\*", "").split("/").last.trim()))
-    branches.toList.contains(branch)
+    val branches: Array[String] = branchList.flatMap(x => {
+      val branchInfo: Array[String] = { x.replaceFirst("\\*", "").split("/") }
+      if (branchInfo.isEmpty) None
+      else Some(branchInfo.lastOption.getOrElse("").trim())
+    })
+    branches.contains(branch)
 
   }
   def getVersionFromYaml(metaYaml: File): String = {
@@ -183,15 +179,12 @@ object BiocondaUtils {
 
   def crawlRecipe(recipe: File): Seq[File] = {
     val files = recipe.listFiles()
-    val yamls = new ArrayBuffer[File]()
-    for (file <- files) {
-      if (file.isDirectory) {
-        yamls ++= crawlRecipe(file)
-      }
-      if (file.getName == "meta.yaml") {
-        yamls.append(file)
-      }
-    }
+    val yamls: Array[File] = files.flatMap(file => {
+      if (file.isDirectory) crawlRecipe(file)
+      else if (file.getName.equals("meta.yaml")) {
+        Seq(file)
+      } else Seq()
+    })
     yamls
   }
 

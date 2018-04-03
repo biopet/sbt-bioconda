@@ -32,7 +32,6 @@ import sbt.Keys._
 import sbt.{Def, _}
 
 import scala.collection.JavaConverters
-import scala.collection.mutable.ArrayBuffer
 
 object BiocondaPlugin extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
@@ -237,24 +236,27 @@ object BiocondaPlugin extends AutoPlugin {
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
     Def.taskDyn {
       // If recipes are overwritten, they are for the purposes of this plugin not published.
-        Def
-          .task {
-            if (biocondaOverwriteRecipes.value) {
-                Seq()
-            } else {
-              val biocondaRecipes: File = new File(biocondaRepository.value, "recipes")
-              val toolRecipes = new File(biocondaRecipes, (name in Bioconda).value)
-              val thisRecipe: File = new File(toolRecipes, (name in Bioconda).value)
-              if (thisRecipe.exists()) {
-                // Hardcoded "v" prefix here. Is the standard in github release plugin.
-                // But not a very nice way of doing it.
-                crawlRecipe(thisRecipe).map(x => "v" + getVersionFromYaml(x))
-              }
-              else Seq()            }
+      Def
+        .task {
+          if (biocondaOverwriteRecipes.value) {
+            Seq()
+          } else {
+            val biocondaRecipes: File =
+              new File(biocondaRepository.value, "recipes")
+            val toolRecipes =
+              new File(biocondaRecipes, (name in Bioconda).value)
+            val thisRecipe: File =
+              new File(toolRecipes, (name in Bioconda).value)
+            if (thisRecipe.exists()) {
+              // Hardcoded "v" prefix here. Is the standard in github release plugin.
+              // But not a very nice way of doing it.
+              crawlRecipe(thisRecipe).map(x => "v" + getVersionFromYaml(x))
+            } else Seq()
           }
-          .dependsOn(biocondaUpdatedBranch)
-      }
+        }
+        .dependsOn(biocondaUpdatedBranch)
     }
+  }
 
   private def getReleasedTags: Def.Initialize[Task[Seq[TagName]]] = {
     Def.task {
@@ -265,14 +267,13 @@ object BiocondaPlugin extends AutoPlugin {
         JavaConverters.collectionAsScalaIterable(releaseList).toList
       val tags = releases.flatMap(release => {
         val tag: TagName = release.getTagName
-        val jar = getSourceUrl(tag,repo)
+        val jar = getSourceUrl(tag, repo)
         if (jar.isEmpty) {
           log.info(s"Release $tag does not have a jar attached. Skipping")
           none[TagName]
-        }
-        else Some(tag)
+        } else Some(tag)
       })
-     if (tags.isEmpty) {
+      if (tags.isEmpty) {
         throw new Exception(
           "No tags have been released. Please release on github before publishing to bioconda")
       }
