@@ -193,11 +193,12 @@ object BiocondaPlugin extends AutoPlugin {
           } else {
             val sourceUrlString = sourceUrl match {
               case Some(x) => x.toString
-              case _ => "Invalid URL"
+              case _       => "Invalid URL"
             }
             log.info(
               s"Downloading jar from ${sourceUrlString} to generate checksum.")
-            val sourceSha256 = getSha256SumFromDownload(sourceUrl.getOrElse(new URL("")))
+            val sourceSha256 =
+              getSha256SumFromDownload(sourceUrl.getOrElse(new URL("")))
             if (sourceSha256.isEmpty) {
               log.error(s"Downloading of ${sourceUrlString} failed. Skipping.")
             } else {
@@ -348,8 +349,7 @@ object BiocondaPlugin extends AutoPlugin {
       // Get the license that is specified first.
       val topLicense = (licenses in Bioconda).value.headOption
       // Get the license and the url and return the license string.
-      topLicense.getOrElse("No license", "")
-        ._1
+      topLicense.getOrElse("No license", "")._1
     }
   }
 }
