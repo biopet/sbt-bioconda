@@ -63,9 +63,11 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     assert(wrapper.canExecute)
     assert(!buildSh.canExecute)
     assert(!metaYaml.canExecute)
-    Source.fromFile(metaYaml).mkString should equal(testRecipe.metaYaml)
-    Source.fromFile(buildSh).mkString should equal(testRecipe.buildScript)
-    Source.fromFile(wrapper).mkString should equal(testRecipe.wrapperScript)
+    Source.fromFile(metaYaml).mkString should equal(testRecipe.metaYaml + "\n")
+    Source.fromFile(buildSh).mkString should equal(
+      testRecipe.buildScript + "\n")
+    Source.fromFile(wrapper).mkString should equal(
+      testRecipe.wrapperScript + "\n")
   }
 
   @Test

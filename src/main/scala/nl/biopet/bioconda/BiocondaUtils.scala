@@ -103,9 +103,11 @@ object BiocondaUtils {
     val versionRegex: Regex = "version:.([0-9\\.]+)".r
     val yaml = Source.fromFile(metaYaml).getLines().mkString
     val matches = versionRegex.findAllIn(yaml).matchData
-    val versions: Seq[String] = matches.map(regex => {
-      regex.group(1)
-    }).toSeq
+    val versions: Seq[String] = matches
+      .map(regex => {
+        regex.group(1)
+      })
+      .toSeq
     if (versions.isEmpty) {
       throw new Exception(s"No version found in: ${metaYaml.getPath}")
     }

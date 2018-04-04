@@ -47,7 +47,7 @@ class BiocondaRecipe(name: String,
 
   def stringToFile(string: String, file: File): Unit = {
     val writer = new PrintWriter(file)
-    writer.write(string)
+    writer.println(string)
     writer.close()
   }
 
@@ -72,33 +72,33 @@ class BiocondaRecipe(name: String,
 
   def metaYaml: String = {
     val meta: Map[String, Any] = {
-        Map(
-          "package" -> Map(
-            "name" -> name,
-            "version" -> version
-          ),
-          "source" -> Map(
-            "url" -> sourceUrl,
-            "sha256" -> sourceSha256
-          ),
-          "build" -> Map(
-            "number" -> buildNumber
-          ),
-          "requirements" -> Map(
-            "run" -> (runRequirements ++ Seq("python")),
-            "build" -> buildRequirements
-          ),
-          "about" -> Map(
-            "home" -> homeUrl,
-            "license" -> license,
-            "summary" -> summary
-          ),
-          "test" -> Map(
-            "commands" -> testCommands
-          ),
-          "extra" -> Map(
-            "notes" -> notes.getOrElse("")
-          )
+      Map(
+        "package" -> Map(
+          "name" -> name,
+          "version" -> version
+        ),
+        "source" -> Map(
+          "url" -> sourceUrl,
+          "sha256" -> sourceSha256
+        ),
+        "build" -> Map(
+          "number" -> buildNumber
+        ),
+        "requirements" -> Map(
+          "run" -> (runRequirements ++ Seq("python")),
+          "build" -> buildRequirements
+        ),
+        "about" -> Map(
+          "home" -> homeUrl,
+          "license" -> license,
+          "summary" -> summary
+        ),
+        "test" -> Map(
+          "commands" -> testCommands
+        ),
+        "extra" -> Map(
+          "notes" -> notes.getOrElse("")
+        )
       )
     }
 
@@ -121,12 +121,11 @@ class BiocondaRecipe(name: String,
        |cp $fileName $$outdir/$fileName
        |cp $$RECIPE_DIR/$wrapperFilename $$outdir/$command
        |ln -s $$outdir/$command $$PREFIX/bin
-       |""".stripMargin + "\n"
+       |""".stripMargin
 
   def wrapperScript: String = {
     def pyScript: String = {
-      val source = getClass
-        .getClassLoader
+      val source = getClass.getClassLoader
         .getResourceAsStream("nl/biopet/bioconda/wrapper.py")
       Source.fromInputStream(source).mkString
     }
