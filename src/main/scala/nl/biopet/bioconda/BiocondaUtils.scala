@@ -23,7 +23,7 @@ package nl.biopet.bioconda
 
 import java.io.IOException
 
-import com.roundeights.hasher.Implicits._
+
 import com.typesafe.sbt.git.GitRunner
 import ohnosequences.sbt.GithubRelease.keys.TagName
 import org.apache.commons.io.FileUtils
@@ -33,20 +33,11 @@ import sbt.{File, URL}
 
 import scala.collection.JavaConverters
 import scala.io.Source
-import scala.language.postfixOps
+
 import scala.sys.process._
 import scala.util.matching.Regex
 
 object BiocondaUtils {
-  def getSha256SumFromDownload(url: String): Option[String] = {
-    val jar = new URL(url)
-    try {
-      Some(jar.openStream().sha256.hex)
-    } catch {
-      case e: java.io.FileNotFoundException => None
-    }
-  }
-
   def getSourceUrl(tag: TagName, repo: GHRepository): Option[String] = {
     val repoName = repo.getName()
     val repoOwner = repo.getOwnerName()
@@ -151,46 +142,6 @@ object BiocondaUtils {
     Process(Seq("docker", "pull", "bioconda/bioconda-utils-build-env"))
       .lineStream(log)
       .foreach(line => log.info(line))
-  }
-
-  def copyDirectory(source: File,
-                    dest: File,
-                    permissions: Boolean = true): Unit = {
-    assert(source.isDirectory, "Source should be a directory")
-    if (dest.exists()) {
-      if (!dest.isDirectory) {
-        throw new IOException(
-          s"Destination ${dest.getAbsolutePath} is a file, not a directory.")
-      }
-    } else {
-      dest.mkdirs()
-    }
-    for (file <- source.listFiles()) {
-      val destination = new File(dest, file.getName)
-      if (file.isDirectory) {
-        destination.mkdir()
-        copyDirectory(file, destination, permissions = permissions)
-      } else {
-        // Simple file copy is used here for maximum control.
-        FileUtils.copyFile(file, destination)
-        if (permissions) {
-          destination.setReadable(file.canRead)
-          destination.setWritable(file.canWrite)
-          destination.setExecutable(file.canExecute)
-        }
-      }
-    }
-  }
-
-  def crawlRecipe(recipe: File): Seq[File] = {
-    val files = recipe.listFiles()
-    val yamls: Array[File] = files.flatMap(file => {
-      if (file.isDirectory) crawlRecipe(file)
-      else if (file.getName.equals("meta.yaml")) {
-        Seq(file)
-      } else Seq()
-    })
-    yamls
   }
 
   class GitUrlParser(gitUrl: String) {

@@ -77,7 +77,7 @@ libraryDependencies += "org.testng" % "testng" % "6.14.2" % "test"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
 libraryDependencies += "org.yaml" % "snakeyaml" % "1.20"
-libraryDependencies ++= Seq("com.roundeights" %% "hasher" % "1.2.0")
+
 libraryDependencies ++= Seq(
   Defaults.sbtPluginExtra(
     "ohnosequences" % "sbt-github-release" % "0.7.0",

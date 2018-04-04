@@ -45,12 +45,6 @@ class BiocondaRecipe(name: String,
   def fileName: String = sourceUrl.split("/").last
   def wrapperFilename: String = s"$name.py"
 
-  def stringToFile(string: String, file: File): Unit = {
-    val writer = new PrintWriter(file)
-    writer.println(string)
-    writer.close()
-  }
-
   def createRecipeFiles(dir: File): Unit = {
     dir.mkdirs()
     val buildSh = new File(dir, "build.sh")

@@ -36,15 +36,7 @@ import scala.io.Source
 class BiocondaUtilsTest extends TestNGSuite with Matchers {
   val s4j = new LoggerContext("test").getLogger("test")
   val log = new ManagedLogger("test", None, None, s4j)
-  @Test
-  def testSha256Sum(): Unit = {
-    // Taken the README from Biopet 0.9.0. Small, link should be stable
-    val downloadLink: String =
-      "https://raw.githubusercontent.com/biopet/biopet/be7838f27f3cad9f80191d92a4a795c34d1ae092/README.md"
-    getSha256SumFromDownload(downloadLink) shouldBe Some(
-      "186e801bf3cacbd564b4ec00815352218038728bd6787b71f65db474a3588901")
-    getSha256SumFromDownload(downloadLink + "nonsense") shouldBe None
-  }
+
   @Test
   def testGetSourceUrl(): Unit = {
     if (sys.env.getOrElse("TRAVIS", "false") != "true") {
