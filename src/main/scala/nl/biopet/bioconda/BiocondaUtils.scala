@@ -112,8 +112,8 @@ object BiocondaUtils {
         Process(Seq("bash", "-c", testCommand), None)
       }
     try { test.!!(log) } catch {
-      case e: Exception =>
-        throw new Exception(s"Docker does not run: ${e.getMessage}")
+      case e: RuntimeException =>
+        throw new RuntimeException(s"Docker does not run: ${e.getMessage}")
     }
   }
   def circleCiCommand(cwd: File,

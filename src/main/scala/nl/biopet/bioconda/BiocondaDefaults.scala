@@ -45,12 +45,12 @@ object BiocondaDefaults {
         if (javaDefaults.isEmpty) "no default java option"
         else opts
       }
-      s"""${(name in Bioconda).value} is Java program that comes with a custom wrapper shell script.
-         |By default “$javaOpts” is set in the wrapper.
-         |The command that runs the program is "${biocondaCommand.value}."
+      s"""${(name in Bioconda).value} is a Java program that comes with a custom wrapper shell script.
+         |By default '$javaOpts' is set in the wrapper.
+         |The command that runs the program is '${biocondaCommand.value}.'
          |If you want to overwrite it you can specify memory options directly after your binaries.
          |If you have _JAVA_OPTIONS set globally this will take precedence.
-         |For example run it with “${biocondaCommand.value} -Xms512m -Xmx1g”.
+         |For example run it with '${biocondaCommand.value} -Xms512m -Xmx1g'.
        """.stripMargin.replace("\n", " ")
     }
   def defaultPullRequestTitle: Def.Initialize[String] =

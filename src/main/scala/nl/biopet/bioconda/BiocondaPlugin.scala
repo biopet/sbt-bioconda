@@ -64,9 +64,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaCreateVersionRecipes := createRecipes(latest = false).value,
     biocondaCreateLatestRecipe := createRecipes(versions = false).value,
     biocondaCreateRecipes := createRecipes().value,
-    biocondaLicense := (licenses in Bioconda).value.toList.headOption
-      .getOrElse("No license", "")
-      ._1,
+    biocondaLicense := getLicense.value,
     biocondaTestCommands := Seq(),
     biocondaCommitMessage := s"Automated update for recipes of ${(name in Bioconda).value}",
     biocondaAddRecipes := addRecipes().value,
@@ -193,11 +191,15 @@ object BiocondaPlugin extends AutoPlugin {
           if (sourceUrl.isEmpty) {
             log.error(s"No released jar for tag: $tag. Skipping.")
           } else {
+            val sourceUrlString = sourceUrl match {
+              case Some(x) => x.toString
+              case _ => "Invalid URL"
+            }
             log.info(
-              s"Downloading jar from ${sourceUrl.get} to generate checksum.")
-            val sourceSha256 = getSha256SumFromDownload(sourceUrl.get)
+              s"Downloading jar from ${sourceUrlString} to generate checksum.")
+            val sourceSha256 = getSha256SumFromDownload(sourceUrl.getOrElse(new URL("")))
             if (sourceSha256.isEmpty) {
-              log.error(s"Downloading of ${sourceUrl.get} failed. Skipping.")
+              log.error(s"Downloading of ${sourceUrlString} failed. Skipping.")
             } else {
               log.info(s"Downloading finished.")
 
@@ -205,9 +207,7 @@ object BiocondaPlugin extends AutoPlugin {
                 name = (name in Bioconda).value,
                 version = versionNumber,
                 command = biocondaCommand.value,
-                sourceUrl = sourceUrl
-                  .getOrElse(new URL("No valid url was given"))
-                  .toString,
+                sourceUrl = sourceUrlString,
                 sourceSha256 =
                   sourceSha256.getOrElse("No valid checksum was generated."),
                 runRequirements = biocondaRequirements.value,
@@ -342,4 +342,14 @@ object BiocondaPlugin extends AutoPlugin {
 
       biocondaMainRepo.createPullRequest(title, head, base, body)
     }
+
+  private def getLicense: Def.Initialize[String] = {
+    Def.setting {
+      // Get the license that is specified first.
+      val topLicense = (licenses in Bioconda).value.headOption
+      // Get the license and the url and return the license string.
+      topLicense.getOrElse("No license", "")
+        ._1
+    }
+  }
 }

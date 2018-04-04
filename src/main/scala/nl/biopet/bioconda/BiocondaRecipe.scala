@@ -43,7 +43,7 @@ class BiocondaRecipe(name: String,
                      buildNumber: Int = 0,
                      notes: Option[String] = None) {
 
-  def fileName: String = sourceUrl.split("/").last
+  def fileName: String = sourceUrl.split("/").lastOption.getOrElse(s"$name.jar")
   def wrapperFilename: String = s"$name.py"
 
   def createRecipeFiles(dir: File): Unit = {

@@ -53,7 +53,6 @@ def jvm_opts(argv):
 
 
 def main():
-    java = java_executable()
     """
     PeptideShaker updates files relative to the path of the jar file.
     In a multiuser setting, the option --exec_dir="exec_dir"
@@ -61,6 +60,7 @@ def main():
     If the exec_dir dies not exist,
     we copy the jar file, lib, and resources to the exec_dir directory.
     """
+    java = java_executable()
     (mem_opts, prop_opts, pass_args, exec_dir) = jvm_opts(sys.argv[1:])
     jar_dir = exec_dir if exec_dir else real_dirname(sys.argv[0])
 
