@@ -53,7 +53,7 @@ lazy val root = (project in file(".")).settings(
 )
 
 def fileExistsInDir(dir: File, file: String): Unit = {
-  assert(new File(dir,file).exists(), s"${file} should exist in ${dir}")
+  assert(new File(dir,file).exists(), s"$file should exist in $dir")
 }
 def filesExistInDir(dir:File, files: Seq[String]): Unit = {
   files.foreach(file => fileExistsInDir(dir, file))

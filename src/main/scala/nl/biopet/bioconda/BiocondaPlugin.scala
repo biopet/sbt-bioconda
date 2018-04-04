@@ -25,6 +25,7 @@ import com.typesafe.sbt.GitPlugin
 import com.typesafe.sbt.SbtGit.GitKeys
 import nl.biopet.bioconda.BiocondaDefaults._
 import nl.biopet.bioconda.BiocondaUtils._
+import nl.biopet.utils.io.{getSha256SumFromDownload,copyDir,listDirectory}
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
 import ohnosequences.sbt.SbtGithubReleasePlugin
 import org.kohsuke.github.GitHub
@@ -205,7 +206,7 @@ object BiocondaPlugin extends AutoPlugin {
                 version = versionNumber,
                 command = biocondaCommand.value,
                 sourceUrl =
-                  sourceUrl.getOrElse("No valid source url was found."),
+                  sourceUrl.getOrElse(new URL("No valid url was given")).toString,
                 sourceSha256 =
                   sourceSha256.getOrElse("No valid checksum was generated."),
                 runRequirements = biocondaRequirements.value,
@@ -248,9 +249,10 @@ object BiocondaPlugin extends AutoPlugin {
             val thisRecipe: File =
               new File(toolRecipes, (name in Bioconda).value)
             if (thisRecipe.exists()) {
+              val yamlFiles = listDirectory(thisRecipe,Some("^meta.ya?ml$".r),recursive = true)
               // Hardcoded "v" prefix here. Is the standard in github release plugin.
               // But not a very nice way of doing it.
-              crawlRecipe(thisRecipe).map(x => "v" + getVersionFromYaml(x))
+              yamlFiles.map(x => "v" + getVersionFromYaml(x))
             } else Seq()
           }
         }
@@ -290,7 +292,7 @@ object BiocondaPlugin extends AutoPlugin {
       val message = biocondaCommitMessage.value
       val biocondaRecipes = new File(repo, "recipes")
       val toolRecipes = new File(biocondaRecipes, (name in Bioconda).value)
-      copyDirectory(recipes, toolRecipes)
+      copyDir(recipes, toolRecipes)
       git("add", ".")(repo, log)
       git("commit", "-m", message)(repo, log)
       repo

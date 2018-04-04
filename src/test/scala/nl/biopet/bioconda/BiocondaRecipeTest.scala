@@ -72,8 +72,8 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
 
   @Test
   def testRecipeValues(): Unit = {
-    testRecipe.fileName shouldBe ("test.jar")
-    testRecipe.wrapperFilename shouldBe ("test.py")
+    testRecipe.fileName shouldBe "test.jar"
+    testRecipe.wrapperFilename shouldBe "test.py"
   }
 
   @Test
@@ -110,7 +110,7 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     py should include("default_jvm_mem_opts = ['-Xms25m',]")
     py should include("#!/usr/bin/env python")
     py should include("if __name__ == '__main__':")
-    py should not include ("Perl the best thing since sliced bread")
+    py should not include "Perl the best thing since sliced bread"
   }
 
   @Test
@@ -124,6 +124,6 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     build should include("cp test.jar $outdir/test.jar")
     build should include("cp $RECIPE_DIR/test.py $outdir/testing")
     build should include("ln -s $outdir/testing $PREFIX/bin")
-    build should not include ("Some crazy text message")
+    build should not include "Some crazy text message"
   }
 }

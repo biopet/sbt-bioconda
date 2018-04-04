@@ -21,26 +21,21 @@
 
 package nl.biopet.bioconda
 
-import java.io.IOException
-
-
 import com.typesafe.sbt.git.GitRunner
 import ohnosequences.sbt.GithubRelease.keys.TagName
-import org.apache.commons.io.FileUtils
 import org.kohsuke.github.{GHAsset, GHRelease, GHRepository, GitHub}
 import sbt.internal.util.ManagedLogger
 import sbt.{File, URL}
 
 import scala.collection.JavaConverters
 import scala.io.Source
-
 import scala.sys.process._
 import scala.util.matching.Regex
 
 object BiocondaUtils {
-  def getSourceUrl(tag: TagName, repo: GHRepository): Option[String] = {
-    val repoName = repo.getName()
-    val repoOwner = repo.getOwnerName()
+  def getSourceUrl(tag: TagName, repo: GHRepository): Option[URL] = {
+    val repoName = repo.getName
+    val repoOwner = repo.getOwnerName
     // Disable authentication. These jars should be accessible for non authenticated users.
     val noAuthRepo =
       GitHub.connectAnonymously().getUser(repoOwner).getRepository(repoName)
@@ -61,11 +56,11 @@ object BiocondaUtils {
       assets.find(
         x =>
           x.getBrowserDownloadUrl.endsWith(".jar") &&
-            !x.getBrowserDownloadUrl().endsWith("javadoc.jar") &&
+            !x.getBrowserDownloadUrl.endsWith("javadoc.jar") &&
             !x.getBrowserDownloadUrl.endsWith("sources.jar")
       )
     if (releaseJar.isEmpty) { None } else
-      Some(releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl)
+      Some(new URL(releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl))
   }
   def branchExists(branch: String,
                    repo: File,
@@ -121,7 +116,7 @@ object BiocondaUtils {
         throw new Exception(s"Docker does not run: ${e.getMessage}")
     }
   }
-  def circleCiCommand(cwd: File, args: Seq[String], log: ManagedLogger) = {
+  def circleCiCommand(cwd: File, args: Seq[String], log: ManagedLogger): Unit = {
     val path = cwd.getPath
     val command = Seq("docker",
                       "run",
@@ -134,11 +129,11 @@ object BiocondaUtils {
                       s"$path",
                       "circleci/picard",
                       "circleci") ++ args
-    (Process(command, cwd).lineStream(log)).foreach(line => log.info(line))
+    Process(command, cwd).lineStream(log).foreach(line => log.info(line))
     // if (exit != 0) throw new Exception(s"Command ${command.mkString(" ")} failed with exit code: ${exit}.")
   }
 
-  def pullLatestUtils(log: ManagedLogger) = {
+  def pullLatestUtils(log: ManagedLogger): Unit = {
     Process(Seq("docker", "pull", "bioconda/bioconda-utils-build-env"))
       .lineStream(log)
       .foreach(line => log.info(line))
@@ -146,8 +141,8 @@ object BiocondaUtils {
 
   class GitUrlParser(gitUrl: String) {
     assert(gitUrl.startsWith("http") || gitUrl.startsWith("git"))
-    val gitUrlParts = gitUrl.split(":/".toCharArray).reverse
-    def repo = gitUrlParts(0).stripSuffix(".git")
-    def owner = gitUrlParts(1)
+    val gitUrlParts: Array[String] = gitUrl.split(":/".toCharArray).reverse
+    def repo: String = gitUrlParts(0).stripSuffix(".git")
+    def owner: String = gitUrlParts(1)
   }
 }

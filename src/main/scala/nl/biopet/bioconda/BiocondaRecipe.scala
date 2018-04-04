@@ -21,9 +21,10 @@
 
 package nl.biopet.bioconda
 
-import java.io.{File, PrintWriter}
+import java.io.File
 
 import nl.biopet.utils.conversions.mapToYaml
+import nl.biopet.utils.io.stringToFile
 
 import scala.io.Source
 
