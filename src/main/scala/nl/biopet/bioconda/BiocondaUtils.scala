@@ -116,7 +116,9 @@ object BiocondaUtils {
         throw new Exception(s"Docker does not run: ${e.getMessage}")
     }
   }
-  def circleCiCommand(cwd: File, args: Seq[String], log: ManagedLogger): Unit = {
+  def circleCiCommand(cwd: File,
+                      args: Seq[String],
+                      log: ManagedLogger): Unit = {
     val path = cwd.getPath
     val command = Seq("docker",
                       "run",

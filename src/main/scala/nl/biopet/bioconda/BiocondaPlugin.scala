@@ -25,7 +25,7 @@ import com.typesafe.sbt.GitPlugin
 import com.typesafe.sbt.SbtGit.GitKeys
 import nl.biopet.bioconda.BiocondaDefaults._
 import nl.biopet.bioconda.BiocondaUtils._
-import nl.biopet.utils.io.{getSha256SumFromDownload,copyDir,listDirectory}
+import nl.biopet.utils.io.{getSha256SumFromDownload, copyDir, listDirectory}
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
 import ohnosequences.sbt.SbtGithubReleasePlugin
 import org.kohsuke.github.GitHub
@@ -205,8 +205,9 @@ object BiocondaPlugin extends AutoPlugin {
                 name = (name in Bioconda).value,
                 version = versionNumber,
                 command = biocondaCommand.value,
-                sourceUrl =
-                  sourceUrl.getOrElse(new URL("No valid url was given")).toString,
+                sourceUrl = sourceUrl
+                  .getOrElse(new URL("No valid url was given"))
+                  .toString,
                 sourceSha256 =
                   sourceSha256.getOrElse("No valid checksum was generated."),
                 runRequirements = biocondaRequirements.value,
@@ -249,7 +250,9 @@ object BiocondaPlugin extends AutoPlugin {
             val thisRecipe: File =
               new File(toolRecipes, (name in Bioconda).value)
             if (thisRecipe.exists()) {
-              val yamlFiles = listDirectory(thisRecipe,Some("^meta.ya?ml$".r),recursive = true)
+              val yamlFiles = listDirectory(thisRecipe,
+                                            Some("^meta.ya?ml$".r),
+                                            recursive = true)
               // Hardcoded "v" prefix here. Is the standard in github release plugin.
               // But not a very nice way of doing it.
               yamlFiles.map(x => "v" + getVersionFromYaml(x))
