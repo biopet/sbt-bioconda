@@ -1,4 +1,5 @@
-import org.kohsuke.github.{GHRepository,GitHub}
+import org.kohsuke.github.{GHRepository, GitHub}
+import sbt.Keys.resolvers
 import sbt._
 lazy val checkRepo = taskKey[Unit]("checks if repo is checked out")
 lazy val checkRecipes = taskKey[Unit]("checks if recipes are created")
@@ -49,7 +50,8 @@ lazy val root = (project in file(".")).settings(
         "recipes/testtool/build.sh",
         "recipes/testtool/testtool.py")
     )
-  }.value
+  }.value,
+    resolvers += Resolver.sonatypeRepo("snapshots")
 )
 
 def fileExistsInDir(dir: File, file: String): Unit = {
