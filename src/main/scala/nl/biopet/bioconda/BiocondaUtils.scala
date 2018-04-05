@@ -33,7 +33,7 @@ import scala.sys.process._
 import scala.util.matching.Regex
 
 object BiocondaUtils {
-  def getSourceUrl(tag: TagName, repo: GHRepository): Option[URL] = {
+  def getSourceUrl(tag: TagName, repo: GHRepository): URL = {
     val repoName = repo.getName
     val repoOwner = repo.getOwnerName
     // Disable authentication. These jars should be accessible for non authenticated users.
@@ -44,7 +44,7 @@ object BiocondaUtils {
       JavaConverters.collectionAsScalaIterable(releaseList).toList
     val currentRelease = releases.find(x => x.getTagName == tag)
     if (currentRelease.isEmpty) {
-      throw new Exception(
+      throw new java.io.FileNotFoundException(
         s"'$tag' tag not present on release page. Please release on github before publishing to bioconda.")
     }
     val assets = JavaConverters
@@ -59,8 +59,12 @@ object BiocondaUtils {
             !x.getBrowserDownloadUrl.endsWith("javadoc.jar") &&
             !x.getBrowserDownloadUrl.endsWith("sources.jar")
       )
-    if (releaseJar.isEmpty) { None } else
-      Some(new URL(releaseJar.getOrElse(new GHAsset).getBrowserDownloadUrl))
+    releaseJar match {
+      case Some(x) => new URL(x.getBrowserDownloadUrl)
+      case _ =>
+        throw new java.io.FileNotFoundException(
+          s"No valid release jar found for: $tag")
+    }
   }
   def branchExists(branch: String,
                    repo: File,

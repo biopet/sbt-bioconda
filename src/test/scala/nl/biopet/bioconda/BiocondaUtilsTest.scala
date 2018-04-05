@@ -45,9 +45,12 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
       // Use old biopet repo to get test data. Should be stable.
       val repository: GHRepository =
         github.getOrganization("biopet").getRepository("biopet")
-      val link: Option[URL] = Some(new URL(
-        "https://github.com/biopet/biopet/releases/download/v0.9.0/Biopet-0.9.0-be7838f2.jar"))
+      val link: URL = new URL(
+        "https://github.com/biopet/biopet/releases/download/v0.9.0/Biopet-0.9.0-be7838f2.jar")
       getSourceUrl(tag = "v0.9.0", repository) shouldBe link
+      intercept[java.io.FileNotFoundException] {
+        getSourceUrl(tag = "v3.3.3", repository)
+      }.getMessage shouldBe s"'v3.3.3' tag not present on release page. Please release on github before publishing to bioconda."
     }
   }
 
