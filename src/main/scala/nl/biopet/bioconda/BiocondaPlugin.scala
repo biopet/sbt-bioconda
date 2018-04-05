@@ -21,7 +21,6 @@
 
 package nl.biopet.bioconda
 
-import com.google.protobuf.`type`.Field.Cardinality.CARDINALITY_OPTIONAL
 import com.typesafe.sbt.GitPlugin
 import com.typesafe.sbt.SbtGit.GitKeys
 import nl.biopet.bioconda.BiocondaDefaults._

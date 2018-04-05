@@ -23,7 +23,7 @@ package nl.biopet.bioconda
 
 import com.typesafe.sbt.git.GitRunner
 import ohnosequences.sbt.GithubRelease.keys.TagName
-import org.kohsuke.github.{GHAsset, GHRelease, GHRepository, GitHub}
+import org.kohsuke.github.{GHRelease, GHRepository, GitHub}
 import sbt.internal.util.ManagedLogger
 import sbt.{File, URL}
 
