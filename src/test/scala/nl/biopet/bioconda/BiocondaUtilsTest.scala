@@ -25,6 +25,7 @@ import java.io.{File, PrintWriter}
 import java.net.URL
 
 import nl.biopet.bioconda.BiocondaUtils._
+import org.apache.commons.io.FileUtils
 import org.apache.logging.log4j.core.{Logger, LoggerContext}
 import org.kohsuke.github.{GHRepository, GitHub}
 import org.scalatest.Matchers
@@ -58,6 +59,7 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
   def testGetVersionFromYaml(): Unit = {
     val yaml = Source.fromResource("nl/biopet/bioconda/meta.yaml")
     val tmp = File.createTempFile("meta", ".yaml")
+    tmp.deleteOnExit()
     val writer = new PrintWriter(tmp)
     val string = yaml.mkString
     writer.write(string)
@@ -83,6 +85,7 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
     tmp.delete()
     tmp.mkdir()
     circleCiCommand(tmp, Seq("version"), log)
+    FileUtils.deleteDirectory(tmp)
 
   }
   @Test
@@ -93,6 +96,7 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
     intercept[Exception] {
       circleCiCommand(tmp, Seq("bladnajsdnk"), log)
     }.getMessage should include("Nonzero exit code: 1")
+    FileUtils.deleteDirectory(tmp)
   }
 
   @Test

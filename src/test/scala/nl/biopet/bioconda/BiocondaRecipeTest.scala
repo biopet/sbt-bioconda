@@ -28,6 +28,7 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 import scala.io.Source
+import org.apache.commons.io.FileUtils
 class BiocondaRecipeTest extends TestNGSuite with Matchers {
 
   val testRecipe = new BiocondaRecipe(
@@ -68,6 +69,7 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
       testRecipe.buildScript + "\n")
     Source.fromFile(wrapper).mkString should equal(
       testRecipe.wrapperScript + "\n")
+    FileUtils.deleteDirectory(tmp)
   }
 
   @Test
