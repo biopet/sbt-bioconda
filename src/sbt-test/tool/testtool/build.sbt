@@ -1,19 +1,21 @@
 import org.kohsuke.github.{GHRepository, GitHub}
+import org.apache.commons.io.FileUtils
 import sbt.Keys.resolvers
 import sbt._
 lazy val checkRepo = taskKey[Unit]("checks if repo is checked out")
 lazy val checkRecipes = taskKey[Unit]("checks if recipes are created")
 lazy val checkCopy = taskKey[Unit]("checks if recipes are copied")
+lazy val deleteTmp = taskKey[Unit]("Deletes temporary test dir")
 
 lazy val root = (project in file(".")).settings(
   name := "testtool",
   organizationName := "biopet",
   organization := "biopet",
   startYear := Some(2017),
+  homepage := Some(new URL("https://github.com/biopet/testtool")),
   //mainClass in assembly := Some(s"nl.biopet.tools.dummytool.DummyTool"),
   scalaVersion := "2.11.11",
   biocondaGitUrl := "https://github.com/biopet/bioconda-recipes.git",
-  biocondaMainGitUrl := "https://github.com/biopet/bioconda-recipes.git",
   licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
   libraryDependencies += "com.github.biopet" %% "tool-utils" % "0.2",
   libraryDependencies += "org.kohsuke" % "github-api" % "1.92",
@@ -21,7 +23,7 @@ lazy val root = (project in file(".")).settings(
   ghreleaseRepoOrg := "biopet",
   ghreleaseRepoName := "testtool",
   ghreleaseGetRepo := getRepo.value,
-  biocondaRepository := biocondaTempDir,
+  biocondaRepository := biocondaTempDir.value,
   checkRepo := Def.task {
     filesExistInDir(biocondaRepository.value,
       Seq(".github",
@@ -51,6 +53,7 @@ lazy val root = (project in file(".")).settings(
         "recipes/testtool/testtool.py")
     )
   }.value,
+  deleteTmp := Def.task{FileUtils.deleteDirectory(biocondaRepository.value)}.value,
     resolvers += Resolver.sonatypeRepo("snapshots")
 )
 
@@ -66,11 +69,12 @@ def getRepo: Def.Initialize[Task[GHRepository]] = Def.task {
   github.getRepository(repo)
 }
 // Home directory is used because using /tmp gives errors while testing
-def biocondaTempDir: File = {
+def biocondaTempDir: Def.Initialize[File] = {
+  Def.setting {
   val homeTest = new File(sys.env("HOME"))
   val dir = java.io.File.createTempFile("bioconda",".d",homeTest)
   dir.delete()
   dir.mkdirs()
   dir.deleteOnExit()
   dir
-}
+}}
