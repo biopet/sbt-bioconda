@@ -7,32 +7,31 @@ lazy val checkRecipes = taskKey[Unit]("checks if recipes are created")
 lazy val checkCopy = taskKey[Unit]("checks if recipes are copied")
 lazy val deleteTmp = taskKey[Unit]("Deletes temporary test dir")
 
-lazy val root = (project in file(".")).settings(
-  name := "testtool",
-  organizationName := "biopet",
-  organization := "biopet",
-  startYear := Some(2017),
-  homepage := Some(new URL("https://github.com/biopet/testtool")),
-  //mainClass in assembly := Some(s"nl.biopet.tools.dummytool.DummyTool"),
-  scalaVersion := "2.11.11",
-  biocondaGitUrl := "https://github.com/biopet/bioconda-recipes.git",
-  licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
-  libraryDependencies += "com.github.biopet" %% "tool-utils" % "0.2",
-  libraryDependencies += "org.kohsuke" % "github-api" % "1.92",
-  libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5",
-  ghreleaseRepoOrg := "biopet",
-  ghreleaseRepoName := "testtool",
-  ghreleaseGetRepo := getRepo.value,
-  biocondaRepository := biocondaTempDir.value,
-  checkRepo := Def.task {
-    filesExistInDir(biocondaRepository.value,
+name := "testtool"
+organizationName := "biopet"
+organization := "biopet"
+startYear := Some(2017)
+homepage := Some(new URL("https://github.com/biopet/testtool"))
+//mainClass in assembly := Some(s"nl.biopet.tools.dummytool.DummyTool")
+scalaVersion := "2.11.11"
+biocondaGitUrl := "https://github.com/biopet/bioconda-recipes.git"
+licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
+libraryDependencies += "com.github.biopet" %% "tool-utils" % "0.2"
+libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5"
+ghreleaseRepoOrg := "biopet"
+ghreleaseRepoName := "testtool"
+ghreleaseGetRepo := getRepo.value
+biocondaRepository := biocondaTempDir.value
+checkRepo := Def.task {
+filesExistInDir(biocondaRepository.value,
       Seq(".github",
         "recipes",
         "scripts",
         "recipes/biopet",
         "config.yml")
     )
-  }.value,
+  }.value
   checkRecipes := Def.task {
     filesExistInDir(biocondaRecipeDir.value,
       Seq("0.1/meta.yaml",
@@ -42,7 +41,7 @@ lazy val root = (project in file(".")).settings(
         "build.sh",
         "testtool.py")
     )
-  }.value,
+  }.value
   checkCopy := Def.task {
     filesExistInDir(biocondaRepository.value,
       Seq("recipes/testtool/0.1/meta.yaml",
@@ -52,10 +51,9 @@ lazy val root = (project in file(".")).settings(
         "recipes/testtool/build.sh",
         "recipes/testtool/testtool.py")
     )
-  }.value,
-  deleteTmp := Def.task{FileUtils.deleteDirectory(biocondaRepository.value)}.value,
+  }.value
+  deleteTmp := Def.task{FileUtils.deleteDirectory(biocondaRepository.value)}.value
     resolvers += Resolver.sonatypeRepo("snapshots")
-)
 
 def fileExistsInDir(dir: File, file: String): Unit = {
   assert(new File(dir,file).exists(), s"$file should exist in $dir")
