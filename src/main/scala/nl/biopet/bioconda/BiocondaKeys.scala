@@ -55,8 +55,8 @@ trait BiocondaKeys {
     settingKey[Seq[String]]("A list of build requirements for the tool")
   lazy val biocondaBuildNumber = settingKey[Int]("The build number")
   lazy val biocondaSummary =
-    settingKey[String]("The summary describing the program")
-  lazy val biocondaNotes = settingKey[String]("Usage notes for the program")
+    taskKey[String]("The summary describing the program")
+  lazy val biocondaNotes = taskKey[String]("Usage notes for the program")
   lazy val biocondaDefaultJavaOptions = settingKey[Seq[String]](
     "The default java options for the program when started with the wrapperscript.")
   lazy val biocondaTestCommands = settingKey[Seq[String]](
@@ -65,7 +65,7 @@ trait BiocondaKeys {
     settingKey[String]("The license displayed in the bioconda recipe.")
   lazy val biocondaAddRecipes =
     taskKey[File]("Adds generated recipes to bioconda recipe and commits them")
-  lazy val biocondaCommitMessage = settingKey[String](
+  lazy val biocondaCommitMessage = taskKey[String](
     "The commit message with which new recipes will be submitted")
   lazy val biocondaTestRecipes =
     taskKey[File]("Tests the generated recipes with circleci")
@@ -76,9 +76,9 @@ trait BiocondaKeys {
   lazy val biocondaPullRequest =
     taskKey[Unit]("Create a pull request on bioconda main")
   lazy val biocondaPullRequestTitle =
-    settingKey[String]("The title of the pull request")
+    taskKey[String]("The title of the pull request")
   lazy val biocondaPullRequestBody =
-    settingKey[String]("The message accompanying the pull request")
+    taskKey[String]("The message accompanying the pull request")
   lazy val biocondaRelease = taskKey[Unit](
     "Create recipes, test them, and create a pull request on bioconda main.")
   lazy val biocondaSkipErrors = settingKey[Boolean](

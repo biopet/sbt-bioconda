@@ -197,6 +197,9 @@ object BiocondaPlugin extends AutoPlugin {
         val repo = ghreleaseGetRepo.value
         val log = streams.value.log
 
+        val summary = biocondaSummary.value
+        val notes = biocondaNotes.value
+
         for (tag <- toBePublishedTags) {
           try {
             val sourceUrl: URL = getSourceUrl(tag, repo)
@@ -219,9 +222,9 @@ object BiocondaPlugin extends AutoPlugin {
               homeUrl = homeUrl,
               license = biocondaLicense.value,
               buildRequirements = biocondaBuildRequirements.value,
-              summary = biocondaSummary.value,
+              summary = summary,
               buildNumber = biocondaBuildNumber.value,
-              notes = Some(biocondaNotes.value),
+              notes = Some(notes),
               defaultJavaOptions = biocondaDefaultJavaOptions.value,
               testCommands = biocondaTestCommands.value
             )
