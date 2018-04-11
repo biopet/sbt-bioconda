@@ -72,7 +72,7 @@ releaseProcess := Seq[ReleaseStep](
   commitNextVersion,
   pushChanges
 )
-libraryDependencies += "com.github.biopet" %% "common-utils" % "0.4-SNAPSHOT" changing ()
+libraryDependencies += "com.github.biopet" %% "common-utils" % "0.4"
 libraryDependencies += "org.testng" % "testng" % "6.14.2" % "test"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
