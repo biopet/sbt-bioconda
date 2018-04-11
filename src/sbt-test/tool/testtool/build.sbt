@@ -6,7 +6,7 @@ lazy val checkRepo = taskKey[Unit]("checks if repo is checked out")
 lazy val checkRecipes = taskKey[Unit]("checks if recipes are created")
 lazy val checkCopy = taskKey[Unit]("checks if recipes are copied")
 lazy val deleteTmp = taskKey[Unit]("Deletes temporary test dir")
-
+lazy val checkTexts = taskKey[Unit]("Checks whether the texts have been initialized correctly")
 name := "testtool"
 organizationName := "biopet"
 organization := "biopet"
@@ -76,3 +76,12 @@ def biocondaTempDir: Def.Initialize[File] = {
   dir.deleteOnExit()
   dir
 }}
+
+def textChecking: Def.Initialize[Task[Unit]] = {
+  Def.task {
+    val summary: String = biocondaSummary.value
+    val notes: String = biocondaNotes.value
+    val pullRequestBody: String = biocondaPullRequestBody.value
+    val pullRequestTitle: String = biocondaPullRequestTitle.value
+  }
+}

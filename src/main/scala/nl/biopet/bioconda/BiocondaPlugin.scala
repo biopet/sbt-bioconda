@@ -166,7 +166,7 @@ object BiocondaPlugin extends AutoPlugin {
     * @return sequence of not yet published tags, latest tag
     */
   private def getUnPublishedTags
-    : Def.Initialize[Task[(Seq[TagName], TagName)]] = {
+    : Def.Initialize[Task[R]] = {
     Def.task {
       val publishedTags: Seq[TagName] = getPublishedTags.value
       val releasedTags: Seq[TagName] = getReleasedTags.value
@@ -178,21 +178,21 @@ object BiocondaPlugin extends AutoPlugin {
       // make sure latest tag is always published if latest.
       val unPublishedTags: Seq[TagName] =
         releasedTags.filter(tag => !publishedTags.contains(tag)).distinct
-      (unPublishedTags, latestTag)
+      R(unPublishedTags, latestTag)
     }
   }
+  private case class R(unPublished: Seq[TagName], latest: TagName)
+
 
   private def createRecipes(
       latest: Boolean = true,
       versions: Boolean = true): Def.Initialize[Task[File]] = {
     Def
       .task {
-        val unPublishedTagsTuple = getUnPublishedTags.value
-        val unPublishedTags: Seq[TagName] = unPublishedTagsTuple._1
-        val latestTag: TagName = unPublishedTagsTuple._2
+        val tags = getUnPublishedTags.value
         val toBePublishedTags: Seq[TagName] = {
-          (if (versions) unPublishedTags else Seq()) ++
-            (if (latest) Seq(latestTag) else Seq())
+          (if (versions) tags.unPublished else Seq()) ++
+            (if (latest) Seq(tags.latest) else Seq())
         }.distinct
 
         val repo = ghreleaseGetRepo.value
@@ -204,15 +204,13 @@ object BiocondaPlugin extends AutoPlugin {
         for (tag <- toBePublishedTags) {
           try {
             val sourceUrl: URL = getSourceUrl(tag, repo)
+            log.info(s"Downloading ${sourceUrl.toString} to get sha256.")
             val sourceSha256: String = getSha256SumFromDownload(sourceUrl)
             val versionNumber
               : String = tag.stripPrefix("v") //hardcoded "v" here. ugly.
-            val homeUrl = (homepage in Bioconda).value match {
-              case Some(x) => x.toString
-              case _ =>
-                throw new IllegalArgumentException(
-                  "Please define (homepage in Bioconda). Required.")
-            }
+            val homeUrl = (homepage in Bioconda).value.map(_.toString).getOrElse(
+              throw new IllegalArgumentException(
+                "Please define (homepage in Bioconda). Required."))
             val recipe = new BiocondaRecipe(
               name = (name in Bioconda).value,
               version = versionNumber,
@@ -233,7 +231,7 @@ object BiocondaPlugin extends AutoPlugin {
             val publishDir = new File(biocondaRecipeDir.value, versionNumber)
             publishDir.mkdirs()
             recipe.createRecipeFiles(publishDir)
-            if (tag == latestTag) {
+            if (tag == tags.latest) {
               recipe.createRecipeFiles(biocondaRecipeDir.value)
             }
           } catch {
@@ -365,10 +363,10 @@ object BiocondaPlugin extends AutoPlugin {
 
   private def getLicense: Def.Initialize[String] = {
     Def.setting {
-      // Get the license that is specified first.
-      val topLicense = (licenses in Bioconda).value.headOption
-      // Get the license and the url and return the license string.
-      topLicense.getOrElse("No license", "")._1
+      (licenses in Bioconda).value.headOption match {
+        case Some((string, url)) => string
+        case _ => "No license"
+      }
     }
   }
 }
