@@ -31,21 +31,19 @@ class BiocondaDefaultsTest extends TestNGSuite with Matchers {
   @Test
   def testPullRequestTemplate: Unit = {
     pullRequestTemplate(true) shouldBe
-      s"""|* [x] I have read the [guidelines for bioconda recipes](https://bioconda.github.io/guidelines.html).
-          |* [ ] This PR adds a new recipe.
+      s"""|* [ ] This PR adds a new recipe.
           |* [x] AFAIK, this recipe **is directly relevant to the biological sciences** (otherwise, please submit to the more general purpose [conda-forge channel](https://conda-forge.org/docs/)).
           |* [x] This PR updates an existing recipe.
           |* [ ] This PR does something else (explain below).
-          |---
+          |***
           |""".stripMargin
 
     pullRequestTemplate(false) shouldBe
-      s"""|* [x] I have read the [guidelines for bioconda recipes](https://bioconda.github.io/guidelines.html).
-          |* [x] This PR adds a new recipe.
+      s"""|* [x] This PR adds a new recipe.
           |* [x] AFAIK, this recipe **is directly relevant to the biological sciences** (otherwise, please submit to the more general purpose [conda-forge channel](https://conda-forge.org/docs/)).
           |* [ ] This PR updates an existing recipe.
           |* [ ] This PR does something else (explain below).
-          |---
+          |***
           |""".stripMargin
   }
 }

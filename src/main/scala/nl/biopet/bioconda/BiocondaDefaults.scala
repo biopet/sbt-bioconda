@@ -69,17 +69,16 @@ object BiocondaDefaults {
          |As part of this process the recipes are tested using CircleCi as described
          |[here](https://bioconda.github.io/contribute-a-recipe.html#test-locally)
          |""".stripMargin
-          .replace("\n", " ") + "\n---\n\n### Tool summary\n\n" + biocondaSummary.value
+          .replace("\n", " ") + "\n\n***\n\n### Tool summary\n\n" + biocondaSummary.value
     }
 
   def pullRequestTemplate(released: Boolean): String = {
     def cross(yes: Boolean): String = if (yes) "x" else " "
-    s"""|* [x] I have read the [guidelines for bioconda recipes](https://bioconda.github.io/guidelines.html).
-        |* [${cross(!released)}] This PR adds a new recipe.
+    s"""|* [${cross(!released)}] This PR adds a new recipe.
         |* [x] AFAIK, this recipe **is directly relevant to the biological sciences** (otherwise, please submit to the more general purpose [conda-forge channel](https://conda-forge.org/docs/)).
         |* [${cross(released)}] This PR updates an existing recipe.
         |* [ ] This PR does something else (explain below).
-        |---
+        |***
         |""".stripMargin
   }
 }
