@@ -26,6 +26,7 @@ import ohnosequences.sbt.GithubRelease.keys.TagName
 import org.kohsuke.github.{GHRelease, GHRepository, GitHub}
 import sbt.internal.util.ManagedLogger
 import sbt.{File, URL}
+import nl.biopet.utils.conversions.{yamlFileToMap,any2map}
 
 import scala.collection.JavaConverters
 import scala.io.Source
@@ -90,19 +91,12 @@ object BiocondaUtils {
 
   }
   def getVersionFromYaml(metaYaml: File): String = {
-    val versionRegex: Regex = "version:.([0-9\\.]+)".r
-    val yaml = Source.fromFile(metaYaml).getLines().mkString
-    val matches = versionRegex.findAllIn(yaml).matchData
-    val versions: Seq[String] = matches
-      .map(regex => {
-        regex.group(1)
-      })
-      .toSeq
-    if (versions.isEmpty) {
-      throw new Exception(s"No version found in: ${metaYaml.getPath}")
-    }
-    val version = versions.headOption.getOrElse("")
-    version
+    val packageValue: Map[String, Any] =
+      any2map(
+        yamlFileToMap(metaYaml)
+          .getOrElse("package", Map()))
+    val version = packageValue.getOrElse("version", throw new Exception(s"No version found in ${metaYaml.getPath}"))
+    version.toString
   }
 
   def dockerInstalled(log: ManagedLogger, path: Option[String] = None): Unit = {
