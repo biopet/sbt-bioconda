@@ -75,7 +75,8 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaPullRequestTitle := defaultPullRequestTitle.value,
     biocondaPullRequest := createPullRequest.value,
     biocondaRelease := releaseProcedure().value,
-    biocondaSkipErrors := false
+    biocondaSkipErrors := false,
+    biocondaIsReleased := false
   )
 
   private def releaseProcedure(): Def.Initialize[Task[Unit]] =
