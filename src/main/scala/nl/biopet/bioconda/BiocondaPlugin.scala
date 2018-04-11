@@ -79,7 +79,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaIsReleased := false
   )
 
-  private def releaseProcedure(): Def.Initialize[Task[Unit]] =
+  def releaseProcedure(): Def.Initialize[Task[Unit]] =
     Def
       .task {}
       .dependsOn(biocondaPullRequest)
