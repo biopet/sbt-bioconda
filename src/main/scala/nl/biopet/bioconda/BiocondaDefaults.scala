@@ -68,7 +68,7 @@ object BiocondaDefaults {
              .getOrElse("")})
          |that are not in bioconda are automatically generated if the `sbt biocondaRelease` command is issued.
          |As part of this process the recipes are tested using CircleCi as described
-         |[here](https://bioconda.github.io/contribute-a-recipe.html#test-locally)
+         |[here](https://bioconda.github.io/contribute-a-recipe.html#test-locally).
          |""".stripMargin
           .replace("\n", " ") + "\n\n***\n\n### Tool summary\n\n" + biocondaSummary.value
     }

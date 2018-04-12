@@ -202,8 +202,9 @@ object BiocondaPlugin extends AutoPlugin {
         for (tag <- toBePublishedTags) {
           try {
             val sourceUrl: URL = getSourceUrl(tag, repo)
-            log.info(s"Downloading ${sourceUrl.toString} to get sha256.")
+            log.info(s"Downloading ${sourceUrl.toString} to get sha256sum.")
             val sourceSha256: String = getSha256SumFromDownload(sourceUrl)
+            log.info("Downloading complete.")
             val versionNumber
               : String = tag.stripPrefix("v") //hardcoded "v" here. ugly.
             val homeUrl = (homepage in Bioconda).value
