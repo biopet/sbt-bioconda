@@ -21,7 +21,6 @@ libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5"
 ghreleaseRepoOrg := "biopet"
 ghreleaseRepoName := "testtool"
-ghreleaseGetRepo := getRepo.value
 biocondaRepository := biocondaTempDir.value
 checkRepo := Def.task {
 filesExistInDir(biocondaRepository.value,
@@ -61,11 +60,7 @@ def fileExistsInDir(dir: File, file: String): Unit = {
 def filesExistInDir(dir:File, files: Seq[String]): Unit = {
   files.foreach(file => fileExistsInDir(dir, file))
 }
-def getRepo: Def.Initialize[Task[GHRepository]] = Def.task {
-  val github = GitHub.connectAnonymously()
-  val repo = s"${ghreleaseRepoOrg.value}/${ghreleaseRepoName.value}"
-  github.getRepository(repo)
-}
+
 // Home directory is used because using /tmp gives errors while testing
 def biocondaTempDir: Def.Initialize[File] = {
   Def.setting {
