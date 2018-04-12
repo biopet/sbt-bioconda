@@ -36,6 +36,7 @@ class BiocondaDefaultsTest extends TestNGSuite with Matchers {
           |* [x] This PR updates an existing recipe.
           |* [ ] This PR does something else (explain below).
           |***
+          |
           |""".stripMargin
 
     pullRequestTemplate(false) shouldBe
@@ -44,6 +45,7 @@ class BiocondaDefaultsTest extends TestNGSuite with Matchers {
           |* [ ] This PR updates an existing recipe.
           |* [ ] This PR does something else (explain below).
           |***
+          |
           |""".stripMargin
   }
 }
