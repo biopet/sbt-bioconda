@@ -165,8 +165,7 @@ object BiocondaPlugin extends AutoPlugin {
     * A task that returns a sequence of net yet published tags and the latest tag
     * @return sequence of not yet published tags, latest tag
     */
-  private def getUnPublishedTags
-    : Def.Initialize[Task[R]] = {
+  private def getUnPublishedTags: Def.Initialize[Task[R]] = {
     Def.task {
       val publishedTags: Seq[TagName] = getPublishedTags.value
       val releasedTags: Seq[TagName] = getReleasedTags.value
@@ -182,7 +181,6 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
   private case class R(unPublished: Seq[TagName], latest: TagName)
-
 
   private def createRecipes(
       latest: Boolean = true,
@@ -208,8 +206,9 @@ object BiocondaPlugin extends AutoPlugin {
             val sourceSha256: String = getSha256SumFromDownload(sourceUrl)
             val versionNumber
               : String = tag.stripPrefix("v") //hardcoded "v" here. ugly.
-            val homeUrl = (homepage in Bioconda).value.map(_.toString).getOrElse(
-              throw new IllegalArgumentException(
+            val homeUrl = (homepage in Bioconda).value
+              .map(_.toString)
+              .getOrElse(throw new IllegalArgumentException(
                 "Please define (homepage in Bioconda). Required."))
             val recipe = new BiocondaRecipe(
               name = (name in Bioconda).value,
@@ -365,7 +364,7 @@ object BiocondaPlugin extends AutoPlugin {
     Def.setting {
       (licenses in Bioconda).value.headOption match {
         case Some((string, url)) => string
-        case _ => "No license"
+        case _                   => "No license"
       }
     }
   }

@@ -42,7 +42,7 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
   @Test
   def testGetSourceUrl(): Unit = {
     if (sys.env.getOrElse("TRAVIS", "false") != "true") {
-      val github: GitHub = GitHub.connectAnonymously()
+      val github: GitHub = GitHub.connect()
       // Use old biopet repo to get test data. Should be stable.
       val repository: GHRepository =
         github.getOrganization("biopet").getRepository("biopet")
@@ -70,7 +70,7 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
   @Test
   def testDockerNotInstalled(): Unit = {
     intercept[Exception] {
-      dockerInstalled(log, path = Some(""))
+      dockerInstalled(log, Map("PATH" -> ""))
     }.getMessage shouldBe "Docker does not run: Nonzero exit value: 127"
   }
 

@@ -22,25 +22,20 @@
 package nl.biopet.bioconda
 
 import com.typesafe.sbt.git.GitRunner
+import nl.biopet.utils.conversions.{any2map, yamlFileToMap}
 import ohnosequences.sbt.GithubRelease.keys.TagName
-import org.kohsuke.github.{GHRelease, GHRepository, GitHub}
+import org.kohsuke.github.{GHRelease, GHRepository}
 import sbt.internal.util.ManagedLogger
 import sbt.{File, URL}
-import nl.biopet.utils.conversions.{yamlFileToMap,any2map}
 
 import scala.collection.JavaConverters
-import scala.io.Source
 import scala.sys.process._
-import scala.util.matching.Regex
 
 object BiocondaUtils {
   def getSourceUrl(tag: TagName, repo: GHRepository): URL = {
     val repoName = repo.getName
     val repoOwner = repo.getOwnerName
-    // Disable authentication. These jars should be accessible for non authenticated users.
-    val noAuthRepo =
-      GitHub.connectAnonymously().getUser(repoOwner).getRepository(repoName)
-    val releaseList = noAuthRepo.listReleases().asList()
+    val releaseList = repo.listReleases().asList()
     val releases =
       JavaConverters.collectionAsScalaIterable(releaseList).toList
     val currentRelease = releases.find(x => x.getTagName == tag)
@@ -95,20 +90,17 @@ object BiocondaUtils {
       any2map(
         yamlFileToMap(metaYaml)
           .getOrElse("package", Map()))
-    val version = packageValue.getOrElse("version", throw new Exception(s"No version found in ${metaYaml.getPath}"))
+    val version = packageValue.getOrElse(
+      "version",
+      throw new Exception(s"No version found in ${metaYaml.getPath}"))
     version.toString
   }
 
-  def dockerInstalled(log: ManagedLogger, path: Option[String] = None): Unit = {
+  def dockerInstalled(log: ManagedLogger,
+                      environment: Map[String, String] = Map()): Unit = {
     val testCommand = "docker version -f '{{.Client.Version}}'"
     def test: ProcessBuilder =
-      if (path.isDefined) {
-        Process(Seq("bash", "-c", testCommand),
-                None,
-                "PATH" -> path.getOrElse("$PATH"))
-      } else {
-        Process(Seq("bash", "-c", testCommand), None)
-      }
+      Process(Seq("bash", "-c", testCommand), None, environment.toList: _*)
     try { test.!!(log) } catch {
       case e: RuntimeException =>
         throw new RuntimeException(s"Docker does not run: ${e.getMessage}")
@@ -130,7 +122,6 @@ object BiocondaUtils {
                       "circleci/picard",
                       "circleci") ++ args
     Process(command, cwd).lineStream(log).foreach(line => log.info(line))
-    // if (exit != 0) throw new Exception(s"Command ${command.mkString(" ")} failed with exit code: ${exit}.")
   }
 
   def pullLatestUtils(log: ManagedLogger): Unit = {

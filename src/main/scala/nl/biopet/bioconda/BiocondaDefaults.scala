@@ -55,7 +55,8 @@ object BiocondaDefaults {
     }
   def defaultPullRequestTitle: Def.Initialize[Task[String]] =
     Def.task {
-      if (biocondaIsReleased.value) s"New version for ${(name in Bioconda).value}"
+      if (biocondaIsReleased.value)
+        s"New version for ${(name in Bioconda).value}"
       else s"New tool: ${(name in Bioconda).value}"
     }
 
