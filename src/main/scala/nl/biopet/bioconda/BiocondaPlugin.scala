@@ -364,7 +364,7 @@ object BiocondaPlugin extends AutoPlugin {
     Def.setting {
       (licenses in Bioconda).value.headOption match {
         case Some((string, _)) => string
-        case _                   => "No license"
+        case _                 => "No license"
       }
     }
   }
