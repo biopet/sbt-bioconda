@@ -32,7 +32,7 @@ object BiocondaDefaults {
          |Please visit ${(homepage in Bioconda).value.getOrElse(
            "the project's website")}
          |for more information about this program.
-       """.stripMargin.replace("\n", " ")
+         |""".stripMargin.replace("\n", " ")
     }
 
   def defaultNotes: Def.Initialize[Task[String]] =
@@ -51,7 +51,7 @@ object BiocondaDefaults {
          |If you want to overwrite it you can specify memory options directly after your binaries.
          |If you have _JAVA_OPTIONS set globally this will take precedence.
          |For example run it with '${biocondaCommand.value} -Xms512m -Xmx1g'.
-       """.stripMargin.replace("\n", " ")
+         |""".stripMargin.replace("\n", " ")
     }
   def defaultPullRequestTitle: Def.Initialize[Task[String]] =
     Def.task {
