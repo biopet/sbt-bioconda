@@ -363,7 +363,7 @@ object BiocondaPlugin extends AutoPlugin {
   private def getLicense: Def.Initialize[String] = {
     Def.setting {
       (licenses in Bioconda).value.headOption match {
-        case Some((string, url)) => string
+        case Some((string, _)) => string
         case _                   => "No license"
       }
     }

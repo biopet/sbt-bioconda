@@ -33,8 +33,6 @@ import scala.sys.process._
 
 object BiocondaUtils {
   def getSourceUrl(tag: TagName, repo: GHRepository): URL = {
-    val repoName = repo.getName
-    val repoOwner = repo.getOwnerName
     val releaseList = repo.listReleases().asList()
     val releases =
       JavaConverters.collectionAsScalaIterable(releaseList).toList

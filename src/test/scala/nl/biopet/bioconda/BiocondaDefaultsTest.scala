@@ -29,7 +29,7 @@ import nl.biopet.bioconda.BiocondaDefaults.pullRequestTemplate
 class BiocondaDefaultsTest extends TestNGSuite with Matchers {
 
   @Test
-  def testPullRequestTemplate: Unit = {
+  def testPullRequestTemplate(): Unit = {
     pullRequestTemplate(true) shouldBe
       s"""|* [ ] This PR adds a new recipe.
           |* [x] AFAIK, this recipe **is directly relevant to the biological sciences** (otherwise, please submit to the more general purpose [conda-forge channel](https://conda-forge.org/docs/)).
