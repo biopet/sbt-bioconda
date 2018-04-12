@@ -80,6 +80,7 @@ object BiocondaDefaults {
         |* [${cross(released)}] This PR updates an existing recipe.
         |* [ ] This PR does something else (explain below).
         |***
+        |
         |""".stripMargin
   }
 }
