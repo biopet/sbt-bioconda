@@ -161,45 +161,56 @@ object BiocondaPlugin extends AutoPlugin {
       .dependsOn(biocondaUpdatedRepository)
   }
 
-  /**
-    * A task that returns a sequence of net yet published tags and the latest tag
-    * @return sequence of not yet published tags, latest tag
-    */
-  private def getUnPublishedTags: Def.Initialize[Task[R]] = {
+  private def getLatestTag: Def.Initialize[Task[TagName]] = {
     Def.task {
-      val publishedTags: Seq[TagName] = getPublishedTags.value
-      val releasedTags: Seq[TagName] = getReleasedTags.value
-      val latestTag = releasedTags
+      getReleasedTags.value
         .sortBy(tag => tag.stripPrefix("v"))
         .lastOption
         .getOrElse("No version")
-      // Tags that are released but not in bioconda yet should be published
-      // make sure latest tag is always published if latest.
-      val unPublishedTags: Seq[TagName] =
-        releasedTags.filter(tag => !publishedTags.contains(tag)).distinct
-      R(unPublishedTags, latestTag)
     }
   }
-  private case class R(unPublished: Seq[TagName], latest: TagName)
 
-  private def createRecipes(
-      latest: Boolean = true,
-      versions: Boolean = true): Def.Initialize[Task[File]] = {
+  private def createCurrentRecipe(): Def.Initialize[Task[File]] = {
+    Def.task {
+      val tag = "v" + version.value
+      val releasedTags = getReleasedTags.value
+      if (!releasedTags.contains(tag)) {
+        throw new Exception(
+          s"Please release tag '$tag' with the githubRelease plugin first.")
+      }
+      val publishedTags = getPublishedTags.value
+      if (publishedTags.contains(tag) && !biocondaOverwriteRecipes.value) {
+        throw new Exception(s"""Tag '$tag' is already released.
+             |Please set 'biocondaOverwriteRecipes' to 'true'
+             |if you want to overwrite the recipe.
+             |""".stripMargin.replace("\n", " "))
+      }
+      createRecipes(Seq(tag)).value
+    }
+  }
+
+  private def createAllRecipes(): Def.Initialize[Task[File]] = {
+    Def.task {
+      val publishedTags: Seq[TagName] = getPublishedTags.value
+      val releasedTags: Seq[TagName] = getReleasedTags.value
+      val unPublishedTags: Seq[TagName] =
+        if (biocondaOverwriteRecipes.value) releasedTags
+        else releasedTags.filter(tag => !publishedTags.contains(tag))
+      createRecipes(unPublishedTags).value
+    }
+  }
+
+  private def createRecipes(tags: Seq[TagName]): Def.Initialize[Task[File]] = {
     Def
       .task {
-        val tags = getUnPublishedTags.value
-        val toBePublishedTags: Seq[TagName] = {
-          (if (versions) tags.unPublished else Seq()) ++
-            (if (latest) Seq(tags.latest) else Seq())
-        }.distinct
-
         val repo = ghreleaseGetRepo.value
         val log = streams.value.log
 
         val summary = biocondaSummary.value
         val notes = biocondaNotes.value
 
-        for (tag <- toBePublishedTags) {
+        val latest = getLatestTag.value
+        for (tag <- tags) {
           try {
             val sourceUrl: URL = getSourceUrl(tag, repo)
             log.info(s"Downloading ${sourceUrl.toString} to get sha256sum.")
@@ -231,7 +242,7 @@ object BiocondaPlugin extends AutoPlugin {
             val publishDir = new File(biocondaRecipeDir.value, versionNumber)
             publishDir.mkdirs()
             recipe.createRecipeFiles(publishDir)
-            if (tag == tags.latest) {
+            if (tag == latest) {
               recipe.createRecipeFiles(biocondaRecipeDir.value)
             }
           } catch {
