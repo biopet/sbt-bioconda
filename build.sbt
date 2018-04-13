@@ -74,6 +74,7 @@ libraryDependencies += "com.github.biopet" %% "common-utils" % "0.4"
 libraryDependencies += "org.testng" % "testng" % "6.14.2" % "test"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
+libraryDependencies += "org.yaml" % "snakeyaml" % "1.20"
 
 libraryDependencies ++= Seq(
   Defaults.sbtPluginExtra(
