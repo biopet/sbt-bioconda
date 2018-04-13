@@ -78,6 +78,10 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaIsReleased := false
   )
 
+  /**
+    * The release procedure for this specific version
+    * @return a task that depends on all the tasks necessary for releasing this version
+    */
   def releaseProcedure(): Def.Initialize[Task[Unit]] =
     Def
       .task {}
@@ -87,6 +91,10 @@ object BiocondaPlugin extends AutoPlugin {
       .dependsOn(biocondaAddRecipes)
       .dependsOn(biocondaCreateRecipe)
 
+  /**
+    * The release procedure for all versions released on github
+    * @return a task that depends on all the tasks necessary for releasing all versions
+    */
   def releaseAllProcedure(): Def.Initialize[Task[Unit]] =
     Def
       .task {}
@@ -96,6 +104,10 @@ object BiocondaPlugin extends AutoPlugin {
       .dependsOn(biocondaAddRecipes)
       .dependsOn(biocondaCreateAllRecipes)
 
+  /**
+    * Creates a new local bioconda git repo
+    * @return a file that is the directory of the bioconda repo
+    */
   private def initBiocondaRepo: Def.Initialize[Task[File]] = {
     Def.task {
       val initialized: Boolean =
@@ -146,6 +158,10 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
 
+  /**
+    * Creates a new branch in the bioconda repo that is up to date with upstream
+    * @return the bioconda repo with the branch checked out
+    */
   private def updateBranch(): Def.Initialize[Task[File]] = {
     Def
       .task {
@@ -169,6 +185,10 @@ object BiocondaPlugin extends AutoPlugin {
       .dependsOn(biocondaUpdatedRepository)
   }
 
+  /**
+    * Gets the released tags from github and determines the latest
+    * @return the latest to be released tag.
+    */
   private def getLatestTag: Def.Initialize[Task[TagName]] = {
     Def.task {
       getReleasedTags.value
@@ -178,6 +198,10 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
 
+  /**
+    * Create the recipe for the current version
+    * @return the directory with the recipes
+    */
   private def createCurrentRecipe(): Def.Initialize[Task[File]] = {
     Def.task {
       val tag = "v" + version.value
@@ -197,17 +221,28 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
 
+  /**
+    * Creates the recipes for all versions on github
+    * @return the directory containing the recipes.
+    */
   private def createAllRecipes(): Def.Initialize[Task[File]] = {
     Def.task {
       val publishedTags: Seq[TagName] = getPublishedTags.value
       val releasedTags: Seq[TagName] = getReleasedTags.value
-      val unPublishedTags: Seq[TagName] =
+      val toBePublishedTags: Seq[TagName] =
         if (biocondaOverwriteRecipes.value) releasedTags
         else releasedTags.filter(tag => !publishedTags.contains(tag))
-      createRecipes(unPublishedTags).value
+      createRecipes(toBePublishedTags).value
     }
   }
 
+  /**
+    * creates the recipes for tags.
+    * Also creates the default recipe for the latest version if the latest version
+    * is among the tags.
+    * @param tags The tags for which a recipe needs to be created
+    * @return the directory with the recipe.
+    */
   private def createRecipes(tags: Seq[TagName]): Def.Initialize[Task[File]] = {
     Def
       .task {
@@ -250,6 +285,7 @@ object BiocondaPlugin extends AutoPlugin {
             val publishDir = new File(biocondaRecipeDir.value, versionNumber)
             publishDir.mkdirs()
             recipe.createRecipeFiles(publishDir)
+            // If tag is latest, create the default recipe for this tag.
             if (tag == latest) {
               recipe.createRecipeFiles(biocondaRecipeDir.value)
             }
@@ -267,22 +303,20 @@ object BiocondaPlugin extends AutoPlugin {
       }
   }
 
+  /**
+    * Determines which tags are already published in bioconda.
+    * @return a sequence of tagnames
+    */
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
     Def.taskDyn {
-      // If recipes are overwritten, they are for the purposes of this plugin not published.
       Def
         .task {
-          if (biocondaOverwriteRecipes.value) {
-            Seq()
-          } else {
-            val biocondaRecipes: File =
+          val biocondaRecipes: File =
               new File(biocondaRepository.value, "recipes")
             val toolRecipes =
               new File(biocondaRecipes, (name in Bioconda).value)
-            val thisRecipe: File =
-              new File(toolRecipes, (name in Bioconda).value)
-            if (thisRecipe.exists()) {
-              val yamlFiles = listDirectory(thisRecipe,
+            if (toolRecipes.exists()) {
+              val yamlFiles = listDirectory(toolRecipes,
                                             Some("^meta.ya?ml$".r),
                                             recursive = true)
               // Hardcoded "v" prefix here. Is the standard in github release plugin.
@@ -293,8 +327,11 @@ object BiocondaPlugin extends AutoPlugin {
         }
         .dependsOn(biocondaUpdatedBranch)
     }
-  }
 
+  /**
+    * Determines which tags are released on github.
+    * @return a sequence of tagnames.
+    */
   private def getReleasedTags: Def.Initialize[Task[Seq[TagName]]] = {
     Def.task {
       val log = streams.value.log
@@ -323,6 +360,10 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
 
+  /**
+    * Add the recipes directory to the bioconda git repo and commit.
+    * @return the git repo with the new commit
+    */
   private def addRecipes(): Def.Initialize[Task[File]] = {
     Def.task {
       val log = streams.value.log
@@ -338,6 +379,11 @@ object BiocondaPlugin extends AutoPlugin {
       repo
     }
   }
+
+  /**
+    * Start a docker container with a circle ci image to test the recipes.
+    * @return the repo with the now tested recipes.
+    */
   private def testRecipes: Def.Initialize[Task[File]] =
     Def.task {
       val repo = biocondaRepository.value
@@ -348,6 +394,9 @@ object BiocondaPlugin extends AutoPlugin {
       repo
     }
 
+  /**
+    * Force push the repo branch to the biocondaRepository
+    */
   private def pushRecipe: Def.Initialize[Task[Unit]] =
     Def.task {
       val log = streams.value.log
@@ -357,6 +406,10 @@ object BiocondaPlugin extends AutoPlugin {
       git("push", "-f", "origin", biocondaBranch.value)(repo, log)
     }
 
+  /**
+    * Create a pull request on the bioconda main repo.
+    * @return A task that creates the pull request.
+    */
   private def createPullRequest: Def.Initialize[Task[Unit]] =
     Def.task {
       val biocondaMain = new GitUrlParser(biocondaMainGitUrl.value)
@@ -380,6 +433,10 @@ object BiocondaPlugin extends AutoPlugin {
       biocondaMainRepo.createPullRequest(title, head, base, body)
     }
 
+  /**
+    * Gets the license from your project by taking the name from the head of the license list.
+    * @return A license as a string.
+    */
   private def getLicense: Def.Initialize[String] = {
     Def.setting {
       (licenses in Bioconda).value.headOption match {
