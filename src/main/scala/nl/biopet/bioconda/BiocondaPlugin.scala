@@ -23,8 +23,8 @@ package nl.biopet.bioconda
 
 import com.typesafe.sbt.GitPlugin
 import com.typesafe.sbt.SbtGit.GitKeys
-import nl.biopet.bioconda.BiocondaTexts._
-import nl.biopet.bioconda.BiocondaUtils._
+import BiocondaTexts._
+import BiocondaUtils._
 import nl.biopet.utils.io.{copyDir, getSha256SumFromDownload, listDirectory}
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
 import ohnosequences.sbt.SbtGithubReleasePlugin
@@ -286,14 +286,14 @@ object BiocondaPlugin extends AutoPlugin {
               sourceUrl = sourceUrl.toString,
               sourceSha256 = sourceSha256,
               runRequirements = biocondaRequirements.value,
+              buildRequirements = biocondaBuildRequirements.value,
+              testCommands = biocondaTestCommands.value,
               homeUrl = homeUrl,
               license = biocondaLicense.value,
-              buildRequirements = biocondaBuildRequirements.value,
               summary = summary,
+              defaultJavaOptions = biocondaDefaultJavaOptions.value,
               buildNumber = biocondaBuildNumber.value,
               notes = Some(notes),
-              defaultJavaOptions = biocondaDefaultJavaOptions.value,
-              testCommands = biocondaTestCommands.value,
               doi = doi
             )
 
