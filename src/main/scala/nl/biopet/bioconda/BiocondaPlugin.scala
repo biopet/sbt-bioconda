@@ -61,9 +61,8 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaNotes := defaultNotes.value,
     biocondaSummary := defaultSummary.value,
     biocondaDefaultJavaOptions := Seq(),
-    biocondaCreateVersionRecipes := createRecipes(latest = false).value,
-    biocondaCreateLatestRecipe := createRecipes(versions = false).value,
-    biocondaCreateRecipes := createRecipes().value,
+    biocondaCreateRecipe := createCurrentRecipe().value,
+    biocondaCreateAllRecipes := createAllRecipes().value,
     biocondaLicense := getLicense.value,
     biocondaTestCommands := Seq(),
     biocondaCommitMessage := s"Automated update for recipes of ${(name in Bioconda).value}",
@@ -86,7 +85,16 @@ object BiocondaPlugin extends AutoPlugin {
       .dependsOn(biocondaPushRecipes)
       .dependsOn(biocondaTestRecipes)
       .dependsOn(biocondaAddRecipes)
-      .dependsOn(biocondaCreateRecipes)
+      .dependsOn(biocondaCreateRecipe)
+
+  def releaseAllProcedure(): Def.Initialize[Task[Unit]] =
+    Def
+      .task {}
+      .dependsOn(biocondaPullRequest)
+      .dependsOn(biocondaPushRecipes)
+      .dependsOn(biocondaTestRecipes)
+      .dependsOn(biocondaAddRecipes)
+      .dependsOn(biocondaCreateAllRecipes)
 
   private def initBiocondaRepo: Def.Initialize[Task[File]] = {
     Def.task {

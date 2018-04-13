@@ -40,12 +40,10 @@ trait BiocondaKeys {
     settingKey[File]("Where the recipes will be created")
   lazy val biocondaPushRecipes =
     taskKey[Unit]("Push the branch with the recipe.")
-  lazy val biocondaCreateRecipes = taskKey[File](
-    "Create the bioconda recipes for all released versions of the tool and the latest(default) version.")
-  lazy val biocondaCreateLatestRecipe = taskKey[File](
-    "Create the bioconda recipe for the latest released version of the tool")
-  lazy val biocondaCreateVersionRecipes = taskKey[File](
-    "Create the bioconda recipes for all released versions of the tool.")
+  lazy val biocondaCreateAllRecipes = taskKey[File](
+    "Create the bioconda recipes for all released versions of the tool that are not currently in bioconda.")
+  lazy val biocondaCreateRecipe = taskKey[File](
+    "Create the bioconda recipe for the current version of the tool")
   lazy val biocondaRepository =
     settingKey[File](
       "Sandbox environment where the bioconda git branch is checked out.")
@@ -80,7 +78,9 @@ trait BiocondaKeys {
   lazy val biocondaPullRequestBody =
     taskKey[String]("The message accompanying the pull request")
   lazy val biocondaRelease = taskKey[Unit](
-    "Create recipes, test them, and create a pull request on bioconda main.")
+    "Create recipe for current version, test it, and create a pull request on bioconda main.")
+  lazy val biocondaReleaseAll = taskKey[Unit](
+    "Create all recipes, test them, and create a pull request on bioconda main.")
   lazy val biocondaIsReleased =
     settingKey[Boolean]("Whether the tool is released on bioconda already")
   lazy val biocondaSkipErrors = settingKey[Boolean](
