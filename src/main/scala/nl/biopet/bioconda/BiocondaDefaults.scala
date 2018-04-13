@@ -26,6 +26,11 @@ import sbt._
 import sbt.Keys._
 
 object BiocondaDefaults {
+
+  /**
+    * The default summary
+    * @return a task that determines the summary string.
+    */
   def defaultSummary: Def.Initialize[Task[String]] =
     Def.task {
       s"""This summary for ${(name in Bioconda).value} is automatically generated.
@@ -35,6 +40,10 @@ object BiocondaDefaults {
          |""".stripMargin.replace("\n", " ")
     }
 
+  /**
+    * the default notes
+    * @return a task that returns the default notes
+    */
   def defaultNotes: Def.Initialize[Task[String]] =
     Def.task {
       def javaOpts: String = {
@@ -53,6 +62,11 @@ object BiocondaDefaults {
          |For example run it with '${biocondaCommand.value} -Xms512m -Xmx1g'.
          |""".stripMargin.replace("\n", " ")
     }
+
+  /**
+    * the default pull request title
+    * @return a task that determines the default pull request title.
+    */
   def defaultPullRequestTitle: Def.Initialize[Task[String]] =
     Def.task {
       if (biocondaIsReleased.value)
@@ -60,6 +74,10 @@ object BiocondaDefaults {
       else s"New tool: ${(name in Bioconda).value}"
     }
 
+  /**
+    * the default pull request body
+    * @return a task that determines the default pull request body.
+    */
   def defaultPullRequestBody: Def.Initialize[Task[String]] =
     Def.task {
       pullRequestTemplate(biocondaIsReleased.value) +
@@ -73,6 +91,11 @@ object BiocondaDefaults {
           .replace("\n", " ") + "\n\n***\n\n### Tool summary\n\n" + biocondaSummary.value
     }
 
+  /**
+    * the bioconda pull request template
+    * @param released whether the tool has been released before.
+    * @return a string resembling the bioconda pull request template with the right boxes crossed.
+    */
   def pullRequestTemplate(released: Boolean): String = {
     def cross(yes: Boolean): String = if (yes) "x" else " "
     s"""|* [${cross(!released)}] This PR adds a new recipe.

@@ -42,10 +42,22 @@ class BiocondaRecipe(name: String,
                      defaultJavaOptions: Seq[String],
                      buildNumber: Int = 0,
                      notes: Option[String] = None) {
-
+  /**
+    * The filename for the jar as determined by the sourceUrl
+    * @return a filename as a string
+    */
   def fileName: String = sourceUrl.split("/").lastOption.getOrElse(s"$name.jar")
+
+  /**
+    * The filename for the wrapper
+    * @return the filename
+    */
   def wrapperFilename: String = s"$name.py"
 
+  /**
+    * Creates meta.yml, build.sh and the wrapper in dir
+    * @param dir the directory where your recipe is created.
+    */
   def createRecipeFiles(dir: File): Unit = {
     dir.mkdirs()
     val buildSh = new File(dir, "build.sh")
@@ -58,13 +70,10 @@ class BiocondaRecipe(name: String,
     wrapper.setExecutable(true)
   }
 
-  def createRecipe(dir: File): Unit = {
-    dir.mkdirs()
-    createRecipeFiles(dir)
-    //Also create a subdirectory with the version
-    createRecipeFiles(new File(dir, version))
-  }
-
+  /**
+    * Creates the meta.yaml as a string.
+    * @return meta.yaml as a string.
+    */
   def metaYaml: String = {
     val meta: Map[String, Any] = {
       Map(
@@ -104,6 +113,10 @@ class BiocondaRecipe(name: String,
      """.stripMargin + "\n" + mapToYaml(meta)
   }
 
+  /**
+    * Creates the buildscript as string.
+    * @return the buildscript.
+    */
   def buildScript: String =
     s"""#!/usr/bin/env bash
        |# Build file is copied from VarScan
@@ -118,6 +131,10 @@ class BiocondaRecipe(name: String,
        |ln -s $$outdir/$command $$PREFIX/bin
        |""".stripMargin
 
+  /**
+    * Creates the wrapperscript as a string.
+    * @return the wrappercript.
+    */
   def wrapperScript: String = {
     def pyScript: String = {
       val source = getClass.getClassLoader

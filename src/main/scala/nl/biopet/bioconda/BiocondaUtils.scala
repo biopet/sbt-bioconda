@@ -32,6 +32,12 @@ import scala.collection.JavaConverters
 import scala.sys.process._
 
 object BiocondaUtils {
+  /**
+    * Get a url for the released jar on github.
+    * @param tag The tag for the release
+    * @param repo The github repo
+    * @return a URL from which the jar can be downloaded.
+    */
   def getSourceUrl(tag: TagName, repo: GHRepository): URL = {
     val releaseList = repo.listReleases().asList()
     val releases =
@@ -60,6 +66,16 @@ object BiocondaUtils {
           s"No valid release jar found for: $tag")
     }
   }
+
+  /**
+    * Checks if a branch exists
+    * @param branch the branch name
+    * @param repo directory where the git repository is
+    * @param git the GitRunner
+    * @param log the log
+    * @param remotes if remotes should be checked if the branch exists
+    * @return true if the branch exists
+    */
   def branchExists(branch: String,
                    repo: File,
                    git: GitRunner,
@@ -83,6 +99,12 @@ object BiocondaUtils {
     branches.contains(branch)
 
   }
+
+  /**
+    * Get a version from a meta.yaml file for conda
+    * @param metaYaml the meta.yaml file
+    * @return the version as a string.
+    */
   def getVersionFromYaml(metaYaml: File): String = {
     val packageValue: Map[String, Any] =
       any2map(
@@ -94,6 +116,11 @@ object BiocondaUtils {
     version.toString
   }
 
+  /**
+    * Check if docker is installed.
+    * @param log the log file to which the version message is issued.
+    * @param environment Set extra environment variables. Useful if PATH needs to be changed
+    */
   def dockerInstalled(log: ManagedLogger,
                       environment: Map[String, String] = Map()): Unit = {
     val testCommand = "docker version -f '{{.Client.Version}}'"
@@ -104,6 +131,13 @@ object BiocondaUtils {
         throw new RuntimeException(s"Docker does not run: ${e.getMessage}")
     }
   }
+
+  /**
+    * Run circle ci in a directory
+    * @param cwd the directory in which circleci should run.
+    * @param args the arguments with which circleci should be run
+    * @param log the log to which the circleci output will be written.
+    */
   def circleCiCommand(cwd: File,
                       args: Seq[String],
                       log: ManagedLogger): Unit = {
@@ -122,12 +156,20 @@ object BiocondaUtils {
     Process(command, cwd).lineStream(log).foreach(line => log.info(line))
   }
 
+  /**
+    * Pull the latest bioconda-utils-build-env image.
+    * @param log
+    */
   def pullLatestUtils(log: ManagedLogger): Unit = {
     Process(Seq("docker", "pull", "bioconda/bioconda-utils-build-env"))
       .lineStream(log)
       .foreach(line => log.info(line))
   }
 
+  /**
+    * A parser that gets the repo and owner from a git url.
+    * @param gitUrl the git url.
+    */
   class GitUrlParser(gitUrl: String) {
     assert(gitUrl.startsWith("http") || gitUrl.startsWith("git"))
     val gitUrlParts: Array[String] = gitUrl.split(":/".toCharArray).reverse
