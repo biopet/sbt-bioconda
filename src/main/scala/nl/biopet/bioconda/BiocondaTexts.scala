@@ -81,7 +81,7 @@ object BiocondaTexts {
   def defaultCommitMessage: Def.Initialize[Task[String]] =
     Def.task {
       if (biocondaNewTool.value) {
-        s"Added new tool ${(name in Bioconda).value}"
+        s"Added new tool: ${(name in Bioconda).value}"
       }
       else {s"Added new versions for ${(name in Bioconda).value}"}
     }

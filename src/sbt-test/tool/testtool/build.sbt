@@ -78,8 +78,12 @@ def textChecking: Def.Initialize[Task[Unit]] = {
     val notes: String = biocondaNotes.value
     val pullRequestBody: String = biocondaPullRequestBody.value
     val pullRequestTitle: String = biocondaPullRequestTitle.value
+    val newTool: Boolean = biocondaNewTool.value
+    assert(newTool, "This tool should not have been published")
     assert(summary.contains("This summary for testtool is automatically generated"))
     assert(pullRequestBody.contains("[x] This PR adds a new recipe."), "Pull request template should be included")
     assert(pullRequestBody.contains(summary), "Summary should be included.")
+    assert(pullRequestTitle.contains("New tool: testtool"),"Pull request title should mention new tool")
+    assert(commitMessage.contains("Added new tool: testtool"))
   }
 }
