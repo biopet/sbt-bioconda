@@ -41,7 +41,8 @@ class BiocondaRecipe(name: String,
                      summary: String,
                      defaultJavaOptions: Seq[String],
                      buildNumber: Int = 0,
-                     notes: Option[String] = None) {
+                     notes: Option[String] = None,
+                     DOI: Option[String] = None) {
 
   /**
     * The filename for the jar as determined by the sourceUrl
@@ -76,6 +77,22 @@ class BiocondaRecipe(name: String,
     * @return meta.yaml as a string.
     */
   def metaYaml: String = {
+
+    val doiMap: Map[String, String] = DOI match {
+      case Some(d) => Map("doi" -> d)
+      case _       => Map()
+    }
+
+    val notesMap: Map[String, String] = notes match {
+      case Some(n) => Map("notes" -> n)
+      case _       => Map()
+    }
+    val extraMap: Map[String, Map[String, String]] = {
+      val extra = doiMap ++ notesMap
+      if (extra.isEmpty) Map()
+      else Map("extra" -> extra)
+    }
+
     val meta: Map[String, Any] = {
       Map(
         "package" -> Map(
@@ -100,11 +117,9 @@ class BiocondaRecipe(name: String,
         ),
         "test" -> Map(
           "commands" -> testCommands
-        ),
-        "extra" -> Map(
-          "notes" -> notes.getOrElse("")
         )
-      )
+      ) ++ extraMap
+
     }
 
     s"""# Based on OpenJDK recipe in conda-forge

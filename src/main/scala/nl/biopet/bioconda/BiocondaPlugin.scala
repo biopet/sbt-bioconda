@@ -75,7 +75,8 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaPullRequest := createPullRequest.value,
     biocondaRelease := releaseProcedure().value,
     biocondaSkipErrors := false,
-    biocondaNewTool := isNewTool.value
+    biocondaNewTool := isNewTool.value,
+    biocondaDoi := None
   )
 
   /**
@@ -283,7 +284,8 @@ object BiocondaPlugin extends AutoPlugin {
               buildNumber = biocondaBuildNumber.value,
               notes = Some(notes),
               defaultJavaOptions = biocondaDefaultJavaOptions.value,
-              testCommands = biocondaTestCommands.value
+              testCommands = biocondaTestCommands.value,
+              DOI = biocondaDoi.value
             )
 
             val publishDir = new File(biocondaRecipeDir.value, versionNumber)

@@ -85,4 +85,5 @@ trait BiocondaKeys {
     taskKey[Boolean]("Whether the tool is new on bioconda")
   lazy val biocondaSkipErrors = settingKey[Boolean](
     "Recipes with failing elements are skipped instead of causing an exception.")
+  lazy val biocondaDoi = taskKey[Option[String]]("A DOI for your tool")
 }
