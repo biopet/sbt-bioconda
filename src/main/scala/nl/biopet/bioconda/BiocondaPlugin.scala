@@ -265,8 +265,15 @@ object BiocondaPlugin extends AutoPlugin {
             log.info(s"Downloading ${sourceUrl.toString} to get sha256sum.")
             val sourceSha256: String = getSha256SumFromDownload(sourceUrl)
             log.info("Downloading complete.")
-            val versionNumber
-              : String = tag.stripPrefix("v") //hardcoded "v" here. ugly.
+            val versionNumber: String = {
+              val number = tag.stripPrefix("v") //hardcoded "v" here. ugly.
+              val finalNumber = number.replace("-", "")
+              if (number.contains("-"))
+                log.warn(
+                  s"'$number' contains '-' which is not allowed in versions. " +
+                    s"'$finalNumber' will be used as version in bioconda.")
+              finalNumber
+            }
             val homeUrl = (homepage in Bioconda).value
               .map(_.toString)
               .getOrElse(throw new IllegalArgumentException(
