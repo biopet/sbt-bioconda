@@ -203,7 +203,7 @@ object BiocondaPlugin extends AutoPlugin {
     * @return the directory with the recipes
     */
   private def createCurrentRecipe(): Def.Initialize[Task[File]] = {
-    Def.task {
+    Def.taskDyn {
       val tag = "v" + version.value
       val releasedTags = getReleasedTags.value
       if (!releasedTags.contains(tag)) {
@@ -212,12 +212,15 @@ object BiocondaPlugin extends AutoPlugin {
       }
       val publishedTags = getPublishedTags.value
       if (publishedTags.contains(tag) && !biocondaOverwriteRecipes.value) {
-        throw new Exception(s"""Tag '$tag' is already released.
+        throw new Exception(
+          s"""Tag '$tag' is already released.
              |Please set 'biocondaOverwriteRecipes' to 'true'
              |if you want to overwrite the recipe.
              |""".stripMargin.replace("\n", " "))
       }
-      createRecipes(Seq(tag)).value
+      Def.task {
+        createRecipes(Seq(tag)).value
+      }
     }
   }
 
@@ -226,14 +229,16 @@ object BiocondaPlugin extends AutoPlugin {
     * @return the directory containing the recipes.
     */
   private def createAllRecipes(): Def.Initialize[Task[File]] = {
-    Def.task {
+    Def.taskDyn {
       val publishedTags: Seq[TagName] = getPublishedTags.value
       val releasedTags: Seq[TagName] = getReleasedTags.value
       val toBePublishedTags: Seq[TagName] =
         if (biocondaOverwriteRecipes.value) releasedTags
         else releasedTags.filter(tag => !publishedTags.contains(tag))
-      createRecipes(toBePublishedTags).value
-    }
+      Def.task {
+        createRecipes(toBePublishedTags).value
+      }
+      }
   }
 
   /**
