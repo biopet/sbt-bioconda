@@ -24,9 +24,9 @@ package nl.biopet.bioconda
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
-import nl.biopet.bioconda.BiocondaDefaults.pullRequestTemplate
+import nl.biopet.bioconda.BiocondaTexts.pullRequestTemplate
 
-class BiocondaDefaultsTest extends TestNGSuite with Matchers {
+class BiocondaTextsTest extends TestNGSuite with Matchers {
 
   @Test
   def testPullRequestTemplate(): Unit = {

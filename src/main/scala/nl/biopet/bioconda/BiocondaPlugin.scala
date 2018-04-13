@@ -23,7 +23,7 @@ package nl.biopet.bioconda
 
 import com.typesafe.sbt.GitPlugin
 import com.typesafe.sbt.SbtGit.GitKeys
-import nl.biopet.bioconda.BiocondaDefaults._
+import nl.biopet.bioconda.BiocondaTexts._
 import nl.biopet.bioconda.BiocondaUtils._
 import nl.biopet.utils.io.{copyDir, getSha256SumFromDownload, listDirectory}
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}

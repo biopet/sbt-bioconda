@@ -25,7 +25,7 @@ import nl.biopet.bioconda.BiocondaPlugin.autoImport._
 import sbt._
 import sbt.Keys._
 
-object BiocondaDefaults {
+object BiocondaTexts {
 
   /**
     * The default summary
@@ -72,6 +72,18 @@ object BiocondaDefaults {
       if (biocondaNewTool.value)
         s"New tool: ${(name in Bioconda).value}"
       else s"New version for ${(name in Bioconda).value}"
+    }
+
+  /**
+    * the default commit message
+    * @return the commit message
+    */
+  def defaultCommitMessage: Def.Initialize[Task[String]] =
+    Def.task {
+      if (biocondaNewTool.value) {
+        s"Added new tool ${(name in Bioconda).value}"
+      }
+      else {s"Added new versions for ${(name in Bioconda).value}"}
     }
 
   /**
