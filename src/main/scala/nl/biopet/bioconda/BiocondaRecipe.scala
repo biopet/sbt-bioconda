@@ -42,6 +42,7 @@ class BiocondaRecipe(name: String,
                      defaultJavaOptions: Seq[String],
                      buildNumber: Int = 0,
                      notes: Option[String] = None) {
+
   /**
     * The filename for the jar as determined by the sourceUrl
     * @return a filename as a string

@@ -32,6 +32,7 @@ import scala.collection.JavaConverters
 import scala.sys.process._
 
 object BiocondaUtils {
+
   /**
     * Get a url for the released jar on github.
     * @param tag The tag for the release

@@ -212,8 +212,7 @@ object BiocondaPlugin extends AutoPlugin {
       }
       val publishedTags = getPublishedTags.value
       if (publishedTags.contains(tag) && !biocondaOverwriteRecipes.value) {
-        throw new Exception(
-          s"""Tag '$tag' is already released.
+        throw new Exception(s"""Tag '$tag' is already released.
              |Please set 'biocondaOverwriteRecipes' to 'true'
              |if you want to overwrite the recipe.
              |""".stripMargin.replace("\n", " "))
@@ -238,7 +237,7 @@ object BiocondaPlugin extends AutoPlugin {
       Def.task {
         createRecipes(toBePublishedTags).value
       }
-      }
+    }
   }
 
   /**
@@ -313,10 +312,11 @@ object BiocondaPlugin extends AutoPlugin {
     * @return a sequence of tagnames
     */
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
-    Def.taskDyn {
-      Def
-        .task {
-          val biocondaRecipes: File =
+    Def
+      .taskDyn {
+        Def
+          .task {
+            val biocondaRecipes: File =
               new File(biocondaRepository.value, "recipes")
             val toolRecipes =
               new File(biocondaRecipes, (name in Bioconda).value)
@@ -329,9 +329,9 @@ object BiocondaPlugin extends AutoPlugin {
               yamlFiles.map(x => "v" + getVersionFromYaml(x))
             } else Seq()
           }
-        }
-        .dependsOn(biocondaUpdatedBranch)
-    }
+      }
+      .dependsOn(biocondaUpdatedBranch)
+  }
 
   /**
     * Determines wheter the tool is new by checking
@@ -339,13 +339,15 @@ object BiocondaPlugin extends AutoPlugin {
     * @return true if tool is not yet present in main repo
     */
   private def isNewTool: Def.Initialize[Task[Boolean]] = {
-    Def.task {
-      val biocondaRecipes: File =
-        new File(biocondaRepository.value, "recipes")
-      val toolRecipes =
-        new File(biocondaRecipes, (name in Bioconda).value)
-      !toolRecipes.exists()
-    }.dependsOn(biocondaUpdatedBranch)
+    Def
+      .task {
+        val biocondaRecipes: File =
+          new File(biocondaRepository.value, "recipes")
+        val toolRecipes =
+          new File(biocondaRecipes, (name in Bioconda).value)
+        !toolRecipes.exists()
+      }
+      .dependsOn(biocondaUpdatedBranch)
   }
 
   /**
