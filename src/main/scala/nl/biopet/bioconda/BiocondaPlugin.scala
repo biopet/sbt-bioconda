@@ -65,7 +65,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaCreateAllRecipes := createAllRecipes().value,
     biocondaLicense := getLicense.value,
     biocondaTestCommands := Seq(),
-    biocondaCommitMessage := s"Automated update for recipes of ${(name in Bioconda).value}",
+    biocondaCommitMessage := defaultCommitMessage.value,
     biocondaAddRecipes := addRecipes().value,
     biocondaTestRecipes := testRecipes.value,
     biocondaOverwriteRecipes := false,
