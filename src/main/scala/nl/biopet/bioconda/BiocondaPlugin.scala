@@ -74,6 +74,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaPullRequestTitle := defaultPullRequestTitle.value,
     biocondaPullRequest := createPullRequest.value,
     biocondaRelease := releaseProcedure().value,
+    biocondaReleaseAll := releaseAllProcedure().value,
     biocondaSkipErrors := false,
     biocondaNewTool := isNewTool.value,
     biocondaDoi := None
