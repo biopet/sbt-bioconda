@@ -45,7 +45,8 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     summary = "test is a tool that is tested in this test suite.",
     defaultJavaOptions = Seq("-Xms25m"),
     buildNumber = 0,
-    notes = Some("This is java")
+    notes = Some("This is java"),
+    DOI = Some("doi:bla")
   )
 
   @Test
@@ -102,6 +103,7 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     yaml should include("extra:")
     yaml should include("notes: This is java")
     yaml shouldNot include("Nederlandse tekst ")
+    yaml should include("doi: doi:bla")
   }
 
   @Test

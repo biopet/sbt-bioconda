@@ -256,6 +256,7 @@ object BiocondaPlugin extends AutoPlugin {
 
         val summary = biocondaSummary.value
         val notes = biocondaNotes.value
+        val DOI = biocondaDoi.value
 
         val latest = getLatestTag.value
         for (tag <- tags) {
@@ -285,7 +286,7 @@ object BiocondaPlugin extends AutoPlugin {
               notes = Some(notes),
               defaultJavaOptions = biocondaDefaultJavaOptions.value,
               testCommands = biocondaTestCommands.value,
-              DOI = biocondaDoi.value
+              DOI = DOI
             )
 
             val publishDir = new File(biocondaRecipeDir.value, versionNumber)
