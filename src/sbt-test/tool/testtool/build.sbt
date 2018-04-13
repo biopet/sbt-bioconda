@@ -22,6 +22,7 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5"
 ghreleaseRepoOrg := "biopet"
 ghreleaseRepoName := "testtool"
 biocondaRepository := biocondaTempDir.value
+checkTexts := textChecking.value
 checkRepo := Def.task {
 filesExistInDir(biocondaRepository.value,
       Seq(".github",
@@ -79,6 +80,7 @@ def textChecking: Def.Initialize[Task[Unit]] = {
     val pullRequestBody: String = biocondaPullRequestBody.value
     val pullRequestTitle: String = biocondaPullRequestTitle.value
     val newTool: Boolean = biocondaNewTool.value
+    val commitMessage: String = biocondaCommitMessage.value
     assert(newTool, "This tool should not have been published")
     assert(summary.contains("This summary for testtool is automatically generated"))
     assert(pullRequestBody.contains("[x] This PR adds a new recipe."), "Pull request template should be included")

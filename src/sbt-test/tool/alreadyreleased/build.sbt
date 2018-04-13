@@ -16,6 +16,8 @@ homepage := Some(new URL("https://github.com/biopet/biopet"))
 scalaVersion := "2.11.11"
 biocondaGitUrl := "https://github.com/biopet/bioconda-recipes.git"
 licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
+checkTexts := textChecking.value
+deleteTmp := Def.task{FileUtils.deleteDirectory(biocondaRepository.value)}.value
 
 ghreleaseRepoOrg := "biopet"
 ghreleaseRepoName := "biopet"
