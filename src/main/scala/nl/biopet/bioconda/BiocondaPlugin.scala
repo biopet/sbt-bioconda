@@ -357,32 +357,18 @@ object BiocondaPlugin extends AutoPlugin {
     * Determines which tags are released on github.
     * @return a sequence of tagnames.
     */
-  private def getReleasedTags: Def.Initialize[Task[Seq[TagName]]] = {
-    Def.task {
-      val log = streams.value.log
-      val repo = ghreleaseGetRepo.value
-      val releaseList = repo.listReleases().asList()
-      val releases =
-        JavaConverters.collectionAsScalaIterable(releaseList).toList
-      val tags = releases.flatMap(release => {
-        val tag: TagName = release.getTagName
-        try {
-          getSourceUrl(tag, repo)
-          Some(tag)
-        } catch {
-          case e: java.io.FileNotFoundException =>
-            if (biocondaSkipErrors.value) {
-              log.error(s"Release $tag does not have a jar attached. Skipping")
-              None
-            } else throw e
-        }
-      })
-      if (tags.isEmpty) {
-        throw new Exception(
-          "No tags have been released. Please release on github before publishing to bioconda")
-      }
-      tags
+  private def getReleasedTags: Def.Initialize[Task[Seq[TagName]]] = Def.task {
+    val log = streams.value.log
+    val repo = ghreleaseGetRepo.value
+    val releaseList = repo.listReleases().asList()
+    val releases =
+      JavaConverters.collectionAsScalaIterable(releaseList).toList
+    val tags = releases.map(release => { release.getTagName })
+    if (tags.isEmpty) {
+      throw new Exception(
+        "No tags have been released. Please release on github before publishing to bioconda")
     }
+    tags
   }
 
   /**
