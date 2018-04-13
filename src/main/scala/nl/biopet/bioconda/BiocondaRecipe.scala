@@ -42,7 +42,7 @@ class BiocondaRecipe(name: String,
                      defaultJavaOptions: Seq[String],
                      buildNumber: Int = 0,
                      notes: Option[String] = None,
-                     DOI: Option[String] = None) {
+                     doi: Option[String] = None) {
 
   /**
     * The filename for the jar as determined by the sourceUrl
@@ -78,7 +78,7 @@ class BiocondaRecipe(name: String,
     */
   def metaYaml: String = {
 
-    val doiMap: Map[String, String] = DOI match {
+    val doiMap: Map[String, String] = doi match {
       case Some(d) => Map("doi" -> d)
       case _       => Map()
     }

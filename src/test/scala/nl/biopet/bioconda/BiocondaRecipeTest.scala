@@ -46,7 +46,7 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     defaultJavaOptions = Seq("-Xms25m"),
     buildNumber = 0,
     notes = Some("This is java"),
-    DOI = Some("doi:bla")
+    doi = Some("doi:bla")
   )
 
   @Test
