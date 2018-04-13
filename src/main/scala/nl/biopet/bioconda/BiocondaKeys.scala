@@ -81,8 +81,8 @@ trait BiocondaKeys {
     "Create recipe for current version, test it, and create a pull request on bioconda main.")
   lazy val biocondaReleaseAll = taskKey[Unit](
     "Create all recipes, test them, and create a pull request on bioconda main.")
-  lazy val biocondaIsReleased =
-    settingKey[Boolean]("Whether the tool is released on bioconda already")
+  lazy val biocondaNewTool =
+    taskKey[Boolean]("Whether the tool is new on bioconda")
   lazy val biocondaSkipErrors = settingKey[Boolean](
     "Recipes with failing elements are skipped instead of causing an exception.")
 }

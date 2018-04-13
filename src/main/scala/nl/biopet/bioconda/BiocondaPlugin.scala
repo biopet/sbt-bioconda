@@ -75,7 +75,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaPullRequest := createPullRequest.value,
     biocondaRelease := releaseProcedure().value,
     biocondaSkipErrors := false,
-    biocondaIsReleased := false
+    biocondaNewTool := true
   )
 
   /**
@@ -327,6 +327,21 @@ object BiocondaPlugin extends AutoPlugin {
         }
         .dependsOn(biocondaUpdatedBranch)
     }
+
+  /**
+    * Determines wheter the tool is new by checking
+    * if the tool name already exists in the main repo.
+    * @return true if tool is not yet present in main repo
+    */
+  private def isNewTool: Def.Initialize[Task[Boolean]] = {
+    Def.task {
+      val biocondaRecipes: File =
+        new File(biocondaRepository.value, "recipes")
+      val toolRecipes =
+        new File(biocondaRecipes, (name in Bioconda).value)
+      !toolRecipes.exists()
+    }.dependsOn(biocondaUpdatedBranch)
+  }
 
   /**
     * Determines which tags are released on github.
