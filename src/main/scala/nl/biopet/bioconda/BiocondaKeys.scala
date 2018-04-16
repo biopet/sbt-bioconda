@@ -54,7 +54,8 @@ trait BiocondaKeys {
   lazy val biocondaBuildNumber = settingKey[Int]("The build number")
   lazy val biocondaSummary =
     taskKey[String]("The summary describing the program")
-  lazy val biocondaDescription = taskKey[Option[String]]("The programs description")
+  lazy val biocondaDescription =
+    taskKey[Option[String]]("The programs description")
   lazy val biocondaNotes = taskKey[String]("Usage notes for the program")
   lazy val biocondaDefaultJavaOptions = settingKey[Seq[String]](
     "The default java options for the program when started with the wrapperscript.")
