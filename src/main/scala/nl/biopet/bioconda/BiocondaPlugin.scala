@@ -293,6 +293,7 @@ object BiocondaPlugin extends AutoPlugin {
               summary = summary,
               defaultJavaOptions = biocondaDefaultJavaOptions.value,
               buildNumber = biocondaBuildNumber.value,
+              description = biocondaDescription.value,
               notes = Some(notes),
               doi = doi
             )
