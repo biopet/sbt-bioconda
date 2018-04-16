@@ -1,4 +1,3 @@
 # Test whether the messages for already released tool are correct.
 > checkTexts
 -> biocondaCreateRecipe
-> biocondaAddRecipes
