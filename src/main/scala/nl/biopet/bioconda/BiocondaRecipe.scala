@@ -43,6 +43,7 @@ class BiocondaRecipe(name: String,
                      summary: String,
                      defaultJavaOptions: Seq[String],
                      buildNumber: Int = 0,
+                     description: Option[String] = None,
                      notes: Option[String] = None,
                      doi: Option[String] = None) {
 
@@ -95,6 +96,11 @@ class BiocondaRecipe(name: String,
       else ListMap("extra" -> extra)
     }
 
+    val descriptionMap: ListMap[String,String] = description match {
+      case Some(d) => ListMap("description" -> d)
+      case _  => ListMap()
+     }
+
     val meta: ListMap[String, Any] = {
       ListMap(
         "package" -> ListMap(
@@ -112,11 +118,11 @@ class BiocondaRecipe(name: String,
           "run" -> (runRequirements ++ Seq("python")),
           "build" -> buildRequirements
         ),
-        "about" -> ListMap(
+        "about" -> {ListMap(
           "home" -> homeUrl,
           "license" -> license,
           "summary" -> summary
-        ),
+        ) ++ descriptionMap},
         "test" -> ListMap(
           "commands" -> testCommands
         )
