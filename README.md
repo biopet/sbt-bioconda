@@ -43,8 +43,11 @@ name in Bioconda := "my_program" // Name of your tool on bioconda.
 // Defaults to normalizedName
 biocondaCommand := "my-program" // the command on the shell to execute your program. 
 // Defaults to name in Bioconda
-biocondaSummary := "description ..." // The summary of your program. 
+biocondaSummary := "summary" // A one sentence summary of your program.  
 // Defaults to a generic description with a link to your homepage.
+// Since this is a task you can set this to for example dynamically read your README.md if you want to.
+biocondaDescription := "Description ..." // A longer description of your program if needed.
+// defaults to None.
 // Since this is a task you can set this to for example dynamically read your README.md if you want to.
 homepage in Bioconda := "example.com" // The homepage of your project as displayed on bioconda. 
 // Defaults to homepage of your project.
