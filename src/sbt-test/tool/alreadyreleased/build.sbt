@@ -45,7 +45,6 @@ def textChecking: Def.Initialize[Task[Unit]] = {
     assert(!newTool, "This tool should already be published")
     assert(summary.contains("This summary for biopet is automatically generated"))
     assert(pullRequestBody.contains("[ ] This PR adds a new recipe."), "Pull request template should be included")
-    assert(pullRequestBody.contains(summary), "Summary should be included.")
     assert(pullRequestTitle.contains("New version for biopet"),"Pull request title should mention new version")
     assert(commitMessage.contains("Added new versions for biopet"))
   }

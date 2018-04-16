@@ -60,6 +60,7 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaBuildRequirements := Seq(),
     biocondaNotes := defaultNotes.value,
     biocondaSummary := defaultSummary.value,
+    biocondaDescription := None,
     biocondaDefaultJavaOptions := Seq(),
     biocondaCreateRecipe := createCurrentRecipe().value,
     biocondaCreateAllRecipes := createAllRecipes().value,
