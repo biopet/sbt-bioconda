@@ -255,6 +255,7 @@ object BiocondaPlugin extends AutoPlugin {
         val repo = ghreleaseGetRepo.value
         val log = streams.value.log
 
+        val description = biocondaDescription.value
         val summary = biocondaSummary.value
         val notes = biocondaNotes.value
         val doi = biocondaDoi.value
@@ -293,7 +294,7 @@ object BiocondaPlugin extends AutoPlugin {
               summary = summary,
               defaultJavaOptions = biocondaDefaultJavaOptions.value,
               buildNumber = biocondaBuildNumber.value,
-              description = biocondaDescription.value,
+              description = description,
               notes = Some(notes),
               doi = doi
             )
