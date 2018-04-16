@@ -76,6 +76,7 @@ def biocondaTempDir: Def.Initialize[File] = {
 def textChecking: Def.Initialize[Task[Unit]] = {
   Def.task {
     val summary: String = biocondaSummary.value
+    val description: Option[String] = biocondaDescription.value
     val notes: String = biocondaNotes.value
     val pullRequestBody: String = biocondaPullRequestBody.value
     val pullRequestTitle: String = biocondaPullRequestTitle.value
@@ -87,5 +88,6 @@ def textChecking: Def.Initialize[Task[Unit]] = {
     assert(pullRequestBody.contains(summary), "Summary should be included.")
     assert(pullRequestTitle.contains("New tool: testtool"),"Pull request title should mention new tool")
     assert(commitMessage.contains("Added new tool: testtool"))
+    assert(description == None)
   }
 }
