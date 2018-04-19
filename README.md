@@ -107,12 +107,14 @@ It checks which are already in bioconda main and only adds new ones. Unless bioc
 - `biocondaPullRequest` create a new pull request on bioconda main.
 - `biocondaRelease` Does all the steps necessary for a pull request for a release of the current version of your tool.
 - `biocondaReleaseAll` Does all the steps necessary for a pull request for all versions released on github and not yet in bioconda.
-If you do not want to publish all the recipes add once (default for biocondaRelease) you can 
+If you do not want to publish all the recipes at once (default for biocondaReleaseAll) you can 
 run the above commands manually and use the following keys:
 - `biocondaCreateAllRecipes` creates recipes for all versions released on github, and not yet in bioconda.
+You can manually delete some versions from `target/recipes` and then use `biocondaAddRecipes`, `biocondaTestRecipes`,
+`biocondaPushRecipes` and `biocondaPullRequest` to publish your selected versions.
 - `biocondaCreateRecipe` creates a recipe for the current version.
 
 ## Known Issues
 
-- Versions with a `-` in them crash on testing. This is a bioconda requirement.
+- Versions with a `-` in .them crash on testing. This is a bioconda requirement
 If you released versions with a - the '-' will be removed from the version in the bioconda recipes.
