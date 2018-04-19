@@ -101,6 +101,11 @@ class BiocondaRecipe(name: String,
       case _       => ListMap()
     }
 
+    val buildMap: ListMap[String, Seq[String]] =
+      if (buildRequirements.isEmpty) {
+        ListMap()
+      } else ListMap("build" -> buildRequirements)
+
     val meta: ListMap[String, Any] = {
       ListMap(
         "package" -> ListMap(
@@ -114,10 +119,11 @@ class BiocondaRecipe(name: String,
         "build" -> ListMap(
           "number" -> buildNumber
         ),
-        "requirements" -> ListMap(
-          "run" -> (runRequirements ++ Seq("python")),
-          "build" -> buildRequirements
-        ),
+        "requirements" -> {
+          ListMap(
+            "run" -> (runRequirements ++ Seq("python"))
+          ) ++ buildMap
+        },
         "about" -> {
           ListMap(
             "home" -> homeUrl,
