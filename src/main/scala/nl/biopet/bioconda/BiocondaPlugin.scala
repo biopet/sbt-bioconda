@@ -26,6 +26,7 @@ import com.typesafe.sbt.SbtGit.GitKeys
 import BiocondaTexts._
 import BiocondaUtils._
 import nl.biopet.utils.io.{copyDir, getSha256SumFromDownload, listDirectory}
+import nl.biopet.utils.SemanticVersion
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
 import ohnosequences.sbt.SbtGithubReleasePlugin
 import org.kohsuke.github.GitHub
@@ -195,7 +196,11 @@ object BiocondaPlugin extends AutoPlugin {
   private def getLatestTag: Def.Initialize[Task[TagName]] = {
     Def.task {
       getReleasedTags.value
-        .sortBy(tag => tag.stripPrefix("v"))
+        .sortBy(tag =>
+          SemanticVersion.fromString(tag) match {
+            case Some(tagVersion) => tagVersion
+            case _                => new SemanticVersion(0, 0, 0)
+        })
         .lastOption
         .getOrElse("No version")
     }
@@ -369,7 +374,6 @@ object BiocondaPlugin extends AutoPlugin {
     * @return a sequence of tagnames.
     */
   private def getReleasedTags: Def.Initialize[Task[Seq[TagName]]] = Def.task {
-    val log = streams.value.log
     val repo = ghreleaseGetRepo.value
     val releaseList = repo.listReleases().asList()
     val releases =
