@@ -136,7 +136,7 @@ object BiocondaPlugin extends AutoPlugin {
         if (remotes.contains(remote)) {
           val currentRemoteUrl = git("remote", "get-url", remote)(local, s.log)
           if (currentRemoteUrl == url) {} else {
-            throw new Exception(
+            throw new IllegalStateException(
               s"""Git repository already has url: '$currentRemoteUrl' defined for remote
                  |'$remote'. Will not set '$remote' to '$url'.""".stripMargin)
           }
@@ -205,7 +205,7 @@ object BiocondaPlugin extends AutoPlugin {
         SemanticVersion.fromString(tag) match {
           case Some(sv) => sv
           case _ =>
-            throw new Exception(
+            throw new IllegalStateException(
               s"'$tag' is not a semantic version! " +
                 s"This should not happen, please report to the developers."
             )
@@ -220,7 +220,7 @@ object BiocondaPlugin extends AutoPlugin {
     sortedTags.lastOption match {
       case Some(tag) => tag
       case _ =>
-        throw new Exception(
+        throw new IllegalStateException(
           "No latest tag found. This should not happen, please report to the developers.")
     }
   }
@@ -234,12 +234,12 @@ object BiocondaPlugin extends AutoPlugin {
       val tag = "v" + version.value
       val releasedTags = getReleasedTags.value
       if (!releasedTags.contains(tag)) {
-        throw new Exception(
+        throw new IllegalStateException(
           s"Please release tag '$tag' with the githubRelease plugin first.")
       }
       val publishedTags = getPublishedTags.value
       if (publishedTags.contains(tag) && !biocondaOverwriteRecipes.value) {
-        throw new Exception(s"""Tag '$tag' is already released.
+        throw new IllegalStateException(s"""Tag '$tag' is already released.
              |Please set 'biocondaOverwriteRecipes' to 'true'
              |if you want to overwrite the recipe.
              |""".stripMargin.replace("\n", " "))
@@ -399,7 +399,7 @@ object BiocondaPlugin extends AutoPlugin {
       JavaConverters.collectionAsScalaIterable(releaseList).toList
     val tags = releases.map(release => { release.getTagName })
     if (tags.isEmpty) {
-      throw new Exception(
+      throw new IllegalStateException(
         "No tags have been released. Please release on github before publishing to bioconda")
     }
     tags
