@@ -193,16 +193,35 @@ object BiocondaPlugin extends AutoPlugin {
     * Gets the released tags from github and determines the latest
     * @return the latest to be released tag.
     */
-  private def getLatestTag: Def.Initialize[Task[TagName]] = {
-    Def.task {
-      getReleasedTags.value
-        .sortBy(tag =>
-          SemanticVersion.fromString(tag) match {
-            case Some(tagVersion) => tagVersion
-            case _                => new SemanticVersion(0, 0, 0)
-        })
-        .lastOption
-        .getOrElse("No version")
+  private def getLatestTag: Def.Initialize[Task[TagName]] = Def.task {
+    val log = streams.value.log
+    val releasedTags = getReleasedTags.value
+    require(!releasedTags.isEmpty,
+            "No tags have been released. " +
+              "A latest version can not be determined.")
+    val noSemanticTags = releasedTags.filter(SemanticVersion.canParse)
+    val sortedTags = if (noSemanticTags.isEmpty) {
+      releasedTags.sortBy(tag =>
+        SemanticVersion.fromString(tag) match {
+          case Some(sv) => sv
+          case _ =>
+            throw new Exception(
+              s"'$tag' is not a semantic version! " +
+                s"This should not happen, please report to the developers."
+            )
+      })
+    } else {
+      log.warn(
+        s"Some tags do not follow semantic versioning. " +
+          s"No semantic version tags: $noSemanticTags. " +
+          s"Falling back to string sorting")
+      releasedTags.sorted
+    }
+    sortedTags.lastOption match {
+      case Some(tag) => tag
+      case _ =>
+        throw new Exception(
+          "No latest tag found. This should not happen, please report to the developers.")
     }
   }
 
