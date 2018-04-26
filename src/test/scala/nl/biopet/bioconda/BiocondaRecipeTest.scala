@@ -137,18 +137,18 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     yaml should include("  license: MIT")
     yaml should include(
       "  summary: test is a tool that is tested in this test suite.")
-    yaml should not include ("description:")
+    yaml should not include "description:"
     yaml should include("requirements:")
     yaml should include("  run:")
     yaml should include("- openjdk")
-    yaml should not include ("  build:")
+    yaml should not include "  build:"
     yaml should include("test:")
     yaml should include("  commands:")
     yaml should include("- testing --version")
-    yaml should not include ("extra:")
-    yaml should not include ("notes:")
-    yaml should not include ("Nederlandse tekst ")
-    yaml should not include ("doi:")
+    yaml should not include "extra:"
+    yaml should not include "notes:"
+    yaml should not include "Nederlandse tekst "
+    yaml should not include "doi:"
   }
   @Test
   def testPythonWrapper(): Unit = {

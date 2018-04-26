@@ -159,7 +159,7 @@ object BiocondaUtils {
 
   /**
     * Pull the latest bioconda-utils-build-env image.
-    * @param log
+    * @param log ManagedLogger to log the pull process
     */
   def pullLatestUtils(log: ManagedLogger): Unit = {
     Process(Seq("docker", "pull", "bioconda/bioconda-utils-build-env"))

@@ -196,7 +196,7 @@ object BiocondaPlugin extends AutoPlugin {
   private def getLatestTag: Def.Initialize[Task[TagName]] = Def.task {
     val log = streams.value.log
     val releasedTags = getReleasedTags.value
-    require(!releasedTags.isEmpty,
+    require(releasedTags.nonEmpty,
             "No tags have been released. " +
               "A latest version can not be determined.")
     val noSemanticTags = releasedTags.filter(SemanticVersion.canParse)
