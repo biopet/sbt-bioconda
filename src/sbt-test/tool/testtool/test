@@ -1,7 +1,9 @@
 > biocondaUpdatedRepository
 > checkRepo
 > biocondaUpdatedBranch
-> biocondaCreateRecipes
+> checkTexts
+-> biocondaCreateRecipe
+> biocondaCreateAllRecipes
 > checkRecipes
 > biocondaAddRecipes
 > checkCopy

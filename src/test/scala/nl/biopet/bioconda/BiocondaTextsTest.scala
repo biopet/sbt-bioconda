@@ -24,26 +24,28 @@ package nl.biopet.bioconda
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
-import nl.biopet.bioconda.BiocondaDefaults.pullRequestTemplate
+import nl.biopet.bioconda.BiocondaTexts.pullRequestTemplate
 
-class BiocondaDefaultsTest extends TestNGSuite with Matchers {
+class BiocondaTextsTest extends TestNGSuite with Matchers {
 
   @Test
   def testPullRequestTemplate(): Unit = {
-    pullRequestTemplate(true) shouldBe
+    pullRequestTemplate(false) shouldBe
       s"""|* [ ] This PR adds a new recipe.
           |* [x] AFAIK, this recipe **is directly relevant to the biological sciences** (otherwise, please submit to the more general purpose [conda-forge channel](https://conda-forge.org/docs/)).
           |* [x] This PR updates an existing recipe.
           |* [ ] This PR does something else (explain below).
           |***
+          |
           |""".stripMargin
 
-    pullRequestTemplate(false) shouldBe
+    pullRequestTemplate(true) shouldBe
       s"""|* [x] This PR adds a new recipe.
           |* [x] AFAIK, this recipe **is directly relevant to the biological sciences** (otherwise, please submit to the more general purpose [conda-forge channel](https://conda-forge.org/docs/)).
           |* [ ] This PR updates an existing recipe.
           |* [ ] This PR does something else (explain below).
           |***
+          |
           |""".stripMargin
   }
 }

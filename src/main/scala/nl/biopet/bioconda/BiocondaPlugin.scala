@@ -23,9 +23,10 @@ package nl.biopet.bioconda
 
 import com.typesafe.sbt.GitPlugin
 import com.typesafe.sbt.SbtGit.GitKeys
-import nl.biopet.bioconda.BiocondaDefaults._
-import nl.biopet.bioconda.BiocondaUtils._
+import BiocondaTexts._
+import BiocondaUtils._
 import nl.biopet.utils.io.{copyDir, getSha256SumFromDownload, listDirectory}
+import nl.biopet.utils.SemanticVersion
 import ohnosequences.sbt.GithubRelease.keys.{TagName, ghreleaseGetRepo}
 import ohnosequences.sbt.SbtGithubReleasePlugin
 import org.kohsuke.github.GitHub
@@ -60,13 +61,13 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaBuildRequirements := Seq(),
     biocondaNotes := defaultNotes.value,
     biocondaSummary := defaultSummary.value,
+    biocondaDescription := None,
     biocondaDefaultJavaOptions := Seq(),
-    biocondaCreateVersionRecipes := createRecipes(latest = false).value,
-    biocondaCreateLatestRecipe := createRecipes(versions = false).value,
-    biocondaCreateRecipes := createRecipes().value,
+    biocondaCreateRecipe := createCurrentRecipe().value,
+    biocondaCreateAllRecipes := createAllRecipes().value,
     biocondaLicense := getLicense.value,
     biocondaTestCommands := Seq(),
-    biocondaCommitMessage := s"Automated update for recipes of ${(name in Bioconda).value}",
+    biocondaCommitMessage := defaultCommitMessage.value,
     biocondaAddRecipes := addRecipes().value,
     biocondaTestRecipes := testRecipes.value,
     biocondaOverwriteRecipes := false,
@@ -75,10 +76,16 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaPullRequestTitle := defaultPullRequestTitle.value,
     biocondaPullRequest := createPullRequest.value,
     biocondaRelease := releaseProcedure().value,
+    biocondaReleaseAll := releaseAllProcedure().value,
     biocondaSkipErrors := false,
-    biocondaIsReleased := false
+    biocondaNewTool := isNewTool.value,
+    biocondaDoi := None
   )
 
+  /**
+    * The release procedure for this specific version
+    * @return a task that depends on all the tasks necessary for releasing this version
+    */
   def releaseProcedure(): Def.Initialize[Task[Unit]] =
     Def
       .task {}
@@ -86,8 +93,25 @@ object BiocondaPlugin extends AutoPlugin {
       .dependsOn(biocondaPushRecipes)
       .dependsOn(biocondaTestRecipes)
       .dependsOn(biocondaAddRecipes)
-      .dependsOn(biocondaCreateRecipes)
+      .dependsOn(biocondaCreateRecipe)
 
+  /**
+    * The release procedure for all versions released on github
+    * @return a task that depends on all the tasks necessary for releasing all versions
+    */
+  def releaseAllProcedure(): Def.Initialize[Task[Unit]] =
+    Def
+      .task {}
+      .dependsOn(biocondaPullRequest)
+      .dependsOn(biocondaPushRecipes)
+      .dependsOn(biocondaTestRecipes)
+      .dependsOn(biocondaAddRecipes)
+      .dependsOn(biocondaCreateAllRecipes)
+
+  /**
+    * Creates a new local bioconda git repo
+    * @return a file that is the directory of the bioconda repo
+    */
   private def initBiocondaRepo: Def.Initialize[Task[File]] = {
     Def.task {
       val initialized: Boolean =
@@ -112,7 +136,7 @@ object BiocondaPlugin extends AutoPlugin {
         if (remotes.contains(remote)) {
           val currentRemoteUrl = git("remote", "get-url", remote)(local, s.log)
           if (currentRemoteUrl == url) {} else {
-            throw new Exception(
+            throw new IllegalStateException(
               s"""Git repository already has url: '$currentRemoteUrl' defined for remote
                  |'$remote'. Will not set '$remote' to '$url'.""".stripMargin)
           }
@@ -138,6 +162,10 @@ object BiocondaPlugin extends AutoPlugin {
     }
   }
 
+  /**
+    * Creates a new branch in the bioconda repo that is up to date with upstream
+    * @return the bioconda repo with the branch checked out
+    */
   private def updateBranch(): Def.Initialize[Task[File]] = {
     Def
       .task {
@@ -162,51 +190,117 @@ object BiocondaPlugin extends AutoPlugin {
   }
 
   /**
-    * A task that returns a sequence of net yet published tags and the latest tag
-    * @return sequence of not yet published tags, latest tag
+    * Gets the released tags from github and determines the latest
+    * @return the latest to be released tag.
     */
-  private def getUnPublishedTags: Def.Initialize[Task[R]] = {
-    Def.task {
-      val publishedTags: Seq[TagName] = getPublishedTags.value
-      val releasedTags: Seq[TagName] = getReleasedTags.value
-      val latestTag = releasedTags
-        .sortBy(tag => tag.stripPrefix("v"))
-        .lastOption
-        .getOrElse("No version")
-      // Tags that are released but not in bioconda yet should be published
-      // make sure latest tag is always published if latest.
-      val unPublishedTags: Seq[TagName] =
-        releasedTags.filter(tag => !publishedTags.contains(tag)).distinct
-      R(unPublishedTags, latestTag)
+  private def getLatestTag: Def.Initialize[Task[TagName]] = Def.task {
+    val log = streams.value.log
+    val releasedTags = getReleasedTags.value
+    require(releasedTags.nonEmpty,
+            "No tags have been released. " +
+              "A latest version can not be determined.")
+    val noSemanticTags = releasedTags.filter(SemanticVersion.canParse)
+    val sortedTags = if (noSemanticTags.isEmpty) {
+      releasedTags.sortBy(tag =>
+        SemanticVersion.fromString(tag) match {
+          case Some(sv) => sv
+          case _ =>
+            throw new IllegalStateException(
+              s"'$tag' is not a semantic version! " +
+                s"This should not happen, please report to the developers."
+            )
+      })
+    } else {
+      log.warn(
+        s"Some tags do not follow semantic versioning. " +
+          s"No semantic version tags: $noSemanticTags. " +
+          s"Falling back to string sorting")
+      releasedTags.sorted
+    }
+    sortedTags.lastOption match {
+      case Some(tag) => tag
+      case _ =>
+        throw new IllegalStateException(
+          "No latest tag found. This should not happen, please report to the developers.")
     }
   }
-  private case class R(unPublished: Seq[TagName], latest: TagName)
 
-  private def createRecipes(
-      latest: Boolean = true,
-      versions: Boolean = true): Def.Initialize[Task[File]] = {
+  /**
+    * Create the recipe for the current version
+    * @return the directory with the recipes
+    */
+  private def createCurrentRecipe(): Def.Initialize[Task[File]] = {
+    Def.taskDyn {
+      val tag = "v" + version.value
+      val releasedTags = getReleasedTags.value
+      if (!releasedTags.contains(tag)) {
+        throw new IllegalStateException(
+          s"Please release tag '$tag' with the githubRelease plugin first.")
+      }
+      val publishedTags = getPublishedTags.value
+      if (publishedTags.contains(tag) && !biocondaOverwriteRecipes.value) {
+        throw new IllegalStateException(s"""Tag '$tag' is already released.
+             |Please set 'biocondaOverwriteRecipes' to 'true'
+             |if you want to overwrite the recipe.
+             |""".stripMargin.replace("\n", " "))
+      }
+      Def.task {
+        createRecipes(Seq(tag)).value
+      }
+    }
+  }
+
+  /**
+    * Creates the recipes for all versions on github
+    * @return the directory containing the recipes.
+    */
+  private def createAllRecipes(): Def.Initialize[Task[File]] = {
+    Def.taskDyn {
+      val publishedTags: Seq[TagName] = getPublishedTags.value
+      val releasedTags: Seq[TagName] = getReleasedTags.value
+      val toBePublishedTags: Seq[TagName] =
+        if (biocondaOverwriteRecipes.value) releasedTags
+        else releasedTags.filter(tag => !publishedTags.contains(tag))
+      Def.task {
+        createRecipes(toBePublishedTags).value
+      }
+    }
+  }
+
+  /**
+    * creates the recipes for tags.
+    * Also creates the default recipe for the latest version if the latest version
+    * is among the tags.
+    * @param tags The tags for which a recipe needs to be created
+    * @return the directory with the recipe.
+    */
+  private def createRecipes(tags: Seq[TagName]): Def.Initialize[Task[File]] = {
     Def
       .task {
-        val tags = getUnPublishedTags.value
-        val toBePublishedTags: Seq[TagName] = {
-          (if (versions) tags.unPublished else Seq()) ++
-            (if (latest) Seq(tags.latest) else Seq())
-        }.distinct
-
         val repo = ghreleaseGetRepo.value
         val log = streams.value.log
 
+        val description = biocondaDescription.value
         val summary = biocondaSummary.value
         val notes = biocondaNotes.value
+        val doi = biocondaDoi.value
 
-        for (tag <- toBePublishedTags) {
+        val latest = getLatestTag.value
+        for (tag <- tags) {
           try {
             val sourceUrl: URL = getSourceUrl(tag, repo)
             log.info(s"Downloading ${sourceUrl.toString} to get sha256sum.")
             val sourceSha256: String = getSha256SumFromDownload(sourceUrl)
             log.info("Downloading complete.")
-            val versionNumber
-              : String = tag.stripPrefix("v") //hardcoded "v" here. ugly.
+            val versionNumber: String = {
+              val number = tag.stripPrefix("v") //hardcoded "v" here. ugly.
+              val finalNumber = number.replace("-", "")
+              if (number.contains("-"))
+                log.warn(
+                  s"'$number' contains '-' which is not allowed in versions. " +
+                    s"'$finalNumber' will be used as version in bioconda.")
+              finalNumber
+            }
             val homeUrl = (homepage in Bioconda).value
               .map(_.toString)
               .getOrElse(throw new IllegalArgumentException(
@@ -218,20 +312,23 @@ object BiocondaPlugin extends AutoPlugin {
               sourceUrl = sourceUrl.toString,
               sourceSha256 = sourceSha256,
               runRequirements = biocondaRequirements.value,
+              buildRequirements = biocondaBuildRequirements.value,
+              testCommands = biocondaTestCommands.value,
               homeUrl = homeUrl,
               license = biocondaLicense.value,
-              buildRequirements = biocondaBuildRequirements.value,
               summary = summary,
-              buildNumber = biocondaBuildNumber.value,
-              notes = Some(notes),
               defaultJavaOptions = biocondaDefaultJavaOptions.value,
-              testCommands = biocondaTestCommands.value
+              buildNumber = biocondaBuildNumber.value,
+              description = description,
+              notes = Some(notes),
+              doi = doi
             )
 
             val publishDir = new File(biocondaRecipeDir.value, versionNumber)
             publishDir.mkdirs()
             recipe.createRecipeFiles(publishDir)
-            if (tag == tags.latest) {
+            // If tag is latest, create the default recipe for this tag.
+            if (tag == latest) {
               recipe.createRecipeFiles(biocondaRecipeDir.value)
             }
           } catch {
@@ -248,22 +345,21 @@ object BiocondaPlugin extends AutoPlugin {
       }
   }
 
+  /**
+    * Determines which tags are already published in bioconda.
+    * @return a sequence of tagnames
+    */
   private def getPublishedTags: Def.Initialize[Task[Seq[TagName]]] = {
-    Def.taskDyn {
-      // If recipes are overwritten, they are for the purposes of this plugin not published.
-      Def
-        .task {
-          if (biocondaOverwriteRecipes.value) {
-            Seq()
-          } else {
+    Def
+      .taskDyn {
+        Def
+          .task {
             val biocondaRecipes: File =
               new File(biocondaRepository.value, "recipes")
             val toolRecipes =
               new File(biocondaRecipes, (name in Bioconda).value)
-            val thisRecipe: File =
-              new File(toolRecipes, (name in Bioconda).value)
-            if (thisRecipe.exists()) {
-              val yamlFiles = listDirectory(thisRecipe,
+            if (toolRecipes.exists()) {
+              val yamlFiles = listDirectory(toolRecipes,
                                             Some("^meta.ya?ml$".r),
                                             recursive = true)
               // Hardcoded "v" prefix here. Is the standard in github release plugin.
@@ -271,39 +367,48 @@ object BiocondaPlugin extends AutoPlugin {
               yamlFiles.map(x => "v" + getVersionFromYaml(x))
             } else Seq()
           }
-        }
-        .dependsOn(biocondaUpdatedBranch)
-    }
-  }
-
-  private def getReleasedTags: Def.Initialize[Task[Seq[TagName]]] = {
-    Def.task {
-      val log = streams.value.log
-      val repo = ghreleaseGetRepo.value
-      val releaseList = repo.listReleases().asList()
-      val releases =
-        JavaConverters.collectionAsScalaIterable(releaseList).toList
-      val tags = releases.flatMap(release => {
-        val tag: TagName = release.getTagName
-        try {
-          getSourceUrl(tag, repo)
-          Some(tag)
-        } catch {
-          case e: java.io.FileNotFoundException =>
-            if (biocondaSkipErrors.value) {
-              log.error(s"Release $tag does not have a jar attached. Skipping")
-              None
-            } else throw e
-        }
-      })
-      if (tags.isEmpty) {
-        throw new Exception(
-          "No tags have been released. Please release on github before publishing to bioconda")
       }
-      tags
-    }
+      .dependsOn(biocondaUpdatedBranch)
   }
 
+  /**
+    * Determines wheter the tool is new by checking
+    * if the tool name already exists in the main repo.
+    * @return true if tool is not yet present in main repo
+    */
+  private def isNewTool: Def.Initialize[Task[Boolean]] = {
+    Def
+      .task {
+        val biocondaRecipes: File =
+          new File(biocondaRepository.value, "recipes")
+        val toolRecipes =
+          new File(biocondaRecipes, (name in Bioconda).value)
+        !toolRecipes.exists()
+      }
+      .dependsOn(biocondaUpdatedBranch)
+  }
+
+  /**
+    * Determines which tags are released on github.
+    * @return a sequence of tagnames.
+    */
+  private def getReleasedTags: Def.Initialize[Task[Seq[TagName]]] = Def.task {
+    val repo = ghreleaseGetRepo.value
+    val releaseList = repo.listReleases().asList()
+    val releases =
+      JavaConverters.collectionAsScalaIterable(releaseList).toList
+    val tags = releases.map(release => { release.getTagName })
+    if (tags.isEmpty) {
+      throw new IllegalStateException(
+        "No tags have been released. Please release on github before publishing to bioconda")
+    }
+    tags
+  }
+
+  /**
+    * Add the recipes directory to the bioconda git repo and commit.
+    * @return the git repo with the new commit
+    */
   private def addRecipes(): Def.Initialize[Task[File]] = {
     Def.task {
       val log = streams.value.log
@@ -319,6 +424,11 @@ object BiocondaPlugin extends AutoPlugin {
       repo
     }
   }
+
+  /**
+    * Start a docker container with a circle ci image to test the recipes.
+    * @return the repo with the now tested recipes.
+    */
   private def testRecipes: Def.Initialize[Task[File]] =
     Def.task {
       val repo = biocondaRepository.value
@@ -329,6 +439,9 @@ object BiocondaPlugin extends AutoPlugin {
       repo
     }
 
+  /**
+    * Force push the repo branch to the biocondaRepository
+    */
   private def pushRecipe: Def.Initialize[Task[Unit]] =
     Def.task {
       val log = streams.value.log
@@ -338,6 +451,10 @@ object BiocondaPlugin extends AutoPlugin {
       git("push", "-f", "origin", biocondaBranch.value)(repo, log)
     }
 
+  /**
+    * Create a pull request on the bioconda main repo.
+    * @return A task that creates the pull request.
+    */
   private def createPullRequest: Def.Initialize[Task[Unit]] =
     Def.task {
       val biocondaMain = new GitUrlParser(biocondaMainGitUrl.value)
@@ -361,6 +478,10 @@ object BiocondaPlugin extends AutoPlugin {
       biocondaMainRepo.createPullRequest(title, head, base, body)
     }
 
+  /**
+    * Gets the license from your project by taking the name from the head of the license list.
+    * @return A license as a string.
+    */
   private def getLicense: Def.Initialize[String] = {
     Def.setting {
       (licenses in Bioconda).value.headOption match {

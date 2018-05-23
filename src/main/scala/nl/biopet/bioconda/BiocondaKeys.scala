@@ -40,12 +40,10 @@ trait BiocondaKeys {
     settingKey[File]("Where the recipes will be created")
   lazy val biocondaPushRecipes =
     taskKey[Unit]("Push the branch with the recipe.")
-  lazy val biocondaCreateRecipes = taskKey[File](
-    "Create the bioconda recipes for all released versions of the tool and the latest(default) version.")
-  lazy val biocondaCreateLatestRecipe = taskKey[File](
-    "Create the bioconda recipe for the latest released version of the tool")
-  lazy val biocondaCreateVersionRecipes = taskKey[File](
-    "Create the bioconda recipes for all released versions of the tool.")
+  lazy val biocondaCreateAllRecipes = taskKey[File](
+    "Create the bioconda recipes for all released versions of the tool that are not currently in bioconda.")
+  lazy val biocondaCreateRecipe = taskKey[File](
+    "Create the bioconda recipe for the current version of the tool")
   lazy val biocondaRepository =
     settingKey[File](
       "Sandbox environment where the bioconda git branch is checked out.")
@@ -56,6 +54,8 @@ trait BiocondaKeys {
   lazy val biocondaBuildNumber = settingKey[Int]("The build number")
   lazy val biocondaSummary =
     taskKey[String]("The summary describing the program")
+  lazy val biocondaDescription =
+    taskKey[Option[String]]("The programs description")
   lazy val biocondaNotes = taskKey[String]("Usage notes for the program")
   lazy val biocondaDefaultJavaOptions = settingKey[Seq[String]](
     "The default java options for the program when started with the wrapperscript.")
@@ -80,9 +80,12 @@ trait BiocondaKeys {
   lazy val biocondaPullRequestBody =
     taskKey[String]("The message accompanying the pull request")
   lazy val biocondaRelease = taskKey[Unit](
-    "Create recipes, test them, and create a pull request on bioconda main.")
-  lazy val biocondaIsReleased =
-    settingKey[Boolean]("Whether the tool is released on bioconda already")
+    "Create recipe for current version, test it, and create a pull request on bioconda main.")
+  lazy val biocondaReleaseAll = taskKey[Unit](
+    "Create all recipes, test them, and create a pull request on bioconda main.")
+  lazy val biocondaNewTool =
+    taskKey[Boolean]("Whether the tool is new on bioconda")
   lazy val biocondaSkipErrors = settingKey[Boolean](
     "Recipes with failing elements are skipped instead of causing an exception.")
+  lazy val biocondaDoi = taskKey[Option[String]]("A DOI for your tool")
 }

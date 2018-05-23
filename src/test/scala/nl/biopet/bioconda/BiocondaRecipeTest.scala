@@ -38,14 +38,31 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     sourceUrl = "test.example.com/test.jar",
     sourceSha256 = "af15", //incorrect but that is irrelevant
     runRequirements = Seq("openjdk"),
-    buildRequirements = Seq(),
+    buildRequirements = Seq("htslib"),
     testCommands = Seq("testing --version"),
     homeUrl = "test.example.com/index.html",
     license = "MIT",
     summary = "test is a tool that is tested in this test suite.",
     defaultJavaOptions = Seq("-Xms25m"),
     buildNumber = 0,
-    notes = Some("This is java")
+    description = Some("bla \n bla \n bla\n"),
+    notes = Some("This is java"),
+    doi = Some("doi:bla")
+  )
+  val testRecipeNoOptionals = new BiocondaRecipe(
+    name = "test",
+    version = "1.0",
+    command = "testing",
+    sourceUrl = "test.example.com/test.jar",
+    sourceSha256 = "af15", //incorrect but that is irrelevant
+    runRequirements = Seq("openjdk"),
+    buildRequirements = Seq(),
+    testCommands = Seq("testing --version"),
+    homeUrl = "test.example.com/index.html",
+    license = "MIT",
+    summary = "test is a tool that is tested in this test suite.",
+    defaultJavaOptions = Seq(),
+    buildNumber = 0
   )
 
   @Test
@@ -92,6 +109,7 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     yaml should include("  license: MIT")
     yaml should include(
       "  summary: test is a tool that is tested in this test suite.")
+    yaml should include("  description: \"bla \\n bla \\n bla\\n\"")
     yaml should include("requirements:")
     yaml should include("  run:")
     yaml should include("- openjdk")
@@ -102,14 +120,51 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     yaml should include("extra:")
     yaml should include("notes: This is java")
     yaml shouldNot include("Nederlandse tekst ")
+    yaml should include("doi: doi:bla")
   }
 
+  @Test
+  def testMetaYamlNoOptionals(): Unit = {
+    val yaml = testRecipeNoOptionals.metaYaml
+    yaml should include("package:")
+    yaml should include("  name: test")
+    yaml should include("  version: '1.0'")
+    yaml should include("source:")
+    yaml should include("  sha256: af15")
+    yaml should include("  url: test.example.com/test.jar")
+    yaml should include("about:")
+    yaml should include("  home: test.example.com/index.html")
+    yaml should include("  license: MIT")
+    yaml should include(
+      "  summary: test is a tool that is tested in this test suite.")
+    yaml should not include "description:"
+    yaml should include("requirements:")
+    yaml should include("  run:")
+    yaml should include("- openjdk")
+    yaml should not include "  build:"
+    yaml should include("test:")
+    yaml should include("  commands:")
+    yaml should include("- testing --version")
+    yaml should not include "extra:"
+    yaml should not include "notes:"
+    yaml should not include "Nederlandse tekst "
+    yaml should not include "doi:"
+  }
   @Test
   def testPythonWrapper(): Unit = {
     val py = testRecipe.wrapperScript
 
     py should include("jar_file = 'test.jar'")
     py should include("default_jvm_mem_opts = ['-Xms25m',]")
+    py should include("#!/usr/bin/env python")
+    py should include("if __name__ == '__main__':")
+    py should not include "Perl the best thing since sliced bread"
+  }
+  @Test
+  def testPythonWrapperNoOptionals(): Unit = {
+    val py = testRecipeNoOptionals.wrapperScript
+    py should include("jar_file = 'test.jar'")
+    py should include("default_jvm_mem_opts = []")
     py should include("#!/usr/bin/env python")
     py should include("if __name__ == '__main__':")
     py should not include "Perl the best thing since sliced bread"

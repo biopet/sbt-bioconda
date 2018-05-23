@@ -14,7 +14,7 @@ startYear := Some(2017)
 homepage := Some(new URL("https://github.com/biopet/testtool"))
 //mainClass in assembly := Some(s"nl.biopet.tools.dummytool.DummyTool")
 scalaVersion := "2.11.11"
-biocondaGitUrl := "https://github.com/biopet/bioconda-recipes.git"
+biocondaGitUrl := "https://github.com/bioconda/bioconda-recipes.git"
 licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
 libraryDependencies += "com.github.biopet" %% "tool-utils" % "0.2"
 libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
@@ -22,6 +22,7 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5"
 ghreleaseRepoOrg := "biopet"
 ghreleaseRepoName := "testtool"
 biocondaRepository := biocondaTempDir.value
+checkTexts := textChecking.value
 checkRepo := Def.task {
 filesExistInDir(biocondaRepository.value,
       Seq(".github",
@@ -75,11 +76,17 @@ def biocondaTempDir: Def.Initialize[File] = {
 def textChecking: Def.Initialize[Task[Unit]] = {
   Def.task {
     val summary: String = biocondaSummary.value
+    val description: Option[String] = biocondaDescription.value
     val notes: String = biocondaNotes.value
     val pullRequestBody: String = biocondaPullRequestBody.value
     val pullRequestTitle: String = biocondaPullRequestTitle.value
+    val newTool: Boolean = biocondaNewTool.value
+    val commitMessage: String = biocondaCommitMessage.value
+    assert(newTool, "This tool should not have been published")
     assert(summary.contains("This summary for testtool is automatically generated"))
     assert(pullRequestBody.contains("[x] This PR adds a new recipe."), "Pull request template should be included")
-    assert(pullRequestBody.contains(summary), "Summary should be included.")
+    assert(pullRequestTitle.contains("New tool: testtool"),"Pull request title should mention new tool")
+    assert(commitMessage.contains("Added new tool: testtool"))
+    assert(description == None)
   }
 }

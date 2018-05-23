@@ -43,8 +43,12 @@ name in Bioconda := "my_program" // Name of your tool on bioconda.
 // Defaults to normalizedName
 biocondaCommand := "my-program" // the command on the shell to execute your program. 
 // Defaults to name in Bioconda
-biocondaSummary := "description ..." // The summary of your program. 
+biocondaSummary := "summary" // A one sentence summary of your program.  
 // Defaults to a generic description with a link to your homepage.
+// Since this is a task you can set this to for example dynamically read your README.md if you want to.
+biocondaDescription := "Description ..." // A longer description of your program if needed.
+// defaults to None.
+// Since this is a task you can set this to for example dynamically read your README.md if you want to.
 homepage in Bioconda := "example.com" // The homepage of your project as displayed on bioconda. 
 // Defaults to homepage of your project.
 biocondaRequirements := Seq("openjdk") // The requirements for your project. 
@@ -85,28 +89,32 @@ biocondaRepository := "/home/user/bioconda-recipes" // Where bioconda repository
 biocondaRecipeDir := "recipes" // Where the recipes will be created.
 // Defaults to target.value/recipes
 biocondaCommitMessage := "Auto" // The default commit message.
-// Default is "automated update for recipes of (name in Bioconda).value. 
+// Default depends on value of biocondaNewTool. 
+biocondaNewTool := true // Whether the tool is new in bioconda.
+// This is automatically determined by the plugin, but you may use this key to override it.
 ```
 
 Task keys:
 - `biocondaUpdatedRepository` makes sure a bioconda repository is present and up to date
 with bioconda main.
 - `biocondaUpdatedBranch` creates a branch for your tool that is up to date with bioconda main.
-- `biocondaCreateRecipes` creates the recipes for your tool. 
+- `biocondaCreateRecipe` creates the recipes for the current version of your tool. 
+- `biocondaCreateAllRecipes` creates the recipes for all versions released on github, and not yet in bioconda.
 It checks which are already in bioconda main and only adds new ones. Unless biocondaOverwriteRecipes == true
 - `biocondaAddRecipes` adds the recipes to the local repository.
 - `biocondaTestRecipes` tests the newly added recipes.
 - `biocondaPushRecipes` pushes the local tool branch to your fork of bioconda.
 - `biocondaPullRequest` create a new pull request on bioconda main.
-- `biocondaRelease` does all of the above. You can add this command to your release procedure.
-
-If you do not want to publish all the recipes add once (default for biocondaRelease) you can 
+- `biocondaRelease` Does all the steps necessary for a pull request for a release of the current version of your tool.
+- `biocondaReleaseAll` Does all the steps necessary for a pull request for all versions released on github and not yet in bioconda.
+If you do not want to publish all the recipes at once (default for biocondaReleaseAll) you can 
 run the above commands manually and use the following keys:
-- `biocondaCreateVersionRecipes` creates all the recipe versions, but does not change the latest versions.
-- `biocondaCreateLatestRecipe` only updates the latest released version.
+- `biocondaCreateAllRecipes` creates recipes for all versions released on github, and not yet in bioconda.
+You can manually delete some versions from `target/recipes` and then use `biocondaAddRecipes`, `biocondaTestRecipes`,
+`biocondaPushRecipes` and `biocondaPullRequest` to publish your selected versions.
+- `biocondaCreateRecipe` creates a recipe for the current version.
 
 ## Known Issues
 
-- Versions with a `-` in them crash on testing. This is a bioconda requirement.
-If you released versions with a - in them this will crash your `biocondaTestRecipes` command 
-and therefore also `biocondaRelease`.
+- Versions with a `-` in .them crash on testing. This is a bioconda requirement
+If you released versions with a - the '-' will be removed from the version in the bioconda recipes.
