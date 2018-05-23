@@ -11,7 +11,7 @@ scala:
 script:
   - sbt clean headerCheck scalafmt
   - "git diff --exit-code || (echo ERROR: Git changes detected, please regenerate the readme and run scalafmt with: sbt headerCreate scalafmt && exit 1)"
-  - sbt clean coverage test scripted coverageReport coverageAggregate
+  - sbt clean coverage test scripted coverageReport coverageAggregate codacyCoverage
 
 after_success:
   - sbt coveralls
