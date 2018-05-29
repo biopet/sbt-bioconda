@@ -200,7 +200,8 @@ object BiocondaPlugin extends AutoPlugin {
             "No tags have been released. " +
               "A latest version can not be determined.")
     //All tags that can not be parsed as a semantic version should go here.
-    val notSemanticTags = releasedTags.filter(tag => !SemanticVersion.canParse(tag))
+    val notSemanticTags =
+      releasedTags.filter(tag => !SemanticVersion.canParse(tag))
     //If there are no tags that can not be parsed, use semantic version sorting.
     val sortedTags = if (notSemanticTags.isEmpty) {
       releasedTags.sortBy(tag =>
