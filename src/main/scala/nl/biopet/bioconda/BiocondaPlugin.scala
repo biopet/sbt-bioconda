@@ -199,8 +199,10 @@ object BiocondaPlugin extends AutoPlugin {
     require(releasedTags.nonEmpty,
             "No tags have been released. " +
               "A latest version can not be determined.")
-    val noSemanticTags = releasedTags.filter(SemanticVersion.canParse)
-    val sortedTags = if (noSemanticTags.isEmpty) {
+    //All tags that can not be parsed as a semantic version should go here.
+    val notSemanticTags = releasedTags.filter(tag => !SemanticVersion.canParse(tag))
+    //If there are no tags that can not be parsed, use semantic version sorting.
+    val sortedTags = if (notSemanticTags.isEmpty) {
       releasedTags.sortBy(tag =>
         SemanticVersion.fromString(tag) match {
           case Some(sv) => sv
@@ -210,10 +212,12 @@ object BiocondaPlugin extends AutoPlugin {
                 s"This should not happen, please report to the developers."
             )
       })
-    } else {
+    }
+    // Else fall back to string sorting.
+    else {
       log.warn(
         s"Some tags do not follow semantic versioning. " +
-          s"No semantic version tags: $noSemanticTags. " +
+          s"No semantic version tags: $notSemanticTags. " +
           s"Falling back to string sorting")
       releasedTags.sorted
     }
