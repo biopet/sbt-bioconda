@@ -84,7 +84,7 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
     val tmp = File.createTempFile("docker", "test")
     tmp.delete()
     tmp.mkdir()
-    circleCiCommand(tmp, Seq("version"), log)
+    circleCiProcess(tmp, Seq("version")).lineStream(log)
     FileUtils.deleteDirectory(tmp)
 
   }
@@ -94,7 +94,7 @@ class BiocondaUtilsTest extends TestNGSuite with Matchers {
     tmp.delete()
     tmp.mkdir()
     intercept[Exception] {
-      circleCiCommand(tmp, Seq("bladnajsdnk"), log)
+      circleCiProcess(tmp, Seq("bladnajsdnk")).lineStream(log)
     }.getMessage should include("Nonzero exit code: 1")
     FileUtils.deleteDirectory(tmp)
   }

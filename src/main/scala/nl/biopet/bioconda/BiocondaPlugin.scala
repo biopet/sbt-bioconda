@@ -440,7 +440,15 @@ object BiocondaPlugin extends AutoPlugin {
       val log = streams.value.log
       dockerInstalled(log)
       pullLatestUtils(log)
-      circleCiCommand(repo, Seq("build"), log)
+      circleCiProcess(repo, Seq("build"))
+        .lineStream(log)
+        .foreach(line => {
+          log.info(line)
+          if (line == "Task failed") { // "Unfortunately exit code is 0. Even when task failed.
+            // Therefore the string contents are tested.
+            throw new IllegalStateException(s"Recipe testing failed.")
+          }
+        })
       repo
     }
 
