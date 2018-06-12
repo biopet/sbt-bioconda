@@ -137,11 +137,9 @@ object BiocondaUtils {
     * Run circle ci in a directory
     * @param cwd the directory in which circleci should run.
     * @param args the arguments with which circleci should be run
-    * @param log the log to which the circleci output will be written.
     */
-  def circleCiCommand(cwd: File,
-                      args: Seq[String],
-                      log: ManagedLogger): Unit = {
+  def circleCiProcess(cwd: File,
+                      args: Seq[String]): ProcessBuilder = {
     val path = cwd.getPath
     val command = Seq("docker",
                       "run",
@@ -154,7 +152,7 @@ object BiocondaUtils {
                       s"$path",
                       "circleci/picard",
                       "circleci") ++ args
-    Process(command, cwd).lineStream(log).foreach(line => log.info(line))
+    Process(command, cwd)
   }
 
   /**

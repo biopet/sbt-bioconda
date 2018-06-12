@@ -440,7 +440,8 @@ object BiocondaPlugin extends AutoPlugin {
       val log = streams.value.log
       dockerInstalled(log)
       pullLatestUtils(log)
-      circleCiCommand(repo, Seq("build"), log)
+      val stream = circleCiProcess(repo, Seq("build")).lineStream(log)
+      stream.foreach(line => log.info(line))
       repo
     }
 
