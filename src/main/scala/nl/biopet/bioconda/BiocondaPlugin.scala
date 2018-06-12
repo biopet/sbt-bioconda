@@ -445,7 +445,7 @@ object BiocondaPlugin extends AutoPlugin {
         .foreach(line => {
           log.info(line)
           if (line == "Task failed") { // "Unfortunately exit code is 0. Even when task failed.
-              // Therefore the string contents are tested.
+            // Therefore the string contents are tested.
             throw new IllegalStateException(s"Recipe testing failed.")
           }
         })
