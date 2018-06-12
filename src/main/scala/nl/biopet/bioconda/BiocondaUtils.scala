@@ -138,8 +138,7 @@ object BiocondaUtils {
     * @param cwd the directory in which circleci should run.
     * @param args the arguments with which circleci should be run
     */
-  def circleCiProcess(cwd: File,
-                      args: Seq[String]): ProcessBuilder = {
+  def circleCiProcess(cwd: File, args: Seq[String]): ProcessBuilder = {
     val path = cwd.getPath
     val command = Seq("docker",
                       "run",
