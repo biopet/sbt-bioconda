@@ -33,7 +33,8 @@ trait BiocondaKeys {
     settingKey[String]("Branch for bioconda tool repository")
   lazy val biocondaUpdatedRepository =
     taskKey[File](
-      "Make sure the repo is up to date with the main branch of the main bioconda-recipes repo.")
+      "Make sure the repo is up to date with the main branch of the main " +
+        "bioconda-recipes repo.")
   lazy val biocondaUpdatedBranch =
     taskKey[File]("Update the tool branch to the main bioconda-recipes repo")
   lazy val biocondaRecipeDir =
@@ -41,7 +42,8 @@ trait BiocondaKeys {
   lazy val biocondaPushRecipes =
     taskKey[Unit]("Push the branch with the recipe.")
   lazy val biocondaCreateAllRecipes = taskKey[File](
-    "Create the bioconda recipes for all released versions of the tool that are not currently in bioconda.")
+    "Create the bioconda recipes for all released versions of the tool " +
+      "that are not currently in bioconda.")
   lazy val biocondaCreateRecipe = taskKey[File](
     "Create the bioconda recipe for the current version of the tool")
   lazy val biocondaRepository =
@@ -50,7 +52,10 @@ trait BiocondaKeys {
   lazy val biocondaRequirements =
     settingKey[Seq[String]]("A list of requirements for the tool")
   lazy val biocondaBuildRequirements =
-    settingKey[Seq[String]]("A list of build requirements for the tool")
+    settingKey[Seq[String]](
+      "A list of build requirements for the tool. " +
+        "Because of the conda-build 3 requirements these will be specified in the 'host'" +
+        " key inside of the 'build' key.")
   lazy val biocondaBuildNumber = settingKey[Int]("The build number")
   lazy val biocondaSummary =
     taskKey[String]("The summary describing the program")
@@ -60,7 +65,8 @@ trait BiocondaKeys {
   lazy val biocondaDefaultJavaOptions = settingKey[Seq[String]](
     "The default java options for the program when started with the wrapperscript.")
   lazy val biocondaTestCommands = settingKey[Seq[String]](
-    "The commands that are used to test whether the program was succesfuly installed with conda.")
+    "The commands that are used to test whether the program was successfully " +
+      "installed with conda.")
   lazy val biocondaLicense =
     settingKey[String]("The license displayed in the bioconda recipe.")
   lazy val biocondaAddRecipes =
@@ -80,7 +86,8 @@ trait BiocondaKeys {
   lazy val biocondaPullRequestBody =
     taskKey[String]("The message accompanying the pull request")
   lazy val biocondaRelease = taskKey[Unit](
-    "Create recipe for current version, test it, and create a pull request on bioconda main.")
+    "Create recipe for current version, test it, and create a pull request on " +
+      "bioconda main.")
   lazy val biocondaReleaseAll = taskKey[Unit](
     "Create all recipes, test them, and create a pull request on bioconda main.")
   lazy val biocondaNewTool =
