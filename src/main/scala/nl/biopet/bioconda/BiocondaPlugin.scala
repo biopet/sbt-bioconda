@@ -79,7 +79,8 @@ object BiocondaPlugin extends AutoPlugin {
     biocondaReleaseAll := releaseAllProcedure().value,
     biocondaSkipErrors := false,
     biocondaNewTool := isNewTool.value,
-    biocondaDoi := None
+    biocondaDoi := None,
+    biocondaNoArch := Some("generic")
   )
 
   /**

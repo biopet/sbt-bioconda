@@ -42,6 +42,7 @@ class BiocondaRecipe(name: String,
                      summary: String,
                      defaultJavaOptions: Seq[String],
                      buildNumber: Int = 0,
+                     noArch: Option[String] = Some("generic"),
                      description: Option[String] = None,
                      notes: Option[String] = None,
                      doi: Option[String] = None) {
@@ -100,10 +101,15 @@ class BiocondaRecipe(name: String,
       case _       => ListMap()
     }
 
+    val noArchMap: ListMap[String, String] = noArch match {
+      case Some(string) => ListMap("noarch" -> string)
+      case _            => ListMap()
+    }
+
     val buildMap: ListMap[String, Seq[String]] =
       if (buildRequirements.isEmpty) {
         ListMap()
-      } else ListMap("build" -> buildRequirements)
+      } else ListMap("host" -> buildRequirements)
 
     val meta: ListMap[String, Any] = {
       ListMap(
@@ -115,9 +121,12 @@ class BiocondaRecipe(name: String,
           "url" -> sourceUrl,
           "sha256" -> sourceSha256
         ),
-        "build" -> ListMap(
-          "number" -> buildNumber
-        ),
+        "build" -> {
+          noArchMap ++
+            ListMap(
+              "number" -> buildNumber
+            )
+        },
         "requirements" -> {
           ListMap(
             "run" -> (runRequirements ++ Seq("python"))
