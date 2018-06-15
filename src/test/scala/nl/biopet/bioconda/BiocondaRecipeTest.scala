@@ -103,6 +103,9 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
         |  name: test
         |  version: '1.0""".stripMargin)
     yaml should include(
+      """build:
+        |  number: 0""".stripMargin)
+    yaml should include(
       """source:
         |  url: test.example.com/test.jar
         |  sha256: af15""".stripMargin)
@@ -137,6 +140,9 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
       """package:
         |  name: test
         |  version: '1.0""".stripMargin)
+    yaml should include(
+      """build:
+        |  number: 0""".stripMargin)
     yaml should include(
       """source:
         |  url: test.example.com/test.jar
