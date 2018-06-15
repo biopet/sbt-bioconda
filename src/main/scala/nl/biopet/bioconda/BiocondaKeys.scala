@@ -35,6 +35,8 @@ trait BiocondaKeys {
     taskKey[File](
       "Make sure the repo is up to date with the main branch of the main " +
         "bioconda-recipes repo.")
+  lazy val biocondaNoArch =
+    settingKey[Option[String]]("Sets the noarch value to this string.")
   lazy val biocondaUpdatedBranch =
     taskKey[File]("Update the tool branch to the main bioconda-recipes repo")
   lazy val biocondaRecipeDir =
