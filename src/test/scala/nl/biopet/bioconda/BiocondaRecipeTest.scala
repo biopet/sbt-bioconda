@@ -62,7 +62,8 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
     license = "MIT",
     summary = "test is a tool that is tested in this test suite.",
     defaultJavaOptions = Seq(),
-    buildNumber = 0
+    buildNumber = 0,
+    noArch = None
   )
 
   @Test
@@ -98,15 +99,13 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
   @Test
   def testMetaYaml(): Unit = {
     val yaml = testRecipe.metaYaml
-    yaml should include(
-      """package:
+    yaml should include("""package:
         |  name: test
         |  version: '1.0""".stripMargin)
-    yaml should include(
-      """build:
+    yaml should include("""build:
+        |  noarch: generic
         |  number: 0""".stripMargin)
-    yaml should include(
-      """source:
+    yaml should include("""source:
         |  url: test.example.com/test.jar
         |  sha256: af15""".stripMargin)
     yaml should include(
@@ -115,19 +114,16 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
         |  license: MIT
         |  summary: test is a tool that is tested in this test suite.
         |  description: "bla \n bla \n bla\n""".stripMargin)
-    yaml should include(
-      """requirements:
+    yaml should include("""requirements:
         |  run:
         |  - openjdk
         |  - python
-        |  build:
+        |  host:
         |  - htslib""".stripMargin)
-    yaml should include(
-      """test:
+    yaml should include("""test:
         |  commands:
         |  - testing --version""".stripMargin)
-    yaml should include(
-      """extra:
+    yaml should include("""extra:
         |  notes: This is java
         |  doi: doi:bla""".stripMargin)
     yaml shouldNot include("Nederlandse tekst ")
@@ -136,15 +132,12 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
   @Test
   def testMetaYamlNoOptionals(): Unit = {
     val yaml = testRecipeNoOptionals.metaYaml
-    yaml should include(
-      """package:
+    yaml should include("""package:
         |  name: test
         |  version: '1.0""".stripMargin)
-    yaml should include(
-      """build:
+    yaml should include("""build:
         |  number: 0""".stripMargin)
-    yaml should include(
-      """source:
+    yaml should include("""source:
         |  url: test.example.com/test.jar
         |  sha256: af15""".stripMargin)
     yaml should include(
@@ -152,17 +145,15 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
         |  home: test.example.com/index.html
         |  license: MIT
         |  summary: test is a tool that is tested in this test suite.""".stripMargin)
-    yaml should include(
-      """requirements:
+    yaml should include("""requirements:
         |  run:
         |  - openjdk
         |  - python""".stripMargin)
-    yaml should include(
-      """test:
+    yaml should include("""test:
         |  commands:
         |  - testing --version""".stripMargin)
     yaml should not include "description:"
-    yaml should not include "  build:"
+    yaml should not include "  host:"
     yaml should include("test:")
     yaml should include("  commands:")
     yaml should include("- testing --version")
