@@ -1,3 +1,6 @@
 # Test whether the messages for already released tool are correct.
 > checkTexts
 -> biocondaCreateRecipe
+-> checkVersionChange
+> set version in Bioconda := "0.8.0"
+> checkVersionChange
