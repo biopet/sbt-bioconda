@@ -18,6 +18,7 @@ scalaVersion := "2.11.11"
 biocondaGitUrl := "https://github.com/bioconda/bioconda-recipes.git"
 licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
 checkTexts := textChecking.value
+checkVersionChange := versionChecking.value
 deleteTmp := Def.task{FileUtils.deleteDirectory(biocondaRepository.value)}.value
 
 ghreleaseRepoOrg := "biopet"
