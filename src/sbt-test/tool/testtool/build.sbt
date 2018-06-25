@@ -23,6 +23,10 @@ ghreleaseRepoOrg := "biopet"
 ghreleaseRepoName := "testtool"
 biocondaTestCommands := Seq("testtool --help")
 biocondaRepository := biocondaTempDir.value
+
+resolvers += Resolver.sonatypeRepo("snapshots")
+resolvers += Resolver.sonatypeRepo("releases")
+
 checkTexts := textChecking.value
 checkRepo := Def.task {
 filesExistInDir(biocondaRepository.value,

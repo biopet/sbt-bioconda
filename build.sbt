@@ -47,6 +47,9 @@ scriptedLaunchOpts := {
 }
 scriptedBufferLog := false
 
+resolvers += Resolver.sonatypeRepo("snapshots")
+resolvers += Resolver.sonatypeRepo("releases")
+
 import ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
   releaseStepCommand("git fetch"),
@@ -70,7 +73,7 @@ releaseProcess := Seq[ReleaseStep](
   commitNextVersion,
   pushChanges
 )
-libraryDependencies += "com.github.biopet" %% "common-utils" % "0.5"
+libraryDependencies += "com.github.biopet" %% "common-utils" % "0.6"
 libraryDependencies += "org.testng" % "testng" % "6.14.2" % "test"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
