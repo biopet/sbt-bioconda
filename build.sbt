@@ -23,7 +23,7 @@ publishMavenStyle := true
 
 sbtPlugin := true
 
-scalaVersion := "2.12.5"
+scalaVersion := "2.12.6"
 
 useGpg := true
 
@@ -74,9 +74,9 @@ releaseProcess := Seq[ReleaseStep](
   pushChanges
 )
 libraryDependencies += "com.github.biopet" %% "common-utils" % "0.6"
-libraryDependencies += "org.testng" % "testng" % "6.14.2" % "test"
+libraryDependencies += "org.testng" % "testng" % "6.14.3" % "test"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
-libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
+libraryDependencies += "org.kohsuke" % "github-api" % "1.93"
 
 libraryDependencies ++= Seq(
   Defaults.sbtPluginExtra(
@@ -85,7 +85,7 @@ libraryDependencies ++= Seq(
     (scalaBinaryVersion in pluginCrossBuild).value
   ),
   Defaults.sbtPluginExtra(
-    "com.typesafe.sbt" % "sbt-git" % "0.9.3",
+    "com.typesafe.sbt" % "sbt-git" % "1.0.0",
     (sbtBinaryVersion in pluginCrossBuild).value,
     (scalaBinaryVersion in pluginCrossBuild).value
   )
