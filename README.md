@@ -41,6 +41,7 @@ The following settingKeys can be used to tune the bioconda recipes to your likin
 ```scala
 name in Bioconda := "my_program" // Name of your tool on bioconda. 
 // Defaults to normalizedName
+biocondaVersion := "0.5" // The version of the tool. Defaults to version in Bioconda.
 biocondaCommand := "my-program" // the command on the shell to execute your program. 
 // Defaults to name in Bioconda
 biocondaSummary := "summary" // A one sentence summary of your program.  
