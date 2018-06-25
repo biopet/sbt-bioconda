@@ -158,7 +158,7 @@ object BiocondaPlugin extends AutoPlugin {
       }
 
       // Get latest recipes from main repository.
-      git("pull","--depth=50", "upstream", branch)(local, s.log)
+      git("pull", "--depth=50", "upstream", branch)(local, s.log)
       local
     }
   }
