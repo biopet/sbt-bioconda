@@ -21,6 +21,7 @@ libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5"
 ghreleaseRepoOrg := "biopet"
 ghreleaseRepoName := "testtool"
+biocondaTestCommands := Seq("testtool --help")
 biocondaRepository := biocondaTempDir.value
 
 resolvers += Resolver.sonatypeRepo("snapshots")
