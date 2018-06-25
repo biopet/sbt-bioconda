@@ -47,6 +47,9 @@ scriptedLaunchOpts := {
 }
 scriptedBufferLog := false
 
+resolvers += Resolver.sonatypeRepo("snapshots")
+resolvers += Resolver.sonatypeRepo("releases")
+
 import ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
   releaseStepCommand("git fetch"),

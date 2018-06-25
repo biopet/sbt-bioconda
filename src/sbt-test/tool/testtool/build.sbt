@@ -22,6 +22,10 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5"
 ghreleaseRepoOrg := "biopet"
 ghreleaseRepoName := "testtool"
 biocondaRepository := biocondaTempDir.value
+
+resolvers += Resolver.sonatypeRepo("snapshots")
+resolvers += Resolver.sonatypeRepo("releases")
+
 checkTexts := textChecking.value
 checkRepo := Def.task {
 filesExistInDir(biocondaRepository.value,
