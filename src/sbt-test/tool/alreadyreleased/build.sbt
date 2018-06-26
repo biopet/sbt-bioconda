@@ -7,6 +7,7 @@ lazy val checkRecipes = taskKey[Unit]("checks if recipes are created")
 lazy val checkCopy = taskKey[Unit]("checks if recipes are copied")
 lazy val deleteTmp = taskKey[Unit]("Deletes temporary test dir")
 lazy val checkTexts = taskKey[Unit]("Checks whether the texts have been initialized correctly")
+lazy val checkVersionChange = taskKey[Unit]("Checks whether the version has properly changed")
 name := "biopet"
 organizationName := "biopet"
 organization := "biopet"
@@ -17,6 +18,7 @@ scalaVersion := "2.11.11"
 biocondaGitUrl := "https://github.com/bioconda/bioconda-recipes.git"
 licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
 checkTexts := textChecking.value
+checkVersionChange := versionChecking.value
 deleteTmp := Def.task{FileUtils.deleteDirectory(biocondaRepository.value)}.value
 
 ghreleaseRepoOrg := "biopet"
@@ -33,6 +35,17 @@ def biocondaTempDir: Def.Initialize[File] = {
   dir.deleteOnExit()
   dir
 }}
+commands += Command.command("versionChange") { state =>
+  "set version in Bioconda := \"0.8.0\"" ::
+  state
+}
+
+def versionChecking: Def.Initialize[Task[Unit]] = {
+  Def.task {
+    val theVersion: String = biocondaVersion.value
+    assert(theVersion == "0.8.0", "The version should be 0.8.0")
+  }
+}
 
 def textChecking: Def.Initialize[Task[Unit]] = {
   Def.task {

@@ -49,6 +49,7 @@ object BiocondaPlugin extends AutoPlugin {
   override def projectSettings: Seq[Setting[_]] = Def.settings(
     biocondaBranch := (normalizedName in Bioconda).value,
     name in Bioconda := normalizedName.value,
+    biocondaVersion := (version in Bioconda).value,
     biocondaCommand := (name in Bioconda).value,
     biocondaMainGitUrl := "https://github.com/bioconda/bioconda-recipes.git",
     biocondaMainBranch := "master",
@@ -237,7 +238,7 @@ object BiocondaPlugin extends AutoPlugin {
     */
   private def createCurrentRecipe(): Def.Initialize[Task[File]] = {
     Def.taskDyn {
-      val tag = "v" + version.value
+      val tag = "v" + biocondaVersion.value
       val releasedTags = getReleasedTags.value
       if (!releasedTags.contains(tag)) {
         throw new IllegalStateException(

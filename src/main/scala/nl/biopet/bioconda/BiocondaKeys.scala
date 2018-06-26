@@ -92,6 +92,7 @@ trait BiocondaKeys {
       "bioconda main.")
   lazy val biocondaReleaseAll = taskKey[Unit](
     "Create all recipes, test them, and create a pull request on bioconda main.")
+  lazy val biocondaVersion = taskKey[String]("The version of the tool")
   lazy val biocondaNewTool =
     taskKey[Boolean]("Whether the tool is new on bioconda")
   lazy val biocondaSkipErrors = settingKey[Boolean](
