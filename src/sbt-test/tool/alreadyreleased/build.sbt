@@ -35,6 +35,10 @@ def biocondaTempDir: Def.Initialize[File] = {
   dir.deleteOnExit()
   dir
 }}
+commands += Command.command("versionChange") { state =>
+  "set version in Bioconda := \"0.8.0\"" ::
+  state
+}
 
 def versionChecking: Def.Initialize[Task[Unit]] = {
   Def.task {

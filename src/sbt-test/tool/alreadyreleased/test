@@ -2,5 +2,5 @@
 > checkTexts
 -> biocondaCreateRecipe
 -> checkVersionChange
-> set version in Bioconda := "0.8.0"
+> versionChange
 > checkVersionChange
