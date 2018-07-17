@@ -10,7 +10,7 @@ The recipes created are in concordance with [bioconda's guidelines](https://bioc
 
 put
 ```scala
-AddSbtPlugin("com.github.biopet","sbt-bioconda","0.1.1")
+AddSbtPlugin("com.github.biopet","sbt-bioconda","0.3.2")
 ```
 in your `project/plugins.sbt` file.
 ### Requirements:
