@@ -17,7 +17,7 @@ in your `project/plugins.sbt` file.
 - the [Sbt Github release plugin](https://github.com/ohnosequences/sbt-github-release)
 must be used in your project. The repo authentication from
 this plugin is used. Also the bioconda plugin works very well in combination with this plugin.
-- An OAuth token is necessary to interact with the github repository and make the pull requests.
+- An OAuth token is necessary to interact with the github repository and make the pull requests. This plugin requires an OAuth token with `repo` scope to interact with Github 
 There are two ways to do this (as described on the Sbt Github release plugin project site):
     - Set GITHUB_TOKEN value in environment.
     - create a `~/.github` properties file. Expected file format is: 
