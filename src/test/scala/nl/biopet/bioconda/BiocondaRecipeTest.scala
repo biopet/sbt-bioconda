@@ -186,8 +186,7 @@ class BiocondaRecipeTest extends TestNGSuite with Matchers {
   def testBuildScript(): Unit = {
     val build = testRecipe.buildScript
     build should include("#!/usr/bin/env bash")
-    build should include(
-      "outdir=$PREFIX/share/$PKG_NAME-$PKG_VERSION-$PKG_BUILDNUM")
+    build should include("outdir=$PREFIX/share/$PKG_NAME")
     build should include("mkdir -p $outdir")
     build should include("mkdir -p $PREFIX/bin")
     build should include("cp test.jar $outdir/test.jar")
