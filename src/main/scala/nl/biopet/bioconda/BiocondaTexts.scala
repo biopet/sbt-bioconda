@@ -60,7 +60,7 @@ object BiocondaTexts {
          |If you want to overwrite it you can specify memory options directly after your binaries.
          |If you have _JAVA_OPTIONS set globally this will take precedence.
          |For example run it with '${biocondaCommand.value} -Xms512m -Xmx1g'.
-         |""".stripMargin.replace("\n", " ")
+         |""".stripMargin
     }
 
   /**
